@@ -6,10 +6,12 @@ nextflow_workflow {
     test("pipeline complet → HTML et reads trimés produits") {
         when {
             workflow {
+                """
                 input[0] = Channel.of([
                     [id: "sample1", single_end: true],
-                    file("${projectDir}/../data/sample.fastq")
+                    file("${projectDir}/../../data/sample.fastq")
                 ])
+                """
             }
         }
         then {
@@ -18,7 +20,7 @@ nextflow_workflow {
             assert workflow.out.reads.size() == 1
             assert workflow.out.report.size() == 1
 
-            def trim_report = workflow.out.report[0][1]
+            def trim_report = path(workflow.out.report[0][1])
             assert trim_report.text.contains("input_reads")
             assert trim_report.text.contains("output_reads")
 

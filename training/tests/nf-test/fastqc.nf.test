@@ -6,10 +6,12 @@ nextflow_process {
     test("reads valides → HTML et stats produits") {
         when {
             process {
+                """
                 input[0] = [
                     [id: "sample1", single_end: true],
-                    file("${projectDir}/../data/sample.fastq")
+                    file("${projectDir}/../../data/sample.fastq")
                 ]
+                """
             }
         }
         then {
@@ -17,9 +19,9 @@ nextflow_process {
             assert process.out.html.size() == 1
             assert process.out.stats.size() == 1
 
-            def html_file = process.out.html[0][1]
-            assert html_file.name.endsWith(".html")
-            assert html_file.text.contains("sample1")
+            def html_path = path(process.out.html[0][1])
+            assert html_path.fileName.toString().endsWith(".html")
+            assert html_path.text.contains("sample1")
 
             assert snapshot(process.out.stats).match()
         }
@@ -28,10 +30,12 @@ nextflow_process {
     test("fichier vide → process échoue") {
         when {
             process {
+                """
                 input[0] = [
                     [id: "empty_sample", single_end: true],
-                    file("${projectDir}/../data/empty.fastq")
+                    file("${projectDir}/../../data/empty.fastq")
                 ]
+                """
             }
         }
         then {
