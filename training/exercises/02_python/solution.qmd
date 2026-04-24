@@ -1,0 +1,75 @@
+---
+title: "Solution 02 — Tests Python avec pytest"
+format: html
+toc: true
+---
+
+## Solution complète
+
+```python
+import pytest
+import pandas as pd
+from pathlib import Path
+from training.pipelines.minimal.scripts.parse_counts import load_counts, validate_counts
+
+DATA = Path("training/data")
+SAMPLES = ["sample1", "sample2", "sample3", "sample4"]
+
+
+def test_load_valid_file():
+    df = load_counts(DATA / "counts.tsv")
+    assert isinstance(df, pd.DataFrame)
+    assert df.shape == (20, 4)
+    assert list(df.columns) == SAMPLES
+
+
+def test_load_missing_file():
+    with pytest.raises(FileNotFoundError, match="not found"):
+        load_counts("/tmp/does_not_exist.tsv")
+
+
+def test_validate_ok():
+    df = load_counts(DATA / "counts.tsv")
+    validate_counts(df, SAMPLES)  # ne doit pas lever d'exception
+
+
+def test_validate_missing_column():
+    df = load_counts(DATA / "counts.tsv")
+    with pytest.raises(ValueError, match="Missing columns"):
+        validate_counts(df, SAMPLES + ["phantom_sample"])
+
+
+def test_validate_negative_values():
+    df = load_counts(DATA / "bad_counts.tsv")
+    with pytest.raises(ValueError, match="Negative counts"):
+        validate_counts(df, list(df.columns))
+```
+
+## Points clés
+
+- `pytest.raises(ExcType, match="...")` : vérifie type ET message de l'exception
+- Fixture `DATA` en haut du fichier : chemin centralisé, facile à changer
+- `isinstance(df, pd.DataFrame)` : vérifier le type de retour, pas seulement l'absence d'erreur
+
+## Patterns avancés
+
+### Fixtures pytest
+
+```python
+@pytest.fixture
+def valid_df():
+    return load_counts(DATA / "counts.tsv")
+
+
+def test_validate_ok(valid_df):
+    validate_counts(valid_df, SAMPLES)
+```
+
+### Parametrize
+
+```python
+@pytest.mark.parametrize("bad_col", ["phantom", "sample99", ""])
+def test_validate_missing_column(valid_df, bad_col):
+    with pytest.raises(ValueError):
+        validate_counts(valid_df, SAMPLES + [bad_col])
+```

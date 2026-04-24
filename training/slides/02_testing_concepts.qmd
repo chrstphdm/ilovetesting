@@ -1,0 +1,112 @@
+---
+title: "Concepts de testing"
+subtitle: "Formation testing — Module 2"
+format:
+  revealjs:
+    theme: simple
+    slide-number: true
+    code-block-height: 400px
+---
+
+## Anatomie d'un test
+
+```
+GIVEN  un fichier FASTQ avec 100 reads
+WHEN   je lance le process FASTQC
+THEN   le fichier de sortie existe
+AND    il contient exactement 100 reads
+```
+
+---
+
+## Assertions
+
+Une assertion = une vérification binaire.
+
+```python
+# Python / pytest
+assert output.exists()
+assert line_count(output) == 100
+assert output.suffix == ".html"
+```
+
+```bash
+# Bash / bats
+[ -f "$output" ]
+[ "$(wc -l < "$output")" -eq 100 ]
+```
+
+---
+
+## Les assertions clés en bioinfo
+
+| Ce qu'on vérifie | Exemple |
+|-----------------|---------|
+| Fichier existe | `assert path.exists()` |
+| Nombre de lignes | `assert lines == 400` (4×100 reads FASTQ) |
+| En-têtes colonnes | `assert "sample_id" in header` |
+| Format valide | `assert line.startswith("@")` |
+| Code de sortie | `assert returncode == 0` |
+
+---
+
+## Snapshots
+
+Un snapshot = **photographie** de la sortie attendue.
+
+```groovy
+// nf-test
+assert snapshot(output).match()
+```
+
+- Première exécution → crée le snapshot
+- Exécutions suivantes → compare avec le snapshot
+- Si différent → le test échoue
+
+::: {.callout-tip}
+Les snapshots détectent les régressions invisibles à l'œil nu.
+:::
+
+---
+
+## Non-régression
+
+Scénario classique :
+
+1. Pipeline fonctionnel → snapshot créé
+2. Refactoring du code
+3. `nf-test test` → snapshot comparé
+4. Différence détectée → bug identifié avant merge
+
+---
+
+## Données de test
+
+**Règle nf-core :** les données de test doivent être **minimalistes**.
+
+```
+data/
+├── sample.fastq      # 100 reads synthétiques
+├── reference.fasta   # 3 séquences, 200 bp chacune
+└── counts.tsv        # 20 gènes × 4 échantillons
+```
+
+Pourquoi petit ? Tests rapides, CI rapide, pas de dépendance aux gros fichiers.
+
+---
+
+## CI/CD
+
+```
+Push → GitHub Actions → Tests → ✅ ou ❌
+```
+
+Si ❌ : merge bloqué automatiquement.
+
+---
+
+## Exercice → Module 3
+
+Rendez-vous dans `exercises/02_python/`
+
+Objectif : tester une fonction Python qui valide le format FASTQ.

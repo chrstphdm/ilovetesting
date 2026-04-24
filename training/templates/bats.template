@@ -1,0 +1,49 @@
+#!/usr/bin/env bats
+# Template bats
+# Copier dans tests/bats/test_<nom_script>.bats
+
+SCRIPT="${BATS_TEST_DIRNAME}/../../pipelines/minimal/scripts/<nom_script>.sh"
+DATA="${BATS_TEST_DIRNAME}/../../data"
+
+# ─── Setup / Teardown (optionnel) ─────────────────────────────────────────────
+
+setup() {
+    TMPFILE=$(mktemp /tmp/test_bats_XXXXXX)
+}
+
+teardown() {
+    rm -f "$TMPFILE"
+}
+
+# ─── Tests nominaux ───────────────────────────────────────────────────────────
+
+@test "<description du cas nominal> → exit 0" {
+    run bash "$SCRIPT" "$DATA/<fichier_test>"
+    [ "$status" -eq 0 ]
+    [[ "$output" == *"OK"* ]]
+}
+
+# ─── Tests d'erreur ───────────────────────────────────────────────────────────
+
+@test "<description cas fichier manquant> → exit 1" {
+    run bash "$SCRIPT" "/tmp/does_not_exist_xyz"
+    [ "$status" -eq 1 ]
+    [[ "$output" == *"not found"* ]]
+}
+
+@test "<description cas format invalide> → exit 2" {
+    run bash "$SCRIPT" "$DATA/<fichier_invalide>"
+    [ "$status" -eq 2 ]
+}
+
+@test "aucun argument → exit 1" {
+    run bash "$SCRIPT"
+    [ "$status" -eq 1 ]
+    [[ "$output" == *"usage"* ]]
+}
+
+# ─── Notes ────────────────────────────────────────────────────────────────────
+# run <cmd>  : capture $status et $output
+# $status    : code de sortie
+# $output    : stdout complet
+# [[ "$output" == *"motif"* ]]  : contient "motif"

@@ -1,0 +1,86 @@
+---
+title: "Pourquoi tester ?"
+subtitle: "Formation testing — Module 1"
+format:
+  revealjs:
+    theme: simple
+    slide-number: true
+    code-block-height: 400px
+---
+
+## Le problème sans tests
+
+```bash
+# Ça marchait hier...
+$ nextflow run pipeline.nf
+ERROR ~ Process terminated with an exit code 1
+```
+
+. . .
+
+**Quand ? Pourquoi ? Sur quels données ?**
+
+Nobody knows.
+
+---
+
+## Ce qu'un test apporte
+
+- **Détection précoce** — bug trouvé avant merge, pas en prod
+- **Documentation vivante** — le test dit ce que le code est censé faire
+- **Refactoring sans peur** — si les tests passent, ça marche
+- **CI possible** — automatisation réelle
+
+---
+
+## Les 4 types de tests
+
+| Type | Question | Exemple Nextflow |
+|------|----------|-----------------|
+| **Unitaire** | Cette fonction marche ? | Un process |
+| **Intégration** | Ces modules s'enchaînent ? | Un workflow |
+| **Fonctionnel** | Le pipeline produit le bon résultat ? | Pipeline complet |
+| **Non-régression** | On n'a pas cassé quelque chose ? | Snapshot comparaison |
+
+---
+
+## Mapping Nextflow
+
+```
+process FASTQC { ... }        ← unit test (nf-test)
+      ↓
+workflow QC_WORKFLOW { ... }  ← integration test (nf-test)
+      ↓
+pipeline main.nf              ← functional test (nf-test)
+```
+
+---
+
+## La règle d'équipe
+
+::: {.callout-important}
+**Pas de merge sans test.**
+
+Chaque bug trouvé → un test qui l'aurait détecté.
+
+Chaque module → un fichier `.nf.test`.
+:::
+
+---
+
+## Les outils
+
+| Langage | Framework |
+|---------|-----------|
+| Nextflow | [nf-test](https://www.nf-test.com/) |
+| Bash | [bats](https://bats-core.readthedocs.io/) |
+| Python | [pytest](https://docs.pytest.org/) |
+| R | [testthat](https://testthat.r-lib.org/) |
+
+---
+
+## Exercice → Module 2
+
+Rendez-vous dans `exercises/01_bash/`
+
+Objectif : écrire votre premier test bats sur un script Bash de validation de fichier FASTQ.

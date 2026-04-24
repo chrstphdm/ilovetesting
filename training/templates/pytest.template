@@ -1,0 +1,43 @@
+# Template pytest
+# Copier dans tests/pytest/test_<nom_module>.py
+
+import pytest
+from pathlib import Path
+import sys
+
+sys.path.insert(0, str(Path(__file__).parents[N] / "scripts"))
+from <nom_module> import <fonction>
+
+DATA = Path(__file__).parents[N] / "data"
+
+
+# ─── Tests nominaux ───────────────────────────────────────────────────────────
+
+def test_<cas_nominal>():
+    result = <fonction>(<args>)
+    assert result == <expected>
+
+
+# ─── Tests d'erreur ───────────────────────────────────────────────────────────
+
+def test_<cas_erreur>():
+    with pytest.raises(<ExceptionType>, match="<message partiel>"):
+        <fonction>(<bad_args>)
+
+
+# ─── Fixtures (optionnel) ─────────────────────────────────────────────────────
+
+@pytest.fixture
+def <nom_fixture>():
+    return <valeur>
+
+
+def test_avec_fixture(<nom_fixture>):
+    assert <condition>
+
+
+# ─── Parametrize (optionnel) ──────────────────────────────────────────────────
+
+@pytest.mark.parametrize("<param>", [<val1>, <val2>, <val3>])
+def test_<cas_multiple>(<param>):
+    assert <condition>

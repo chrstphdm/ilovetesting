@@ -1,0 +1,34 @@
+project:
+  type: website
+  output-dir: _site
+
+website:
+  title: "ilovetesting"
+  description: "Formation aux tests dans les pipelines bioinformatiques"
+  navbar:
+    left:
+      - text: "Accueil"
+        href: index.qmd
+      - text: "Slides"
+        menu:
+          - text: "Introduction"
+            href: slides/01_intro.qmd
+          - text: "Concepts de testing"
+            href: slides/02_testing_concepts.qmd
+          - text: "nf-test"
+            href: slides/03_nf_test.qmd
+      - text: "Exercices"
+        menu:
+          - text: "01 - Bash / bats"
+            href: exercises/01_bash/README.qmd
+          - text: "02 - Python / pytest"
+            href: exercises/02_python/README.qmd
+          - text: "03 - R / testthat"
+            href: exercises/03_r/README.qmd
+          - text: "04 - Nextflow / nf-test"
+            href: exercises/04_nextflow/README.qmd
+
+format:
+  html:
+    theme: cosmo
+    toc: true

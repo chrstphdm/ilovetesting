@@ -1,0 +1,86 @@
+---
+title: "Exercice 01 — Tests Bash avec bats"
+format: html
+toc: true
+---
+
+## Objectif
+
+Écrire des tests bats pour un script Bash qui valide un fichier FASTQ.
+
+## Contexte
+
+Avant de lancer un pipeline sur un fichier FASTQ, on veut vérifier :
+
+- que le fichier existe
+- qu'il n'est pas vide
+- que le format est valide (lignes commençant par `@`)
+
+Le script à tester est `pipelines/minimal/scripts/validate_fastq.sh`.
+
+## Données
+
+```bash
+training/data/sample.fastq    # FASTQ valide (100 reads)
+training/data/empty.fastq     # Fichier vide
+training/data/bad.fastq       # Format invalide
+```
+
+## Code de départ
+
+Le script `validate_fastq.sh` :
+
+```bash
+#!/usr/bin/env bash
+set -euo pipefail
+
+FILE="$1"
+
+[ -f "$FILE" ] || { echo "ERROR: file not found: $FILE"; exit 1; }
+[ -s "$FILE" ] || { echo "ERROR: file is empty: $FILE"; exit 1; }
+grep -q "^@" "$FILE" || { echo "ERROR: not a valid FASTQ: $FILE"; exit 2; }
+
+echo "OK: $FILE is a valid FASTQ"
+```
+
+## Exercice
+
+Compléter le fichier `tests/bats/test_validate_fastq.bats` :
+
+```bash
+#!/usr/bin/env bats
+
+SCRIPT="training/pipelines/minimal/scripts/validate_fastq.sh"
+DATA="training/data"
+
+@test "fichier valide → exit 0" {
+    # TODO : tester avec sample.fastq
+}
+
+@test "fichier vide → exit 1" {
+    # TODO : tester avec empty.fastq
+}
+
+@test "format invalide → exit 2" {
+    # TODO : tester avec bad.fastq
+}
+
+@test "fichier inexistant → exit 1" {
+    # TODO : tester avec un chemin qui n'existe pas
+}
+```
+
+## Résultat attendu
+
+```
+✓ fichier valide → exit 0
+✓ fichier vide → exit 1
+✓ format invalide → exit 2
+✓ fichier inexistant → exit 1
+
+4 tests, 0 failures
+```
+
+## Solution
+
+→ Voir [solution.qmd](solution.qmd)

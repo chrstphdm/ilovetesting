@@ -1,0 +1,60 @@
+---
+title: "Solution 01 — Tests Bash avec bats"
+format: html
+toc: true
+---
+
+## Solution complète
+
+```bash
+#!/usr/bin/env bats
+
+SCRIPT="training/pipelines/minimal/scripts/validate_fastq.sh"
+DATA="training/data"
+
+@test "fichier valide → exit 0" {
+    run bash "$SCRIPT" "$DATA/sample.fastq"
+    [ "$status" -eq 0 ]
+    [[ "$output" == *"OK"* ]]
+}
+
+@test "fichier vide → exit 1" {
+    run bash "$SCRIPT" "$DATA/empty.fastq"
+    [ "$status" -eq 1 ]
+    [[ "$output" == *"empty"* ]]
+}
+
+@test "format invalide → exit 2" {
+    run bash "$SCRIPT" "$DATA/bad.fastq"
+    [ "$status" -eq 2 ]
+    [[ "$output" == *"not a valid FASTQ"* ]]
+}
+
+@test "fichier inexistant → exit 1" {
+    run bash "$SCRIPT" "/tmp/does_not_exist.fastq"
+    [ "$status" -eq 1 ]
+    [[ "$output" == *"not found"* ]]
+}
+```
+
+## Points clés
+
+- `run` : exécute la commande et capture `$status` + `$output`
+- `[ "$status" -eq N ]` : vérifie le code de sortie
+- `[[ "$output" == *"..."* ]]` : vérifie le contenu du message
+
+## Pour aller plus loin
+
+- Tester le cas où `$1` n'est pas fourni
+- Ajouter un test sur le nombre de reads (multiple de 4)
+- Utiliser `setup` / `teardown` pour créer/nettoyer les fichiers temporaires :
+
+```bash
+setup() {
+    TMPFILE=$(mktemp /tmp/test_XXXXXX.fastq)
+}
+
+teardown() {
+    rm -f "$TMPFILE"
+}
+```

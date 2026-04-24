@@ -1,0 +1,40 @@
+---
+title: "ilovetesting"
+subtitle: "Formation aux tests dans les pipelines bioinformatiques"
+format: html
+---
+
+## Bienvenue
+
+Cette formation couvre l'écriture de tests pour les pipelines bioinformatiques
+en **Nextflow**, **Bash**, **Python** et **R**.
+
+## Parcours recommandé
+
+| Étape | Module | Outil | Durée |
+|-------|--------|-------|-------|
+| 1 | [Introduction](slides/01_intro.qmd) | — | 30 min |
+| 2 | [Concepts de testing](slides/02_testing_concepts.qmd) | — | 30 min |
+| 3 | [Exercice Bash](exercises/01_bash/README.qmd) | bats | 45 min |
+| 4 | [Exercice Python](exercises/02_python/README.qmd) | pytest | 45 min |
+| 5 | [Exercice R](exercises/03_r/README.qmd) | testthat | 45 min |
+| 6 | [nf-test en détail](slides/03_nf_test.qmd) | nf-test | 30 min |
+| 7 | [Exercice Nextflow](exercises/04_nextflow/README.qmd) | nf-test | 90 min |
+
+## Règles d'équipe
+
+- **Pas de merge sans test**
+- Chaque bug → un test qui l'aurait détecté
+- Chaque module Nextflow → un fichier `.nf.test`
+
+## Structure du repo
+
+```
+training/
+├── slides/        # Présentations revealjs
+├── exercises/     # Exercices guidés + corrections
+├── pipelines/     # Pipeline Nextflow exemple
+├── tests/         # Tests prêts à lancer
+├── data/          # Mini datasets synthétiques
+└── templates/     # Templates copiables
+```

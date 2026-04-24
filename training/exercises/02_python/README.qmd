@@ -1,0 +1,100 @@
+---
+title: "Exercice 02 — Tests Python avec pytest"
+format: html
+toc: true
+---
+
+## Objectif
+
+Tester une fonction Python qui parse et valide un fichier de comptage de gènes (TSV).
+
+## Contexte
+
+En RNA-seq, on produit des matrices de comptage (gènes × échantillons).
+Avant d'analyser, on veut s'assurer que :
+
+- le fichier existe et est lisible
+- les colonnes attendues sont présentes
+- il n'y a pas de valeurs négatives
+
+## Données
+
+```
+training/data/counts.tsv    # Matrice valide : 20 gènes × 4 échantillons
+training/data/bad_counts.tsv  # Colonne manquante + valeurs négatives
+```
+
+## Code de départ
+
+`training/pipelines/minimal/scripts/parse_counts.py` :
+
+```python
+import pandas as pd
+from pathlib import Path
+
+
+def load_counts(path: str) -> pd.DataFrame:
+    p = Path(path)
+    if not p.exists():
+        raise FileNotFoundError(f"File not found: {path}")
+    df = pd.read_csv(p, sep="\t", index_col=0)
+    return df
+
+
+def validate_counts(df: pd.DataFrame, required_cols: list[str]) -> None:
+    missing = [c for c in required_cols if c not in df.columns]
+    if missing:
+        raise ValueError(f"Missing columns: {missing}")
+    if (df < 0).any().any():
+        raise ValueError("Negative counts found")
+```
+
+## Exercice
+
+Compléter `tests/pytest/test_parse_counts.py` :
+
+```python
+import pytest
+import pandas as pd
+from pathlib import Path
+from training.pipelines.minimal.scripts.parse_counts import load_counts, validate_counts
+
+DATA = Path("training/data")
+
+
+def test_load_valid_file():
+    # TODO : vérifier que load_counts retourne un DataFrame
+    # et que le shape est correct (20 lignes, 4 colonnes)
+    pass
+
+
+def test_load_missing_file():
+    # TODO : vérifier que FileNotFoundError est levée
+    pass
+
+
+def test_validate_ok():
+    # TODO : vérifier qu'aucune exception n'est levée sur counts.tsv
+    pass
+
+
+def test_validate_missing_column():
+    # TODO : vérifier que ValueError est levée si une colonne manque
+    pass
+
+
+def test_validate_negative_values():
+    # TODO : vérifier que ValueError est levée sur bad_counts.tsv
+    pass
+```
+
+## Résultat attendu
+
+```
+tests/pytest/test_parse_counts.py .....  [100%]
+5 passed in 0.3s
+```
+
+## Solution
+
+→ Voir [solution.qmd](solution.qmd)

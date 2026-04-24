@@ -1,0 +1,29 @@
+name: ilovetesting
+
+channels:
+  - bioconda
+  - conda-forge
+  - defaults
+
+dependencies:
+  # Nextflow
+  - openjdk=17
+  - nextflow
+
+  # nf-test
+  - nf-test
+
+  # Bash testing
+  - bats-core
+
+  # Python
+  - python=3.11
+  - pandas
+  - pytest
+
+  # Quarto
+  - quarto
+
+  # R + testthat
+  - r-base=4.4
+  - r-testthat

@@ -1,0 +1,119 @@
+---
+title: "Exercice 04 — Tests Nextflow avec nf-test"
+format: html
+toc: true
+---
+
+## Objectif
+
+Écrire des tests nf-test pour le process `FASTQC` et le workflow `QC_TRIM`.
+
+## Contexte
+
+Le pipeline exemple (`pipelines/minimal/`) contient :
+
+- `modules/fastqc.nf` — process qui génère un rapport qualité HTML
+- `modules/trim.nf` — process qui filtre les reads de mauvaise qualité
+- `workflows/qc_trim.nf` — enchaîne FASTQC → TRIM
+
+## Données
+
+```
+training/data/sample.fastq   # 100 reads synthétiques
+```
+
+## Structure attendue des tests
+
+```
+pipelines/minimal/
+├── tests/
+│   ├── fastqc.nf.test        # ← à compléter
+│   └── qc_trim.nf.test       # ← à compléter
+```
+
+## Exercice — Partie 1 : test de process
+
+Compléter `tests/fastqc.nf.test` :
+
+```groovy
+nextflow_process {
+    name "Test FASTQC"
+    script "modules/fastqc.nf"
+    process "FASTQC"
+
+    test("reads valides → HTML produit") {
+        when {
+            process {
+                input[0] = [
+                    // TODO : définir le meta et le fichier d'entrée
+                ]
+            }
+        }
+        then {
+            // TODO : vérifier que le process a réussi
+            // TODO : vérifier que la sortie html existe
+            // TODO : vérifier le snapshot
+        }
+    }
+
+    test("reads vides → process échoue") {
+        when {
+            process {
+                input[0] = [
+                    // TODO
+                ]
+            }
+        }
+        then {
+            // TODO : vérifier que le process a échoué
+        }
+    }
+}
+```
+
+## Exercice — Partie 2 : test de workflow
+
+Compléter `tests/qc_trim.nf.test` :
+
+```groovy
+nextflow_workflow {
+    name "Test QC_TRIM"
+    script "workflows/qc_trim.nf"
+    workflow "QC_TRIM"
+
+    test("pipeline complet → bam et rapport produits") {
+        when {
+            workflow {
+                input[0] = Channel.of([
+                    // TODO
+                ])
+            }
+        }
+        then {
+            // TODO
+        }
+    }
+}
+```
+
+## Lancer les tests
+
+```bash
+cd training/pipelines/minimal
+nf-test test tests/fastqc.nf.test --verbose
+nf-test test  # tous les tests
+```
+
+## Résultat attendu
+
+```
+[nf-test] Running 2 tests in fastqc.nf.test
+  ✔ reads valides → HTML produit
+  ✔ reads vides → process échoue
+
+SUCCESS: Executed 2 tests in 12s
+```
+
+## Solution
+
+→ Voir [solution.qmd](solution.qmd)

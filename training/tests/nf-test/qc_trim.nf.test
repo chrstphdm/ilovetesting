@@ -1,0 +1,31 @@
+nextflow_workflow {
+    name "Test QC_TRIM workflow"
+    script "../../pipelines/minimal/workflows/qc_trim.nf"
+    workflow "QC_TRIM"
+
+    test("pipeline complet → HTML et reads trimés produits") {
+        when {
+            workflow {
+                input[0] = Channel.of([
+                    [id: "sample1", single_end: true],
+                    file("${projectDir}/../data/sample.fastq")
+                ])
+            }
+        }
+        then {
+            assert workflow.success
+            assert workflow.out.html.size() == 1
+            assert workflow.out.reads.size() == 1
+            assert workflow.out.report.size() == 1
+
+            def trim_report = workflow.out.report[0][1]
+            assert trim_report.text.contains("input_reads")
+            assert trim_report.text.contains("output_reads")
+
+            assert snapshot(
+                workflow.out.stats,
+                workflow.out.report
+            ).match()
+        }
+    }
+}
