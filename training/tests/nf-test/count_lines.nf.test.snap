@@ -1,0 +1,19 @@
+{
+    "TSV valide \u2192 count et summary produits": {
+        "content": [
+            [
+                [
+                    {
+                        "id": "records"
+                    },
+                    "records.count:md5,dbbf8220893d497d403bb9cdf49db7a4"
+                ]
+            ]
+        ],
+        "meta": {
+            "nf-test": "0.9.3",
+            "nextflow": "25.10.2"
+        },
+        "timestamp": "2026-04-27T13:18:22.371022861"
+    }
+}

@@ -6,70 +6,64 @@ toc: true
 
 ## Objectif
 
-Écrire des tests nf-test pour le process `FASTQC` et le workflow `QC_TRIM`.
+Écrire des tests nf-test pour le process `COUNT_LINES` et le workflow `PROCESS_TABLE`.
 
 ## Contexte
 
 Le pipeline exemple (`pipelines/minimal/`) contient :
 
-- `modules/fastqc.nf` — process qui génère un rapport qualité HTML
-- `modules/trim.nf` — process qui filtre les reads de mauvaise qualité
-- `workflows/qc_trim.nf` — enchaîne FASTQC → TRIM
+- `modules/count_lines.nf` — compte les lignes d'un TSV, produit un fichier `.count` et un `.summary.txt`
+- `modules/summarise.nf` — calcule mean/n par groupe, produit un `.stats.tsv`
+- `workflows/process_table.nf` — enchaîne COUNT_LINES → SUMMARISE
 
 ::: {.callout-note}
 **Ce pipeline est une simulation pédagogique.**
 
-Le module `FASTQC` ne lance pas le vrai outil FastQC. Il génère un HTML et un fichier de stats via un script bash. Les assertions que vous écrirez sur le contenu de ces fichiers fonctionnent parce que ce contenu est entièrement sous notre contrôle.
-
-En production, vous testerez des **propriétés observables** d'un vrai outil (nombre de reads, format du rapport, code de sortie) et non le texte exact codé en dur dans un script bash. La logique de test reste identique — la distinction est importante pour comprendre ce que vos assertions prouvent réellement.
+Les modules utilisent des scripts bash (awk, wc). En production, vous testeriez des **propriétés observables** d'un vrai outil (nombre de lignes, format de sortie, code de sortie). La logique de test reste identique — la distinction est importante pour comprendre ce que vos assertions prouvent réellement.
 :::
 
 ## Données
 
 ```
-training/data/sample.fastq   # 100 reads synthétiques
-```
-
-## Structure attendue des tests
-
-```
-pipelines/minimal/
-├── tests/
-│   ├── fastqc.nf.test        # ← à compléter
-│   └── qc_trim.nf.test       # ← à compléter
+training/data/records.tsv   # 20 lignes (id, group, value)
+training/data/empty.tsv     # En-tête seul, aucune donnée
 ```
 
 ## Exercice — Partie 1 : test de process
 
-Compléter `tests/fastqc.nf.test` :
+Compléter `training/tests/nf-test/count_lines.nf.test` :
 
 ```groovy
 nextflow_process {
-    name "Test FASTQC"
-    script "modules/fastqc.nf"
-    process "FASTQC"
+    name "Test COUNT_LINES"
+    script "../../pipelines/minimal/modules/count_lines.nf"
+    process "COUNT_LINES"
 
-    test("reads valides → HTML produit") {
+    test("TSV valide → count produit") {
         when {
             process {
+                """
                 input[0] = [
                     // TODO : définir le meta et le fichier d'entrée
                 ]
+                """
             }
         }
         then {
             // TODO : vérifier que le process a réussi
-            // TODO : vérifier que la sortie html existe
+            // TODO : vérifier que count == 20
             // TODO : vérifier le snapshot
         }
     }
 
-    test("reads vides → process échoue") {
+    test("fichier vide → process échoue") {
         when {
             process {
+                """
                 input[0] = [
                     // TODO
                 ]
+                """
             }
         }
         then {
@@ -81,24 +75,26 @@ nextflow_process {
 
 ## Exercice — Partie 2 : test de workflow
 
-Compléter `tests/qc_trim.nf.test` :
+Compléter `training/tests/nf-test/process_table.nf.test` :
 
 ```groovy
 nextflow_workflow {
-    name "Test QC_TRIM"
-    script "workflows/qc_trim.nf"
-    workflow "QC_TRIM"
+    name "Test PROCESS_TABLE"
+    script "../../pipelines/minimal/workflows/process_table.nf"
+    workflow "PROCESS_TABLE"
 
-    test("pipeline complet → bam et rapport produits") {
+    test("TSV valide → count et stats produits") {
         when {
             workflow {
+                """
                 input[0] = Channel.of([
                     // TODO
                 ])
+                """
             }
         }
         then {
-            // TODO
+            // TODO : vérifier succès, taille des sorties, valeur du count
         }
     }
 }
@@ -107,19 +103,22 @@ nextflow_workflow {
 ## Lancer les tests
 
 ```bash
-cd training/pipelines/minimal
-nf-test test tests/fastqc.nf.test --verbose
-nf-test test  # tous les tests
+cd training/tests/nf-test
+nf-test test count_lines.nf.test --verbose
+nf-test test --verbose   # tous les tests
 ```
 
 ## Résultat attendu
 
 ```
-[nf-test] Running 2 tests in fastqc.nf.test
-  ✔ reads valides → HTML produit
-  ✔ reads vides → process échoue
+Test COUNT_LINES
+  ✔ TSV valide → count et summary produits
+  ✔ fichier vide (en-tête seul) → process échoue
 
-SUCCESS: Executed 2 tests in 12s
+Test PROCESS_TABLE workflow
+  ✔ TSV valide → count, summary et stats produits
+
+SUCCESS: Executed 3 tests
 ```
 
 ## Solution

@@ -1,0 +1,45 @@
+nextflow_workflow {
+    name "Test PROCESS_TABLE workflow"
+    script "../../pipelines/minimal/workflows/process_table.nf"
+    workflow "PROCESS_TABLE"
+
+    test("TSV valide → count, summary et stats produits") {
+        when {
+            workflow {
+                """
+                input[0] = Channel.of([
+                    [id: "records"],
+                    file("${projectDir}/../../data/records.tsv")
+                ])
+                """
+            }
+        }
+        then {
+            assert workflow.success
+
+            // ── Assertions structurelles ──────────────────────────────
+            assert workflow.out.count.size() == 1
+            assert workflow.out.summary.size() == 1
+            assert workflow.out.stats.size() == 1
+
+            // ── Assertions métier — count ─────────────────────────────
+            def count_val = path(workflow.out.count[0][1]).text.trim().toInteger()
+            assert count_val == 20
+
+            // ── Assertions métier — stats par groupe ──────────────────
+            def stats_lines = path(workflow.out.stats[0][1]).readLines()
+            assert stats_lines.size() == 3   // header + groupe A + groupe B
+            assert stats_lines[0] == "group\tmean\tn"
+            assert stats_lines[1].startsWith("A\t")
+            assert stats_lines[2].startsWith("B\t")
+            assert stats_lines[1].split("\t")[2].toInteger() == 10
+            assert stats_lines[2].split("\t")[2].toInteger() == 10
+
+            // ── Non-régression via snapshot ───────────────────────────
+            assert snapshot(
+                workflow.out.count,
+                workflow.out.stats
+            ).match()
+        }
+    }
+}
