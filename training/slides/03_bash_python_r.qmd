@@ -49,15 +49,18 @@ records.tsv
 ## bats — Bash
 
 ```bash
-@test "fichier valide → exit 0 et 20 records" {
-    run bash validate_records.sh records.tsv   # Act
-    [ "$status" -eq 0 ]                        # Assert
-    [[ "$output" == *"20 records"* ]]          # Assert
+DATA="training/data"
+
+@test "fichier valide → exit 0 et message avec count" {
+    run bash validate_records.sh "$DATA/records.tsv"
+    [ "$status" -eq 0 ]                     # code de sortie
+    [[ "$output" =~ "20 records" ]]         # contenu — pas seulement le code
 }
 
-@test "fichier vide → exit 1" {
-    run bash validate_records.sh empty.tsv     # Act
-    [ "$status" -eq 1 ]                        # Assert
+@test "valeur non numérique → exit 1 et message d'erreur" {
+    run bash validate_records.sh "$DATA/invalid_records.tsv"
+    [ "$status" -eq 1 ]
+    [[ "$output" =~ "ERROR" ]]              # vérifier le message explicite
 }
 ```
 
@@ -66,14 +69,18 @@ records.tsv
 ## pytest — Python
 
 ```python
-def test_load_valid_records():
-    df = load_records(DATA / "records.tsv")              # Act
-    assert df.shape == (20, 3)                           # Assert
-    assert list(df.columns) == ["id", "group", "value"]  # Assert
+def test_ids_uniques_obligatoires():
+    df = load_records(DATA / "duplicated_records.tsv")   # GIVEN
+    with pytest.raises(ValueError, match="Duplicate"):   # THEN — type + message
+        validate_records(df)                             # WHEN
 
-def test_load_empty_file():
-    with pytest.raises(ValueError):                      # Assert
-        load_records(DATA / "empty.tsv")                 # Act
+@pytest.mark.parametrize("path,exc", [
+    ("empty.tsv",   ValueError),
+    ("missing.tsv", FileNotFoundError),
+])
+def test_inputs_invalides(path, exc):
+    with pytest.raises(exc):           # même test, inputs multiples
+        load_records(DATA / path)
 ```
 
 ---
@@ -81,26 +88,27 @@ def test_load_empty_file():
 ## testthat — R
 
 ```r
-test_that("fichier valide — 20 lignes chargées", {
-    df <- load_records("data/records.tsv")             # Act
-    expect_equal(nrow(df), 20)                         # Assert
-    expect_equal(names(df), c("id","group","value"))   # Assert
+test_that("colonne manquante → erreur explicite", {
+    bad <- data.frame(id="S01", group="A")               # GIVEN
+    expect_error(compute_stats(bad), "Missing columns")  # WHEN + THEN
 })
 
-test_that("fichier vide — erreur levée", {
-    expect_error(load_records("data/empty.tsv"))       # Assert
+test_that("résultat a les bonnes colonnes et un invariant", {
+    result <- compute_stats(load_records("data/records.tsv"))
+    expect_named(result, c("group", "mean", "sd"))  # structure exacte
+    expect_true(all(result$mean >= 0))              # invariant métier
 })
 ```
 
 ---
 
-## Même règle, trois syntaxes
+## Ce que chaque framework apporte
 
-| Framework | Happy path | Edge case (fichier vide) |
-|-----------|-----------|--------------------------|
-| bats | `[ "$status" -eq 0 ]` | `[ "$status" -eq 1 ]` |
-| pytest | `assert df.shape == (20, 3)` | `pytest.raises(ValueError)` |
-| testthat | `expect_equal(nrow(df), 20)` | `expect_error(...)` |
+| Framework | Spécificité montrée |
+|-----------|---------------------|
+| bats | `$output` — tester le message, pas seulement `$status` |
+| pytest | `raises(match=)` — exception typée et `parametrize` — N cas, 1 test |
+| testthat | `expect_named` — structure et `expect_error(pattern)` — message |
 
 ---
 
