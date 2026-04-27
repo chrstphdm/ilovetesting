@@ -8,6 +8,19 @@ toc: true
 
 Tester une fonction Python qui charge et valide un fichier TSV de données tabulaires.
 
+## Référence rapide — pytest
+
+Documentation : <https://docs.pytest.org/en/stable/>
+
+| Élément | Syntaxe |
+|---------|---------|
+| Assertion simple | `assert expr` |
+| Exception attendue | `with pytest.raises(ValueError):` |
+| Match sur le message | `pytest.raises(ValueError, match="texte")` |
+| Approximation numérique | `assert val == pytest.approx(3.14)` |
+
+---
+
 ## Contexte
 
 Avant de traiter un fichier de données, on veut s'assurer que :

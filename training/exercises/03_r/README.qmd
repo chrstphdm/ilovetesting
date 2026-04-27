@@ -8,6 +8,19 @@ toc: true
 
 Tester une fonction R qui calcule des statistiques par groupe sur un fichier TSV.
 
+## Référence rapide — testthat
+
+Documentation : <https://testthat.r-lib.org/>
+
+| Élément | Syntaxe |
+|---------|---------|
+| Égalité | `expect_equal(a, b)` |
+| Erreur attendue | `expect_error(expr)` |
+| Match sur message | `expect_error(expr, "pattern")` |
+| Vrai / faux | `expect_true(expr)` / `expect_false(expr)` |
+
+---
+
 ## Contexte
 
 La fonction `compute_stats()` lit un data.frame avec colonnes `id`, `group`, `value`
