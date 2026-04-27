@@ -51,6 +51,8 @@ website:
             href: container-policy.qmd
           - text: "FAQ"
             href: faq.qmd
+          - text: "Références"
+            href: references.qmd
 
 format:
   html:

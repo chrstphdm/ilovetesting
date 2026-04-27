@@ -56,6 +56,18 @@ nextflow_process {
 
 ---
 
+## Mapping des niveaux de test Nextflow
+
+```
+process COUNT_LINES { ... }    ← test unitaire   (nextflow_process)
+          ↓
+workflow PROCESS_TABLE { ... } ← test intégration (nextflow_workflow)
+          ↓
+pipeline main.nf               ← test fonctionnel (nextflow_pipeline)
+```
+
+---
+
 ## Les 3 niveaux de test
 
 ```groovy

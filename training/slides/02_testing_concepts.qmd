@@ -50,6 +50,31 @@ run bash validate_records.sh /tmp/missing.tsv
 
 ---
 
+## Le bug que Python ne signale pas
+
+**Bug 2 — comparaison de scores numériques lus comme chaînes**
+
+```python
+# Scores lus depuis un fichier texte → type str par défaut
+"80.6"  > "407.9"   # → True   (ordre alphabétique)
+ 80.6   >  407.9    # → False  (ordre numérique)
+```
+
+. . .
+
+Le programme ne plante pas — il sélectionne le mauvais "meilleur hit".
+
+```python
+# Test minimal
+assert best_hit(["407.9", "80.6"]) == pytest.approx(407.9)
+```
+
+::: {.callout-tip}
+Toujours convertir les valeurs numériques lues depuis un fichier avant de les comparer.
+:::
+
+---
+
 ## Tests rapides vs tests lents
 
 | Rapides (< 1 min) | Lents (> 1 min) |

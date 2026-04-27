@@ -8,27 +8,47 @@ format:
     code-block-height: 400px
 ---
 
-## Le danger le plus courant
+## Un pipeline peut réussir… et produire une sortie fausse
 
-Le pipeline passe. Le rapport est généré.
+Cas réel — annotation KEGG / KOfam
 
-. . .
-
-Mais trois lignes ont disparu après une jointure de table.
+Deux outils annotent les mêmes gènes avec la même base de données KOfam.
 
 . . .
 
-Personne ne le voit avant la livraison.
+Résultat attendu : des différences limitées, explicables par la méthode.
+Résultat observé : des annotations incohérentes — jusqu'à 65 % de faux positifs.
+
+. . .
+
+Le pipeline tourne. Les fichiers sont générés. **Aucune erreur visible.**
+
+::: {.notes}
+Le blog anvi'o (2022) décrit une comparaison entre anvi'o et MicrobeAnnotator pour annoter des KEGG Orthologs à partir de KOfam. Les auteurs s'attendaient à des différences méthodologiques, mais ont observé des résultats très incohérents. L'investigation a révélé deux erreurs de code : (1) un filtrage utilisant le seuil du premier KO d'un lot plutôt que le seuil propre à chaque KO, (2) une comparaison de scores numériques lus comme chaînes de caractères. Source : https://anvio.org/blog/bioinformatics-bugs/
+:::
 
 ---
 
-## Le vrai problème
+## Le test minimal : protéger la règle métier
 
-::: {.callout-warning}
-Le danger principal n'est pas l'erreur visible.
+**Bug 1 — filtrage avec le mauvais seuil de bit score**
 
-**Le danger principal est la régression silencieuse.**
-:::
+Règle : un hit ne passe le filtre que si son score ≥ seuil du modèle.
+
+```
+KO_A  threshold = 100,  score = 120  → conservé  ✓
+KO_B  threshold = 500,  score =  80  → rejeté    ✗
+```
+
+. . .
+
+```python
+# Mauvais test
+assert os.path.exists("output.filtered")
+
+# Bon test — protège la règle métier
+assert all(hit.score >= threshold[hit.ko] for hit in kept_hits)
+```
 
 ---
 
@@ -38,18 +58,6 @@ Le danger principal n'est pas l'erreur visible.
 - **Documentation vivante** — le test dit ce que le code est censé faire
 - **Refactoring sans peur** — si les tests passent, ça marche
 - **CI possible** — automatisation réelle
-
----
-
-## Mapping Nextflow
-
-```
-process FASTQC { ... }        ← unit test (nf-test)
-      ↓
-workflow QC_WORKFLOW { ... }  ← integration test (nf-test)
-      ↓
-pipeline main.nf              ← functional test (nf-test)
-```
 
 ---
 
@@ -107,4 +115,4 @@ Chaque module → un fichier `.nf.test`.
 
 Rendez-vous dans `exercises/01_bash/`
 
-Objectif : écrire votre premier test bats sur un script Bash de validation de fichier FASTQ.
+Objectif : écrire des tests bats sur `validate_records.sh`, un script de validation de fichier TSV.
