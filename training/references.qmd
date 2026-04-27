@@ -1,0 +1,60 @@
+---
+title: "Références"
+format:
+  html:
+    toc: true
+---
+
+## Sources bioinformatiques
+
+### anvi'o — Bugs dans les logiciels bioinformatiques
+
+Eren AM et al. (2022). "Coding mistakes in bioinformatics, their consequences for science, and how to avoid them."
+<https://anvio.org/blog/bioinformatics-bugs/>
+
+Ce billet décrit deux bugs trouvés dans MicrobeAnnotator lors d'une comparaison avec anvi'o pour l'annotation KEGG/KOfam :
+
+1. **Filtrage par seuil de bit score** — la fonction `hmmer_filter()` utilisait le seuil du premier KO d'un lot pour filtrer tous les hits du lot, au lieu du seuil propre à chaque KO.
+2. **Comparaison alphabétique de scores numériques** — la fonction `best_match_selector()` comparait les scores comme des chaînes de caractères, produisant `"80.6" > "407.9" → True`.
+
+Ces deux bugs produisaient des sorties scientifiquement incorrectes sans aucun message d'erreur.
+
+### MicrobeAnnotator — Issue #94
+
+Cruiz Perez L. (2022). GitHub issue — correction des deux bugs décrits ci-dessus.
+<https://github.com/cruizperez/MicrobeAnnotator/issues/94>
+
+---
+
+## Sources pédagogiques
+
+### nf-test
+
+Framework de référence pour tester les pipelines Nextflow.
+<https://www.nf-test.com/>
+
+Utilisé comme source d'inspiration pour les bonnes pratiques de test Nextflow (niveaux process / workflow / pipeline, snapshots SHA256).
+
+### bats-core
+
+Framework de test pour scripts Bash.
+<https://bats-core.readthedocs.io/>
+
+### pytest
+
+Framework de test pour Python.
+<https://docs.pytest.org/>
+
+### testthat
+
+Framework de test pour R.
+<https://testthat.r-lib.org/>
+
+### nf-core — Pipeline standards
+
+Source d'inspiration sélective pour les conventions de structure de pipeline Nextflow.
+<https://nf-co.re/>
+
+::: {.callout-note}
+nf-core est une **référence sélective**, pas un framework obligatoire dans cette formation.
+:::

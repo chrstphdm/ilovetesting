@@ -2,6 +2,11 @@ process FASTQC {
     tag "$meta.id"
     label 'process_low'
 
+    // Container declaration — ignored unless running with -profile apptainer or -profile docker.
+    // In production, the script block below would call the real `fastqc` binary.
+    // Here it is a pedagogical simulation that runs correctly inside or outside the container.
+    container 'biocontainers/fastqc:0.12.1--hdfd78af_0'
+
     input:
     tuple val(meta), path(reads)
 
@@ -12,7 +17,8 @@ process FASTQC {
     script:
     def prefix = meta.id
     """
-    # Simulation FastQC : compte les reads et génère un rapport HTML minimal
+    # Pedagogical simulation: counts reads and produces a minimal HTML report.
+    # In a real pipeline, replace with: fastqc --outdir . ${reads}
     total_reads=\$(awk 'NR%4==1' ${reads} | wc -l)
 
     [ "\$total_reads" -gt 0 ] || { echo "ERROR: empty FASTQ"; exit 1; }

@@ -9,31 +9,37 @@ toc: true
 ```bash
 #!/usr/bin/env bats
 
-SCRIPT="training/pipelines/minimal/scripts/validate_fastq.sh"
-DATA="training/data"
+SCRIPT="${BATS_TEST_DIRNAME}/../../pipelines/minimal/scripts/validate_records.sh"
+DATA="${BATS_TEST_DIRNAME}/../../data"
 
-@test "fichier valide → exit 0" {
-    run bash "$SCRIPT" "$DATA/sample.fastq"
+@test "fichier valide → exit 0 et 20 records" {
+    run bash "$SCRIPT" "$DATA/records.tsv"
     [ "$status" -eq 0 ]
     [[ "$output" == *"OK"* ]]
+    [[ "$output" == *"20 records"* ]]
 }
 
-@test "fichier vide → exit 1" {
-    run bash "$SCRIPT" "$DATA/empty.fastq"
+@test "fichier vide (en-tête seul) → exit 1" {
+    run bash "$SCRIPT" "$DATA/empty.tsv"
     [ "$status" -eq 1 ]
     [[ "$output" == *"empty"* ]]
 }
 
-@test "format invalide → exit 2" {
-    run bash "$SCRIPT" "$DATA/bad.fastq"
-    [ "$status" -eq 2 ]
-    [[ "$output" == *"not a valid FASTQ"* ]]
+@test "valeur non numérique → exit 1" {
+    run bash "$SCRIPT" "$DATA/invalid_records.tsv"
+    [ "$status" -eq 1 ]
 }
 
-@test "fichier inexistant → exit 1" {
-    run bash "$SCRIPT" "/tmp/does_not_exist.fastq"
+@test "fichier inexistant → exit 1 et message" {
+    run bash "$SCRIPT" "/tmp/does_not_exist_xyz.tsv"
     [ "$status" -eq 1 ]
     [[ "$output" == *"not found"* ]]
+}
+
+@test "aucun argument → exit 1 et usage" {
+    run bash "$SCRIPT"
+    [ "$status" -eq 1 ]
+    [[ "$output" == *"usage"* ]]
 }
 ```
 
@@ -45,13 +51,12 @@ DATA="training/data"
 
 ## Pour aller plus loin
 
-- Tester le cas où `$1` n'est pas fourni
-- Ajouter un test sur le nombre de reads (multiple de 4)
-- Utiliser `setup` / `teardown` pour créer/nettoyer les fichiers temporaires :
+- Tester avec `duplicated_records.tsv` si le script détecte les doublons
+- Utiliser `setup` / `teardown` pour créer/nettoyer des fichiers temporaires :
 
 ```bash
 setup() {
-    TMPFILE=$(mktemp /tmp/test_XXXXXX.fastq)
+    TMPFILE=$(mktemp /tmp/test_XXXXXX.tsv)
 }
 
 teardown() {

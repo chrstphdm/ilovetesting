@@ -10,66 +10,86 @@ toc: true
 import pytest
 import pandas as pd
 from pathlib import Path
-from training.pipelines.minimal.scripts.parse_counts import load_counts, validate_counts
+import sys
 
-DATA = Path("training/data")
-SAMPLES = ["sample1", "sample2", "sample3", "sample4"]
+sys.path.insert(0, str(Path(__file__).parents[2] / "pipelines" / "minimal" / "scripts"))
+from parse_records import load_records, validate_records
+
+DATA = Path(__file__).parents[2] / "data"
 
 
 def test_load_valid_file():
-    df = load_counts(DATA / "counts.tsv")
+    df = load_records(DATA / "records.tsv")
     assert isinstance(df, pd.DataFrame)
-    assert df.shape == (20, 4)
-    assert list(df.columns) == SAMPLES
+    assert df.shape == (20, 3)
+    assert list(df.columns) == ["id", "group", "value"]
 
 
 def test_load_missing_file():
     with pytest.raises(FileNotFoundError, match="not found"):
-        load_counts("/tmp/does_not_exist.tsv")
+        load_records("/tmp/does_not_exist_xyz.tsv")
+
+
+def test_load_empty_file():
+    with pytest.raises(ValueError, match="no data rows"):
+        load_records(DATA / "empty.tsv")
 
 
 def test_validate_ok():
-    df = load_counts(DATA / "counts.tsv")
-    validate_counts(df, SAMPLES)  # ne doit pas lever d'exception
+    df = load_records(DATA / "records.tsv")
+    validate_records(df)
 
 
-def test_validate_missing_column():
-    df = load_counts(DATA / "counts.tsv")
-    with pytest.raises(ValueError, match="Missing columns"):
-        validate_counts(df, SAMPLES + ["phantom_sample"])
+def test_validate_non_numeric_value():
+    df = load_records(DATA / "invalid_records.tsv")
+    with pytest.raises(ValueError, match="numeric"):
+        validate_records(df)
 
 
-def test_validate_negative_values():
-    df = load_counts(DATA / "bad_counts.tsv")
-    with pytest.raises(ValueError, match="Negative counts"):
-        validate_counts(df, list(df.columns))
+def test_validate_duplicate_ids():
+    df = load_records(DATA / "duplicated_records.tsv")
+    with pytest.raises(ValueError, match="Duplicate"):
+        validate_records(df)
+
+
+def test_all_values_non_negative():
+    df = load_records(DATA / "records.tsv")
+    assert (df["value"] >= 0).all()
 ```
 
 ## Points clés
 
 - `pytest.raises(ExcType, match="...")` : vérifie type ET message de l'exception
-- Fixture `DATA` en haut du fichier : chemin centralisé, facile à changer
-- `isinstance(df, pd.DataFrame)` : vérifier le type de retour, pas seulement l'absence d'erreur
+- `isinstance(df, pd.DataFrame)` : vérifier le type de retour
+- Invariant métier : `(df["value"] >= 0).all()` — propriété qui doit toujours être vraie
 
 ## Patterns avancés
 
-### Fixtures pytest
+### Fixture pytest
 
 ```python
 @pytest.fixture
 def valid_df():
-    return load_counts(DATA / "counts.tsv")
+    return load_records(DATA / "records.tsv")
 
 
 def test_validate_ok(valid_df):
-    validate_counts(valid_df, SAMPLES)
+    validate_records(valid_df)
+
+
+def test_all_values_non_negative(valid_df):
+    assert (valid_df["value"] >= 0).all()
 ```
 
 ### Parametrize
 
 ```python
-@pytest.mark.parametrize("bad_col", ["phantom", "sample99", ""])
-def test_validate_missing_column(valid_df, bad_col):
+@pytest.mark.parametrize("bad_file", [
+    "invalid_records.tsv",
+    "duplicated_records.tsv",
+])
+def test_validate_rejects_bad_data(bad_file):
+    df = load_records(DATA / bad_file)
     with pytest.raises(ValueError):
-        validate_counts(valid_df, SAMPLES + [bad_col])
+        validate_records(df)
 ```

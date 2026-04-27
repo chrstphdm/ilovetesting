@@ -1,0 +1,84 @@
+---
+title: "Exercice 05 — Metamorphic testing"
+format: html
+toc: true
+---
+
+## Objectif
+
+Comprendre et appliquer le **metamorphic testing** à un pipeline bioinformatique.
+
+## Principe
+
+Le metamorphic testing résout un problème fondamental : **comment vérifier qu'un résultat est correct quand on ne connaît pas la réponse attendue ?**
+
+Plutôt que de vérifier une valeur absolue, on vérifie une **relation** entre deux exécutions :
+
+```
+f(input_A) ─── relation attendue ──→ f(input_B)
+```
+
+Si la relation n'est pas respectée, il y a un bug — même sans connaître le bon résultat.
+
+## Relations métamorphiques en bioinfo
+
+| Relation (MR) | Input A | Input B | Relation attendue |
+|---------------|---------|---------|-------------------|
+| **Permutation** | 100 reads | mêmes 100 reads, ordre aléatoire | même nombre de reads en sortie |
+| **Duplication** | 100 reads | 200 reads (× 2) | exactement 2× les reads en sortie |
+| **Sous-ensemble** | 100 reads | 50 premiers reads | sortie ≤ 100 reads |
+
+## Données disponibles
+
+```
+training/data/sample.fastq          # 100 reads
+training/data/sample_shuffled.fastq # mêmes 100 reads, ordre aléatoire
+training/data/sample_doubled.fastq  # 200 reads (sample × 2)
+```
+
+## Code de départ
+
+```bash
+#!/usr/bin/env bats
+
+DATA="training/data"
+count_reads() { awk 'NR%4==1' "$1" | wc -l; }
+
+@test "MR1 — permutation : reads réordonnés → même nombre de reads valides" {
+    # TODO :
+    # 1. compter les reads dans sample.fastq
+    # 2. compter les reads dans sample_shuffled.fastq
+    # 3. vérifier que les deux counts sont égaux
+}
+
+@test "MR2 — duplication : 2× l'input → exactement 2× les reads" {
+    # TODO :
+    # 1. compter les reads dans sample.fastq
+    # 2. compter les reads dans sample_doubled.fastq
+    # 3. vérifier que doubled = original × 2
+}
+```
+
+## Exercice
+
+Compléter le fichier `training/tests/bats/test_metamorphic.bats`.
+
+## Résultat attendu
+
+```
+✓ MR1 — permutation : reads réordonnés → même nombre de reads valides
+✓ MR2 — duplication : 2× l'input → exactement 2× les reads
+```
+
+## Pourquoi c'est utile ?
+
+Dans nos pipelines, on ne connaît pas toujours la "bonne réponse" sur des données réelles.
+Le metamorphic testing permet de détecter des bugs sans oracle — par exemple :
+
+- un outil de trimming qui perd des reads selon l'ordre d'entrée
+- un comptage qui change selon le tri du fichier BAM
+- une normalisation qui produit des résultats différents sur un sous-ensemble
+
+## Solution
+
+→ Voir [solution.qmd](solution.qmd)

@@ -1,12 +1,12 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
-include { QC_TRIM } from './workflows/qc_trim'
+include { PROCESS_TABLE } from './workflows/process_table'
 
 workflow {
-    reads = Channel
+    table = Channel
         .fromPath(params.input)
-        .map { f -> [[id: f.simpleName, single_end: true], f] }
+        .map { f -> [[id: f.simpleName], f] }
 
-    QC_TRIM(reads)
+    PROCESS_TABLE(table)
 }

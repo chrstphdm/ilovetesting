@@ -1,0 +1,133 @@
+---
+title: "Tester Bash, Python et R"
+subtitle: "Formation testing — Module 03"
+format:
+  revealjs:
+    theme: simple
+    slide-number: true
+    code-block-height: 400px
+---
+
+## Objectif
+
+Appliquer la même logique de test dans trois langages différents,
+sur un exemple commun : `records.tsv`.
+
+---
+
+## Pourquoi tester les scripts hors Nextflow ?
+
+Les scripts `validate_records.sh`, `parse_records.py`, `stats_records.R` :
+
+- sont appelés par le pipeline
+- peuvent casser silencieusement
+- sont réutilisés dans plusieurs projets
+
+. . .
+
+**Un bug dans un script = un bug dans le pipeline.**
+
+---
+
+## Le dataset commun
+
+```
+records.tsv
+┌─────┬───────┬───────┐
+│ id  │ group │ value │
+├─────┼───────┼───────┤
+│ S01 │ A     │  12   │
+│ S02 │ B     │  45   │
+│ ... │ ...   │  ...  │
+│ S20 │ B     │  88   │
+└─────┴───────┴───────┘
+20 lignes · 2 groupes · valeurs numériques positives
+```
+
+---
+
+## bats — Bash
+
+```bash
+@test "fichier valide → exit 0 et 20 records" {
+    run bash validate_records.sh records.tsv   # Act
+    [ "$status" -eq 0 ]                        # Assert
+    [[ "$output" == *"20 records"* ]]          # Assert
+}
+
+@test "fichier vide → exit 1" {
+    run bash validate_records.sh empty.tsv     # Act
+    [ "$status" -eq 1 ]                        # Assert
+}
+```
+
+---
+
+## pytest — Python
+
+```python
+def test_load_valid_file():
+    df = load_records(DATA / "records.tsv")    # Act
+    assert df.shape == (20, 3)                 # Assert
+    assert list(df.columns) == ["id", "group", "value"]
+
+def test_validate_duplicate_ids():
+    df = load_records(DATA / "duplicated_records.tsv")
+    with pytest.raises(ValueError, match="Duplicate"):  # Assert
+        validate_records(df)                            # Act
+```
+
+---
+
+## testthat — R
+
+```r
+test_that("moyenne par groupe calculée correctement", {
+    result <- compute_stats(make_records())       # Act
+    expect_equal(result$mean[result$group == "A"], 30)  # Assert
+    expect_equal(result$mean[result$group == "B"], 40)
+})
+
+test_that("erreur si colonne manquante", {
+    bad_df <- data.frame(id = "S01", group = "A")
+    expect_error(compute_stats(bad_df), "Missing columns")
+})
+```
+
+---
+
+## Même règle, trois syntaxes
+
+| Framework | Cas d'erreur attendu | Cas limite |
+|-----------|---------------------|------------|
+| bats | `[ "$status" -ne 0 ]` | fichier vide, absent |
+| pytest | `pytest.raises(ValueError)` | doublons, valeurs négatives |
+| testthat | `expect_error(...)` | colonne manquante, df vide |
+
+---
+
+## Règle à retenir
+
+::: {.callout-important}
+**Tout script appelé par un workflow doit pouvoir être testé hors du workflow.**
+
+Si ce n'est pas testable seul, le script fait trop de choses.
+:::
+
+---
+
+## Message à retenir
+
+::: {.callout-important}
+La syntaxe change. La logique ne change pas.
+
+Tester les invariants métier (`>= 0`, colonnes attendues) autant que le comportement.
+:::
+
+---
+
+## Exercices → Modules 01, 02, 03
+
+- `exercises/01_bash/` — bats sur `validate_records.sh`
+- `exercises/02_python/` — pytest sur `parse_records.py`
+- `exercises/03_r/` — testthat sur `stats_records.R`

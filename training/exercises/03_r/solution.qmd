@@ -8,63 +8,65 @@ toc: true
 
 ```r
 library(testthat)
-source("training/pipelines/minimal/scripts/stats.R")
 
-# Données de test réutilisables
-make_counts <- function() {
+this_dir <- tryCatch(
+  dirname(normalizePath(sys.frame(1)$ofile)),
+  error = function(e) getwd()
+)
+source(file.path(this_dir, "..", "..", "pipelines", "minimal", "scripts", "stats_records.R"))
+
+make_records <- function() {
   data.frame(
-    s1 = c(10, 0, 5),
-    s2 = c(20, 0, 5),
-    s3 = c(30, 0, 5),
-    row.names = c("geneA", "geneB", "geneC")
+    id    = c("S01", "S02", "S03", "S04", "S05", "S06"),
+    group = c("A", "B", "A", "B", "A", "B"),
+    value = c(10, 20, 30, 40, 50, 60),
+    stringsAsFactors = FALSE
   )
 }
 
 test_that("résultat est un data.frame avec les bonnes colonnes", {
-  result <- compute_stats(make_counts())
+  result <- compute_stats(make_records())
   expect_s3_class(result, "data.frame")
-  expect_named(result, c("gene", "mean", "sd", "zero_variance"))
-  expect_equal(nrow(result), 3)
+  expect_named(result, c("group", "mean", "sd"))
+  expect_equal(nrow(result), 2)
 })
 
-test_that("moyenne calculée correctement", {
-  result <- compute_stats(make_counts())
-  expect_equal(result$mean[result$gene == "geneA"], 20)
-  expect_equal(result$mean[result$gene == "geneC"], 5)
+test_that("moyenne par groupe calculée correctement", {
+  result <- compute_stats(make_records())
+  expect_equal(result$mean[result$group == "A"], 30)  # (10+30+50)/3
+  expect_equal(result$mean[result$group == "B"], 40)  # (20+40+60)/3
 })
 
-test_that("zero_variance détecté", {
-  result <- compute_stats(make_counts())
-  expect_true(result$zero_variance[result$gene == "geneC"])
-  expect_false(result$zero_variance[result$gene == "geneA"])
+test_that("toutes les moyennes sont non négatives", {
+  result <- compute_stats(make_records())
+  expect_true(all(result$mean >= 0))
 })
 
-test_that("erreur si df vide", {
-  expect_error(compute_stats(data.frame()))
+test_that("erreur si colonne manquante", {
+  bad_df <- data.frame(id = "S01", group = "A", stringsAsFactors = FALSE)
+  expect_error(compute_stats(bad_df), "Missing columns")
+})
+
+test_that("erreur si data.frame vide", {
+  expect_error(compute_stats(data.frame()), "Missing columns")
 })
 ```
 
 ## Points clés
 
-- `expect_s3_class()` : vérifier le type d'objet
-- `expect_named()` : vérifier les noms de colonnes
-- `expect_equal()` : comparaison valeur par valeur
-- `expect_true/false()` : assertions booléennes
-- `expect_error()` : vérifier qu'une erreur est levée
+- `expect_s3_class()` : vérifier le type d'objet R
+- `expect_named()` : vérifier les noms de colonnes exactement
+- `expect_equal()` : comparaison valeur par valeur (avec tolérance numérique)
+- `expect_error(expr, "pattern")` : vérifie qu'une erreur est levée avec le bon message
 
 ## Pour aller plus loin
 
 ```r
-# Tester avec des données aléatoires reproductibles
-set.seed(42)
-counts_random <- as.data.frame(
-  matrix(rpois(100, lambda = 10), nrow = 20,
-         dimnames = list(paste0("gene", 1:20), paste0("s", 1:5)))
-)
-
-test_that("fonctionne sur grande matrice", {
-  result <- compute_stats(counts_random)
-  expect_equal(nrow(result), 20)
-  expect_true(all(result$mean >= 0))
+# Tester avec les vraies données
+test_that("fonctionne sur records.tsv complet", {
+  df <- load_records("training/data/records.tsv")
+  result <- compute_stats(df)
+  expect_equal(nrow(result), 2)        # deux groupes A et B
+  expect_true(all(result$mean >= 0))   # invariant métier
 })
 ```

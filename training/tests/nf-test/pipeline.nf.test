@@ -1,0 +1,46 @@
+nextflow_pipeline {
+    name "Test pipeline minimal end-to-end"
+    script "../../pipelines/minimal/main.nf"
+
+    test("pipeline complet → COUNT_LINES + SUMMARISE sur records.tsv") {
+        when {
+            params {
+                input  = "${projectDir}/../../data/records.tsv"
+                outdir = "${outputDir}"
+            }
+        }
+        then {
+            assert workflow.success
+            assert workflow.exitStatus == 0
+
+            // 2 tâches lancées : COUNT_LINES + SUMMARISE
+            assert workflow.trace.tasks().size() == 2
+            assert workflow.trace.succeeded().size() == 2
+            assert workflow.trace.failed().size() == 0
+
+            // Fichier count produit
+            def count_file = file("${outputDir}/count_lines/records.count")
+            assert count_file.exists()
+            assert count_file.text.trim().toInteger() == 20
+
+            // Fichier stats produit
+            def stats_file = file("${outputDir}/summarise/records.stats.tsv")
+            assert stats_file.exists()
+            def stats_lines = stats_file.readLines()
+            assert stats_lines[0] == "group\tmean\tn"
+            assert stats_lines.size() == 3   // header + A + B
+        }
+    }
+
+    test("pipeline échoue si fichier vide") {
+        when {
+            params {
+                input  = "${projectDir}/../../data/empty.tsv"
+                outdir = "${outputDir}"
+            }
+        }
+        then {
+            assert workflow.failed
+        }
+    }
+}

@@ -1,0 +1,125 @@
+---
+title: "FAQ"
+format:
+  html:
+    toc: true
+---
+
+## Je suis nouveau dans l'équipe : par où commencer ?
+
+1. Lancer `bash setup.sh` pour installer l'environnement
+2. Lire les slides [01](slides/01_intro.qmd) et [02](slides/02_testing_concepts.qmd)
+3. Faire l'exercice [01_bash](exercises/01_bash/README.qmd) — c'est le plus court
+4. Lancer les tests existants pour vérifier que tout est vert :
+
+```bash
+pytest -v --tb=short
+bats training/tests/bats/
+Rscript -e "testthat::test_dir('training/tests/testthat/')"
+cd training/tests/nf-test && nf-test test --verbose
+```
+
+---
+
+## Je modifie un process Nextflow : quels tests ajouter ?
+
+1. Vérifier qu'un fichier `.nf.test` existe pour ce process
+2. Si non : créer un test qui couvre le happy path + un input vide
+3. Ajouter au moins une assertion sur une valeur métier (pas seulement `process.success`)
+4. Lancer `nf-test test` depuis `training/tests/nf-test/`
+
+Voir l'exercice [04_nextflow](exercises/04_nextflow/README.qmd) pour un exemple complet.
+
+---
+
+## Je corrige un bug : quel test écrire ?
+
+Écrire d'abord le test qui **reproduit le bug** — il doit échouer.
+Corriger le bug. Le test doit maintenant passer.
+
+```bash
+# Exemple bats : le bug était "fichier absent → pas de message d'erreur"
+@test "fichier absent → exit 1 et message d'erreur" {
+    run bash validate_records.sh /tmp/missing.tsv
+    [ "$status" -eq 1 ]
+    [[ "$output" =~ "not found" ]]
+}
+```
+
+---
+
+## Je change un container : que vérifier ?
+
+1. Mettre à jour le tag exact dans le process Nextflow
+2. Mettre à jour le `.def` correspondant
+3. Reconstruire ou re-pull le `.sif` localement
+4. Relancer les tests bats du container :
+
+```bash
+bats exercises/05_testing_containers/tests/container_fastqc.bats
+```
+
+5. Relancer le test nf-test avec le profil apptainer :
+
+```bash
+cd training/tests/nf-test
+nf-test test fastqc.nf.test --profile apptainer
+```
+
+Voir [container-policy.qmd](container-policy.qmd) pour les règles complètes.
+
+---
+
+## Un snapshot change : que dois-je faire ?
+
+1. **Lire le diff** — comprendre ce qui a changé et pourquoi
+2. Si c'est un changement **intentionnel** : accepter avec `--update-snapshot` et l'expliquer dans la PR
+3. Si c'est une **régression** : ne pas mettre à jour, corriger le code
+
+```bash
+# Voir le diff avant d'accepter
+nf-test test --verbose
+
+# Accepter uniquement si le changement est justifié
+nf-test test --update-snapshot
+```
+
+Voir [snapshot-policy.qmd](snapshot-policy.qmd) pour la politique complète.
+
+---
+
+## La CI est rouge : comment diagnostiquer ?
+
+1. Regarder quel job a échoué (pytest / bats / testthat / nf-test)
+2. Lancer ce job localement avec les mêmes commandes
+3. Lire le message d'erreur complet — `--tb=short` pour pytest, `--verbose` pour nf-test
+4. Chercher si un snapshot est obsolète → `nf-test test --clean-snapshot` si nécessaire
+
+```bash
+# Reproduire localement
+pytest -v --tb=long
+bats training/tests/bats/ --verbose
+cd training/tests/nf-test && nf-test test --verbose
+```
+
+---
+
+## Je prépare une release : quels tests lancer ?
+
+Avant de merger vers `main` :
+
+```bash
+# Tous les tests unitaires et process
+pytest -v --tb=short
+bats training/tests/bats/
+Rscript -e "testthat::test_dir('training/tests/testthat/')"
+cd training/tests/nf-test && nf-test test --verbose
+
+# Vérifier le rendu du site
+cd training && quarto check
+
+# Tests containers (si disponibles)
+bats training/exercises/05_testing_containers/tests/container_fastqc.bats
+```
+
+La CI vérifie automatiquement les quatre premiers blocs à chaque PR.

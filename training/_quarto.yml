@@ -11,22 +11,48 @@ website:
         href: index.qmd
       - text: "Slides"
         menu:
-          - text: "Introduction"
+          - text: "01 — Pourquoi tester ?"
             href: slides/01_intro.qmd
-          - text: "Concepts de testing"
+          - text: "02 — Concepts de testing"
             href: slides/02_testing_concepts.qmd
-          - text: "nf-test"
-            href: slides/03_nf_test.qmd
+          - text: "03 — Bash · Python · R"
+            href: slides/03_bash_python_r.qmd
+          - text: "04 — nf-test"
+            href: slides/04_nf_test.qmd
+          - text: "05 — Containers"
+            href: slides/05_container_testing.qmd
+          - text: "06 — Tests bioinformatiques"
+            href: slides/06_bioinformatics_testing.qmd
+          - text: "07 — Stratégie équipe"
+            href: slides/07_small_team_strategy.qmd
       - text: "Exercices"
         menu:
-          - text: "01 - Bash / bats"
+          - text: "01 — Bash / bats"
             href: exercises/01_bash/README.qmd
-          - text: "02 - Python / pytest"
+          - text: "02 — Python / pytest"
             href: exercises/02_python/README.qmd
-          - text: "03 - R / testthat"
+          - text: "03 — R / testthat"
             href: exercises/03_r/README.qmd
-          - text: "04 - Nextflow / nf-test"
+          - text: "04 — Nextflow / nf-test"
             href: exercises/04_nextflow/README.qmd
+          - text: "05 — Containers Apptainer"
+            href: exercises/05_testing_containers/README.qmd
+          - text: "06 — Metamorphic testing"
+            href: exercises/06_metamorphic/README.qmd
+      - text: "Référence"
+        menu:
+          - text: "Méthodologie"
+            href: testing-methodology.qmd
+          - text: "Matrice de décision"
+            href: testing-matrix.qmd
+          - text: "Politique snapshots"
+            href: snapshot-policy.qmd
+          - text: "Politique containers"
+            href: container-policy.qmd
+          - text: "FAQ"
+            href: faq.qmd
+          - text: "Références"
+            href: references.qmd
 
 format:
   html:

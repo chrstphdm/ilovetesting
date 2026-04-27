@@ -1,0 +1,55 @@
+nextflow_process {
+    name "Test COUNT_LINES"
+    script "../../pipelines/minimal/modules/count_lines.nf"
+    process "COUNT_LINES"
+
+    test("TSV valide → count et summary produits") {
+        when {
+            process {
+                """
+                input[0] = [
+                    [id: "records"],
+                    file("${projectDir}/../../data/records.tsv")
+                ]
+                """
+            }
+        }
+        then {
+            assert process.success
+
+            // ── Assertions structurelles ──────────────────────────────
+            assert process.out.count.size() == 1
+            assert process.out.summary.size() == 1
+
+            // ── Assertions métier — count ─────────────────────────────
+            def count_val = path(process.out.count[0][1]).text.trim().toInteger()
+            assert count_val == 20   // 20 lignes dans records.tsv
+
+            // ── Assertions métier — summary ───────────────────────────
+            def summary_lines = path(process.out.summary[0][1]).readLines()
+            assert summary_lines.size() == 2
+            assert summary_lines[0].startsWith("file\t")
+            assert summary_lines[1].startsWith("rows\t")
+            assert summary_lines[1].split("\t")[1].toInteger() == 20
+
+            // ── Non-régression via snapshot ───────────────────────────
+            assert snapshot(process.out.count).match()
+        }
+    }
+
+    test("fichier vide (en-tête seul) → process échoue") {
+        when {
+            process {
+                """
+                input[0] = [
+                    [id: "empty"],
+                    file("${projectDir}/../../data/empty.tsv")
+                ]
+                """
+            }
+        }
+        then {
+            assert process.failed
+        }
+    }
+}

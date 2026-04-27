@@ -2,6 +2,10 @@ process TRIM {
     tag "$meta.id"
     label 'process_low'
 
+    // Container declaration — ignored unless running with -profile apptainer or -profile docker.
+    // In production, replace the simulation below with a real trimmer (e.g. cutadapt, fastp).
+    container 'biocontainers/cutadapt:4.4--py310h1425a21_0'
+
     input:
     tuple val(meta), path(reads)
 
@@ -14,7 +18,8 @@ process TRIM {
     def min_len  = params.min_length  ?: 20
     def min_qual = params.min_quality ?: 20
     """
-    # Simulation trim : garde les reads dont la longueur de séquence >= min_len
+    # Pedagogical simulation: filters reads shorter than min_len using awk.
+    # In a real pipeline, replace with: cutadapt -m ${min_len} -o ${prefix}_trimmed.fastq ${reads}
     awk -v min_len=${min_len} '
         NR%4==1 { header=\$0 }
         NR%4==2 { seq=\$0 }

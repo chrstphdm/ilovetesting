@@ -1,6 +1,6 @@
 ---
 title: "Concepts de testing"
-subtitle: "Formation testing — Module 2"
+subtitle: "Formation testing — Module 02"
 format:
   revealjs:
     theme: simple
@@ -11,11 +11,80 @@ format:
 ## Anatomie d'un test
 
 ```
-GIVEN  un fichier FASTQ avec 100 reads
-WHEN   je lance le process FASTQC
-THEN   le fichier de sortie existe
-AND    il contient exactement 100 reads
+GIVEN  un fichier TSV avec 20 lignes             ← Arrange
+WHEN   je lance validate_records.sh              ← Act
+THEN   le code de sortie est 0                   ← Assert
+AND    la sortie indique "20 records validés"
 ```
+
+GIVEN / WHEN / THEN = Arrange / Act / Assert — même concept, deux notations.
+
+---
+
+## Quatre types de tests
+
+| Type | Périmètre | Vitesse |
+|------|-----------|---------|
+| **Unitaire** | une fonction, un process | rapide |
+| **Intégration** | plusieurs modules enchaînés | moyen |
+| **Fonctionnel** | pipeline complet, end-to-end | lent |
+| **Non-régression** | comparaison avec une sortie attendue | variable |
+
+---
+
+## Happy path vs edge case
+
+```bash
+# Happy path — input valide
+run bash validate_records.sh records.tsv
+[ "$status" -eq 0 ]
+
+# Edge case — fichier vide
+run bash validate_records.sh empty.tsv
+[ "$status" -eq 1 ]
+
+# Edge case — fichier absent
+run bash validate_records.sh /tmp/missing.tsv
+[ "$status" -eq 1 ]
+```
+
+---
+
+## Le bug que Python ne signale pas
+
+**Bug 2 — comparaison de scores numériques lus comme chaînes**
+
+```python
+# Scores lus depuis un fichier texte → type str par défaut
+"80.6"  > "407.9"   # → True   (ordre alphabétique)
+ 80.6   >  407.9    # → False  (ordre numérique)
+```
+
+. . .
+
+Le programme ne plante pas — il sélectionne le mauvais "meilleur hit".
+
+```python
+# Test minimal
+assert best_hit(["407.9", "80.6"]) == pytest.approx(407.9)
+```
+
+::: {.callout-tip}
+Toujours convertir les valeurs numériques lues depuis un fichier avant de les comparer.
+:::
+
+---
+
+## Tests rapides vs tests lents
+
+| Rapides (< 1 min) | Lents (> 1 min) |
+|-------------------|-----------------|
+| Fonctions unitaires | Pipeline complet |
+| Process Nextflow | Tests containers |
+| Snapshots existants | Golden dataset |
+
+→ Les rapides passent à chaque PR.
+→ Les lents passent en CI nightly ou manuellement.
 
 ---
 
@@ -38,14 +107,14 @@ assert output.suffix == ".html"
 
 ---
 
-## Les assertions clés en bioinfo
+## Les assertions utiles
 
 | Ce qu'on vérifie | Exemple |
 |-----------------|---------|
 | Fichier existe | `assert path.exists()` |
-| Nombre de lignes | `assert lines == 400` (4×100 reads FASTQ) |
-| En-têtes colonnes | `assert "sample_id" in header` |
-| Format valide | `assert line.startswith("@")` |
+| Nombre de lignes | `assert len(df) == 20` |
+| Colonnes attendues | `assert "id" in df.columns` |
+| Valeur dans une borne | `assert (df["value"] >= 0).all()` |
 | Code de sortie | `assert returncode == 0` |
 
 ---
@@ -63,8 +132,12 @@ assert snapshot(output).match()
 - Exécutions suivantes → compare avec le snapshot
 - Si différent → le test échoue
 
-::: {.callout-tip}
-Les snapshots détectent les régressions invisibles à l'œil nu.
+::: {.callout-warning}
+Un snapshot ne dit pas que la sortie est **correcte**.
+
+Il dit seulement qu'elle n'a **pas changé**.
+
+Snapshot seul = filet de non-régression. Snapshot + assertion explicite = test utile.
 :::
 
 ---
@@ -82,13 +155,12 @@ Scénario classique :
 
 ## Données de test
 
-**Règle nf-core :** les données de test doivent être **minimalistes**.
+**Bonne pratique :** les données de test doivent être **minimalistes**.
 
 ```
 data/
-├── sample.fastq      # 100 reads synthétiques
-├── reference.fasta   # 3 séquences, 200 bp chacune
-└── counts.tsv        # 20 gènes × 4 échantillons
+├── records.tsv    # 20 lignes (id, group, value)
+└── empty.tsv      # en-tête seul, aucune donnée
 ```
 
 Pourquoi petit ? Tests rapides, CI rapide, pas de dépendance aux gros fichiers.
@@ -98,15 +170,15 @@ Pourquoi petit ? Tests rapides, CI rapide, pas de dépendance aux gros fichiers.
 ## CI/CD
 
 ```
-Push → GitHub Actions → Tests → ✅ ou ❌
+Push → GitHub Actions → Tests → OK ou ÉCHEC
 ```
 
-Si ❌ : merge bloqué automatiquement.
+Si ÉCHEC : merge bloqué automatiquement.
 
 ---
 
-## Exercice → Module 3
+## Suite → Module 03
 
-Rendez-vous dans `exercises/02_python/`
+Ces concepts s'appliquent aux exercices 01, 02 et 03.
 
-Objectif : tester une fonction Python qui valide le format FASTQ.
+Le module suivant montre comment les appliquer concrètement en Bash, Python et R.

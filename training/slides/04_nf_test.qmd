@@ -1,0 +1,180 @@
+---
+title: "Tests Nextflow avec nf-test"
+subtitle: "Formation testing — Module 04"
+format:
+  revealjs:
+    theme: simple
+    slide-number: true
+    code-block-height: 500px
+---
+
+## nf-test en une phrase
+
+nf-test = framework de référence pour tester des process, workflows et pipelines Nextflow.
+
+Utilisé notamment par nf-core comme standard communautaire.
+
+---
+
+## Installation
+
+```bash
+# Via conda (méthode recommandée pour la formation)
+conda install -c bioconda nf-test
+
+# Alternative : script d'installation officiel
+# bash <(curl -fsSL https://get.nf-test.com)
+
+# Vérification
+nf-test version
+```
+
+---
+
+## Structure d'un test nf-test
+
+```groovy
+nextflow_process {
+    name "Test COUNT_LINES"
+    script "modules/count_lines.nf"
+    process "COUNT_LINES"
+
+    test("TSV valide → count produit") {
+        when {
+            process {
+                input[0] = [
+                    [id: "records"],
+                    file("data/records.tsv")
+                ]
+            }
+        }
+        then {
+            assert process.success
+            assert process.out.count.size() == 1
+            assert snapshot(process.out).match()
+        }
+    }
+}
+```
+
+---
+
+## Mapping des niveaux de test Nextflow
+
+```
+process COUNT_LINES { ... }    ← test unitaire   (nextflow_process)
+          ↓
+workflow PROCESS_TABLE { ... } ← test intégration (nextflow_workflow)
+          ↓
+pipeline main.nf               ← test fonctionnel (nextflow_pipeline)
+```
+
+---
+
+## Les 3 niveaux de test
+
+```groovy
+nextflow_process { ... }   // ← process seul
+nextflow_workflow { ... }  // ← workflow (plusieurs process)
+nextflow_pipeline { ... }  // ← pipeline complet (main.nf)
+```
+
+---
+
+## Snapshot workflow
+
+```groovy
+then {
+    assert workflow.success
+    assert snapshot(
+        workflow.out.count,
+        workflow.out.stats
+    ).match()
+}
+```
+
+Fichier snapshot généré :
+```json
+{
+  "count": "sha256:abc123...",
+  "stats": "sha256:def456..."
+}
+```
+
+---
+
+## Assertions explicites d'abord
+
+```groovy
+then {
+    assert process.success
+    assert process.out.count.size() == 1           // structure
+
+    def n = path(process.out.count[0][1]).text.trim().toInteger()
+    assert n == 20                                  // valeur métier
+
+    assert snapshot(process.out.count).match()      // non-régression
+}
+```
+
+::: {.callout-tip}
+Snapshot seul = boîte noire. Assertion explicite = documentation.
+:::
+
+---
+
+## Limites des snapshots
+
+| Ce qu'un snapshot détecte | Ce qu'il ne détecte pas |
+|--------------------------|------------------------|
+| Changement inattendu | Que la valeur est correcte |
+| Régression de format | Bug présent dès le début |
+| Modification d'un champ | Valeur scientifiquement fausse |
+
+→ Toujours combiner snapshot + au moins une assertion sur la valeur.
+
+---
+
+## Mettre à jour un snapshot
+
+```bash
+# Regénérer après changement intentionnel
+nf-test test --update-snapshot
+```
+
+::: {.callout-warning}
+Ne jamais mettre à jour un snapshot sans comprendre pourquoi il a changé.
+:::
+
+---
+
+## nf-test ne remplace pas
+
+- les tests Bash / Python / R sur les scripts
+- la relecture humaine des snapshots
+- la validation scientifique des résultats
+- les tests containers (`bats` + `--profile apptainer`)
+- les tests sur jeux de données représentatifs
+
+---
+
+## Lancer les tests
+
+```bash
+# Tous les tests (depuis training/tests/nf-test/)
+nf-test test --verbose
+
+# Un fichier spécifique
+nf-test test count_lines.nf.test
+
+# Regénérer les snapshots
+nf-test test --update-snapshot
+```
+
+---
+
+## Exercice → Module 04
+
+Rendez-vous dans `exercises/04_nextflow/`
+
+À la fin, vous devez avoir : 1 test COUNT_LINES (TSV valide → count 20), 1 test COUNT_LINES (fichier vide → échec), 1 test PROCESS_TABLE (count + stats produits), au moins 1 assertion comportementale sur une valeur, 1 snapshot.

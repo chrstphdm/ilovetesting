@@ -1,0 +1,83 @@
+---
+title: "Matrice de décision"
+format:
+  html:
+    toc: true
+---
+
+## Que tester selon le changement
+
+| Changement | Test minimal | Test complet |
+|------------|-------------|-------------|
+| Nouveau process Nextflow | `nf-test` happy path + fichier vide | snapshot + assertions métier |
+| Script Bash modifié | bats exit code + stdout | tous les edge cases |
+| Fonction Python modifiée | pytest assertions | bornes + erreurs |
+| Fonction R modifiée | testthat colonnes + valeurs | data.frame vide + grands inputs |
+| Container mis à jour | bats `--version` | nf-test `--profile apptainer` |
+| Bug corrigé | test qui reproduit le bug | non-régression snapshot |
+
+---
+
+## Couverture attendue par outil
+
+### bats (Bash)
+
+- exit code 0 sur input valide
+- exit code ≠ 0 sur input invalide
+- message d'erreur sur stderr/stdout
+- fichier de sortie généré
+
+### pytest (Python)
+
+- fonctions pures : valeurs attendues
+- parsing : colonnes, types, forme
+- bornes : valeurs négatives, vides, extrêmes
+- erreurs : `pytest.raises(ValueError)` etc.
+
+### testthat (R)
+
+- structure du résultat : `expect_s3_class`, `expect_named`
+- valeurs calculées : `expect_equal`
+- invariants : `expect_true(all(x >= 0))`
+- erreurs : `expect_error`
+
+### nf-test (Nextflow)
+
+- process isolé : entrée/sortie, exit status
+- workflow : chaînage, outputs des étapes
+- pipeline complet : end-to-end, fichiers dans `outdir`
+- snapshot : non-régression
+
+### bats + Apptainer (containers)
+
+- image présente (`-f image.sif`)
+- outil accessible : `apptainer exec image.sif tool --version`
+- chemin de l'outil : `which tool` → `/usr/` ou `/opt/`
+- sans `$HOME` : `apptainer exec --no-home image.sif tool --version`
+
+---
+
+## Fréquence d'exécution
+
+| Test | Fréquence | Déclencheur |
+|------|-----------|-------------|
+| pytest, bats, testthat | chaque PR | CI automatique |
+| nf-test process/workflow | chaque PR | CI automatique |
+| nf-test pipeline complet | chaque PR | CI automatique |
+| Tests containers | à la demande | `workflow_dispatch` CI |
+| Quarto render | chaque push sur main | CI déploiement |
+
+---
+
+## Priorités de test
+
+```
+1 — toujours tester
+    transformations critiques, filtres, décisions métier
+
+2 — tester dès que possible
+    enchaînements de modules, workflows
+
+3 — tester progressivement
+    pipeline complet, containers, golden dataset
+```
