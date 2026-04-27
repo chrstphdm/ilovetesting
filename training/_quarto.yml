@@ -16,7 +16,7 @@ website:
           - text: "Concepts de testing"
             href: slides/02_testing_concepts.qmd
           - text: "nf-test"
-            href: slides/03_nf_test.qmd
+            href: slides/04_nf_test.qmd
           - text: "Metamorphic testing"
             href: slides/05_metamorphic.qmd
           - text: "Tester les containers"

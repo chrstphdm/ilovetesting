@@ -1,6 +1,6 @@
 ---
 title: "Metamorphic testing"
-subtitle: "Formation testing — Module avancé"
+subtitle: "Formation testing — Module 05"
 format:
   revealjs:
     theme: simple
@@ -81,7 +81,7 @@ Un bug trouvé par PMC5425734 (2017) :
 
 ---
 
-## Exercice → Module 5
+## Exercice → Module 05
 
 Rendez-vous dans `exercises/05_metamorphic/`
 

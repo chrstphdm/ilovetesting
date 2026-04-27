@@ -1,6 +1,6 @@
 ---
 title: "Concepts de testing"
-subtitle: "Formation testing — Module 2"
+subtitle: "Formation testing — Module 02"
 format:
   revealjs:
     theme: simple
@@ -105,8 +105,9 @@ Si ❌ : merge bloqué automatiquement.
 
 ---
 
-## Exercice → Module 3
+## Exercices → Modules 02 et 03
 
-Rendez-vous dans `exercises/02_python/`
+Ces concepts s'appliquent aux deux exercices suivants :
 
-Objectif : tester une fonction Python qui valide le format FASTQ.
+- `exercises/02_python/` — tester une fonction Python qui valide le format FASTQ (pytest)
+- `exercises/03_r/` — tester une fonction R équivalente (testthat)

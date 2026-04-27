@@ -1,6 +1,6 @@
 ---
 title: "Tests Nextflow avec nf-test"
-subtitle: "Formation testing — Module 5"
+subtitle: "Formation testing — Module 04"
 format:
   revealjs:
     theme: simple
@@ -140,7 +140,7 @@ nf-test test --verbose
 
 ---
 
-## Exercice → Module 5
+## Exercice → Module 04
 
 Rendez-vous dans `exercises/04_nextflow/`
 

@@ -1,6 +1,6 @@
 ---
 title: "Pourquoi tester ?"
-subtitle: "Formation testing — Module 1"
+subtitle: "Formation testing — Module 01"
 format:
   revealjs:
     theme: simple
@@ -79,7 +79,7 @@ Chaque module → un fichier `.nf.test`.
 
 ---
 
-## Exercice → Module 2
+## Exercice → Module 01
 
 Rendez-vous dans `exercises/01_bash/`
 
