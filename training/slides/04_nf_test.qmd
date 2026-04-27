@@ -10,7 +10,7 @@ format:
 
 ## nf-test en une phrase
 
-nf-test = framework de référence pour tester les pipelines Nextflow.
+nf-test = framework de référence pour tester des process, workflows et pipelines Nextflow.
 
 Utilisé notamment par nf-core comme standard communautaire.
 
@@ -19,8 +19,11 @@ Utilisé notamment par nf-core comme standard communautaire.
 ## Installation
 
 ```bash
-# Via conda (méthode contrôlée, recommandée)
+# Via conda (méthode recommandée pour la formation)
 conda install -c bioconda nf-test
+
+# Alternative : script d'installation officiel
+# bash <(curl -fsSL https://get.nf-test.com)
 
 # Vérification
 nf-test version
@@ -147,11 +150,11 @@ Ne jamais mettre à jour un snapshot sans comprendre pourquoi il a changé.
 
 ## nf-test ne remplace pas
 
-- ❌ les tests Bash / Python / R sur les scripts
-- ❌ la relecture humaine des snapshots
-- ❌ la validation scientifique des résultats
-- ❌ les tests containers (`bats` + `--profile apptainer`)
-- ❌ les tests sur jeux de données représentatifs
+- les tests Bash / Python / R sur les scripts
+- la relecture humaine des snapshots
+- la validation scientifique des résultats
+- les tests containers (`bats` + `--profile apptainer`)
+- les tests sur jeux de données représentatifs
 
 ---
 
@@ -174,4 +177,4 @@ nf-test test --update-snapshot
 
 Rendez-vous dans `exercises/04_nextflow/`
 
-Objectif : écrire un test nf-test pour le process `COUNT_LINES` et le workflow `PROCESS_TABLE`.
+À la fin, vous devez avoir : 1 test COUNT_LINES (TSV valide → count 20), 1 test COUNT_LINES (fichier vide → échec), 1 test PROCESS_TABLE (count + stats produits), au moins 1 assertion comportementale sur une valeur, 1 snapshot.

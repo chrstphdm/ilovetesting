@@ -30,10 +30,12 @@ apptainer exec mon_outil.sif mon_outil --version
 
 | Sujet | Docker | Apptainer |
 |-------|--------|-----------|
-| Bind mounts | configurables | `/home`, `/tmp` montés par défaut |
+| Bind mounts | configurables | `/home`, `/tmp` souvent montés automatiquement |
 | Permissions | root dans le container | UID de l'utilisateur |
 | Écriture dans `/` | possible | read-only par défaut |
 | `$HOME` disponible | selon config | oui, sauf `--no-home` |
+
+Les montages exacts dépendent de la configuration du cluster.
 
 → Tester avec Apptainer, pas seulement Docker.
 
@@ -140,8 +142,19 @@ Tag exact. `.def` dans git. `.sif` sur HPC.
 
 ---
 
+## CI vs HPC — qui exécute quoi
+
+| Contexte | Ce qu'on teste |
+|----------|---------------|
+| **PR / CI standard** | présence du `.def`, tag non-`latest`, test de version si possible |
+| **HPC / nightly / manuel** | Apptainer réel, `.sif` réel, bind mounts, permissions, stockage partagé |
+
+Les tests HPC ne s'automatisent pas dans la CI standard — les exécuter localement ou en job nightly.
+
+---
+
 ## Exercice → Module 05
 
 Rendez-vous dans `exercises/05_testing_containers/`
 
-Objectif : tester le container FastQC avec bats, puis valider le process Nextflow avec nf-test et le profil apptainer.
+À la fin, vous devez avoir : 2 tests bats sur le container (version attendue, outil sans `/home`), 1 test nf-test process avec `--profile apptainer`, et le `.sif` accessible localement ou sur le stockage HPC.

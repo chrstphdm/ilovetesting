@@ -19,10 +19,10 @@ Exemple en bats :
 
 ```bash
 @test "fichier valide → exit 0" {
-    # Arrange : données dans data/sample.fastq
-    run bash validate_fastq.sh data/sample.fastq   # Act
-    [ "$status" -eq 0 ]                            # Assert
-    [[ "$output" =~ "100 reads" ]]                 # Assert
+    # Arrange : données dans data/records.tsv
+    run bash validate_records.sh data/records.tsv   # Act
+    [ "$status" -eq 0 ]                             # Assert
+    [[ "$output" =~ "20 records" ]]                 # Assert
 }
 ```
 

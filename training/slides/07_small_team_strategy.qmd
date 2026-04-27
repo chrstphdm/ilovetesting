@@ -24,7 +24,8 @@ Priorité = probabilité de casser × impact si ça casse
 |----------|---------------|----------------------|
 | **1 — toujours** | transformations, filtres, décisions métier | — |
 | **2 — dès que possible** | enchaînements de modules | — |
-| **3 — progressivement** | pipeline complet, containers | visualisations |
+| **3 — dès que livrable** | pipeline complet (mini-data) | visualisations |
+| **dès création** | container custom critique (version) | — |
 
 ---
 
@@ -97,11 +98,11 @@ C'est suffisant pour commencer.
 
 ## Quand ne pas tester
 
-- ❌ code exploratoire jetable
-- ❌ visualisation temporaire
-- ❌ wrapper trivial déjà couvert ailleurs
-- ❌ sortie volumineuse jamais relue
-- ❌ cas non critique et très coûteux à tester
+- code exploratoire jetable
+- visualisation temporaire
+- wrapper trivial déjà couvert ailleurs
+- sortie volumineuse jamais relue
+- cas non critique et très coûteux à tester
 
 . . .
 
@@ -113,11 +114,11 @@ C'est suffisant pour commencer.
 
 ```
 Niveau 0  aucun test
-Niveau 1  exit code et fichier de sortie
-Niveau 2  assertions sur les valeurs clés
-Niveau 3  snapshots + non-régression
-Niveau 4  metamorphic tests + golden dataset
-Niveau 5  containers + CI complète
+Niveau 1  smoke test sur mini input (exit 0, fichier produit)
+Niveau 2  tests unitaires scripts et process
+Niveau 3  test fonctionnel pipeline mini-data
+Niveau 4  assertions comportementales + golden dataset
+Niveau 5  robustesse, containers critiques, performance, handover
 ```
 
 Ne pas viser le niveau 5 dès le premier sprint.
@@ -126,11 +127,11 @@ Ne pas viser le niveau 5 dès le premier sprint.
 
 ## Ce que les tests ne doivent pas faire
 
-- ❌ Vérifier seulement que le process tourne
-- ❌ Dépendre de l'ordre si l'ordre n'est pas garanti
-- ❌ Figer des chemins temporaires
-- ❌ Utiliser `latest`
-- ❌ Accepter un snapshot sans lire le diff
+- Vérifier seulement que le process tourne
+- Dépendre de l'ordre si l'ordre n'est pas garanti
+- Figer des chemins temporaires
+- Utiliser `latest`
+- Accepter un snapshot sans lire le diff
 
 ---
 

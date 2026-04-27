@@ -11,10 +11,10 @@ format:
 ## Anatomie d'un test
 
 ```
-GIVEN  un fichier FASTQ avec 100 reads   ← Arrange
-WHEN   je lance le process FASTQC        ← Act
-THEN   le fichier de sortie existe       ← Assert
-AND    il contient exactement 100 reads
+GIVEN  un fichier TSV avec 20 lignes             ← Arrange
+WHEN   je lance validate_records.sh              ← Act
+THEN   le code de sortie est 0                   ← Assert
+AND    la sortie indique "20 records validés"
 ```
 
 GIVEN / WHEN / THEN = Arrange / Act / Assert — même concept, deux notations.
@@ -25,10 +25,10 @@ GIVEN / WHEN / THEN = Arrange / Act / Assert — même concept, deux notations.
 
 | Type | Périmètre | Vitesse |
 |------|-----------|---------|
-| **Unitaire** | une fonction, un process | ⚡ rapide |
-| **Intégration** | plusieurs modules enchaînés | 🔶 moyen |
-| **Fonctionnel** | pipeline complet, end-to-end | 🐢 lent |
-| **Non-régression** | comparaison snapshot avant/après | ⚡ rapide |
+| **Unitaire** | une fonction, un process | rapide |
+| **Intégration** | plusieurs modules enchaînés | moyen |
+| **Fonctionnel** | pipeline complet, end-to-end | lent |
+| **Non-régression** | comparaison avec une sortie attendue | variable |
 
 ---
 
@@ -136,6 +136,8 @@ assert snapshot(output).match()
 Un snapshot ne dit pas que la sortie est **correcte**.
 
 Il dit seulement qu'elle n'a **pas changé**.
+
+Snapshot seul = filet de non-régression. Snapshot + assertion explicite = test utile.
 :::
 
 ---
@@ -157,9 +159,8 @@ Scénario classique :
 
 ```
 data/
-├── sample.fastq      # 100 reads synthétiques
-├── reference.fasta   # 3 séquences, 200 bp chacune
-└── counts.tsv        # 20 gènes × 4 échantillons
+├── records.tsv    # 20 lignes (id, group, value)
+└── empty.tsv      # en-tête seul, aucune donnée
 ```
 
 Pourquoi petit ? Tests rapides, CI rapide, pas de dépendance aux gros fichiers.
@@ -169,10 +170,10 @@ Pourquoi petit ? Tests rapides, CI rapide, pas de dépendance aux gros fichiers.
 ## CI/CD
 
 ```
-Push → GitHub Actions → Tests → ✅ ou ❌
+Push → GitHub Actions → Tests → OK ou ÉCHEC
 ```
 
-Si ❌ : merge bloqué automatiquement.
+Si ÉCHEC : merge bloqué automatiquement.
 
 ---
 

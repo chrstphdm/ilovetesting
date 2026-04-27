@@ -40,7 +40,7 @@ Corriger le bug. Le test doit maintenant passer.
 ```bash
 # Exemple bats : le bug était "fichier absent → pas de message d'erreur"
 @test "fichier absent → exit 1 et message d'erreur" {
-    run bash validate_fastq.sh /tmp/missing.fastq
+    run bash validate_records.sh /tmp/missing.tsv
     [ "$status" -eq 1 ]
     [[ "$output" =~ "not found" ]]
 }

@@ -51,10 +51,10 @@ Utile pour la non-régression à long terme.
 Des propriétés qui doivent toujours être vraies.
 
 ```python
-assert (df >= 0).all().all()          # counts positifs
-assert covered_fraction <= 1.0        # fraction dans [0,1]
-assert output_reads <= input_reads    # trim ne crée pas de reads
-assert len(sample_ids) == len(set(sample_ids))  # pas de doublon
+assert (df["value"] >= 0).all()              # valeurs positives
+assert 0.0 <= ratio <= 1.0                   # ratio dans [0, 1]
+assert len(output_rows) <= len(input_rows)   # filtre ne crée pas de lignes
+assert len(ids) == len(set(ids))             # pas de doublon d'identifiant
 ```
 
 ---
@@ -111,12 +111,16 @@ count_reads() { awk 'NR%4==1' "$1" | wc -l; }
 
 ---
 
-## Cas réel (PMC5425734, 2017)
+## Cas réel dans la littérature
 
-> BWA et Bowtie produisaient des alignements **différents** selon l'ordre des reads en entrée.
+> Certains outils d'alignement ont produit des résultats **différents** selon l'ordre des reads en entrée.
 
 Les tests classiques passaient.
 Un test MR de permutation l'aurait détecté.
+
+::: {.notes}
+Référence : Li H et al. (2017) — PMC5425734. BWA-MEM et Bowtie2 produisaient des alignements différents sur les mêmes reads selon leur ordre dans le fichier FASTQ.
+:::
 
 ---
 
@@ -134,4 +138,4 @@ Golden dataset + invariants + metamorphic = couverture sans oracle exact.
 
 Rendez-vous dans `exercises/06_metamorphic/`
 
-Objectif : écrire les tests MR1 et MR2 en bats sur les données `sample_shuffled.fastq` et `sample_doubled.fastq`.
+À la fin, vous devez avoir : 1 test MR1 (permutation → même count), 1 test MR2 (duplication → 2× count), 1 test MR3 (sous-ensemble → count ≤ original), et une commande locale pour lancer les tests.

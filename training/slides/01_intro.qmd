@@ -56,7 +56,7 @@ assert all(hit.score >= threshold[hit.ko] for hit in kept_hits)
 
 - **Détection précoce** — bug trouvé avant merge, pas en prod
 - **Documentation vivante** — le test dit ce que le code est censé faire
-- **Refactoring sans peur** — si les tests passent, ça marche
+- **Refactoring sans peur** — si les tests passent, les comportements testés sont préservés
 - **CI possible** — automatisation réelle
 
 ---
@@ -86,14 +86,14 @@ Chaque module → un fichier `.nf.test`.
 
 ## Ce que les tests ne garantissent pas
 
-- ❌ Que la biologie est correcte
-- ❌ Que les paramètres sont optimaux
-- ❌ Que l'outil tiers fonctionne sans bug
-- ❌ Qu'il n'y a aucun autre bug
+- Que la biologie est correcte
+- Que les paramètres sont optimaux
+- Que l'outil tiers fonctionne sans bug
+- Qu'il n'y a aucun autre bug
 
 . . .
 
-✅ Ils garantissent que **ce qu'on a écrit fait ce qu'on pense qu'il fait**.
+Ils vérifient automatiquement les comportements que l'on a explicitement définis.
 
 ---
 
@@ -115,4 +115,4 @@ Chaque module → un fichier `.nf.test`.
 
 Rendez-vous dans `exercises/01_bash/`
 
-Objectif : écrire des tests bats sur `validate_records.sh`, un script de validation de fichier TSV.
+À la fin, vous devez avoir : 1 test happy path, 1 test fichier vide, 1 test fichier absent, 1 assertion sur le contenu du message de sortie, et la commande bats documentée.

@@ -41,8 +41,8 @@ training/data/sample_doubled.fastq  # 200 reads (sample × 2)
 ```bash
 #!/usr/bin/env bats
 
-SCRIPT="training/pipelines/minimal/scripts/validate_fastq.sh"
 DATA="training/data"
+count_reads() { awk 'NR%4==1' "$1" | wc -l; }
 
 @test "MR1 — permutation : reads réordonnés → même nombre de reads valides" {
     # TODO :
