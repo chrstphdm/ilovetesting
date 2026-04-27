@@ -43,3 +43,6 @@ Thumbs.db
 # Apptainer/Singularity — images compilées (archivées sur HPC, pas dans git)
 *.sif
 *.img
+
+# Claude Code — instructions locales, non partagées
+CLAUDE.md
