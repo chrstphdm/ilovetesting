@@ -17,6 +17,10 @@ website:
             href: slides/02_testing_concepts.qmd
           - text: "nf-test"
             href: slides/03_nf_test.qmd
+          - text: "Metamorphic testing"
+            href: slides/05_metamorphic.qmd
+          - text: "Tester les containers"
+            href: slides/06_testing_containers.qmd
       - text: "Exercices"
         menu:
           - text: "01 - Bash / bats"
@@ -27,6 +31,10 @@ website:
             href: exercises/03_r/README.qmd
           - text: "04 - Nextflow / nf-test"
             href: exercises/04_nextflow/README.qmd
+          - text: "05 - Metamorphic testing"
+            href: exercises/05_metamorphic/README.qmd
+          - text: "06 - Containers Apptainer"
+            href: exercises/06_testing_containers/README.qmd
 
 format:
   html:

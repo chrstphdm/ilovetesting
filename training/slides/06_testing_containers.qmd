@@ -1,0 +1,137 @@
+---
+title: "Tester les containers"
+subtitle: "Formation testing — Module 06"
+format:
+  revealjs:
+    theme: simple
+    slide-number: true
+    code-block-height: 400px
+---
+
+## Un container n'est pas une garantie
+
+```bash
+# Ça démarre...
+apptainer exec mon_outil.sif echo "OK"
+# → OK
+
+# Mais ça ?
+apptainer exec mon_outil.sif mon_outil --version
+# → command not found
+```
+
+. . .
+
+**Un container qui démarre ≠ un outil qui fonctionne.**
+
+---
+
+## Les risques classiques
+
+| Problème | Conséquence |
+|----------|-------------|
+| Tag `latest` | L'image change silencieusement |
+| Pull réseau en run critique | Timeout, version inattendue |
+| Test Docker, prod Apptainer | Bind mounts différents, permissions |
+| Pas de `.def` versionné | Image irréconstruisible |
+| Écriture dans `/home` | Non reproductible selon l'environnement |
+| Aucun test `--version` | Version réelle inconnue |
+
+---
+
+## Deux niveaux de test
+
+```
+1. Container seul         →  apptainer exec + bats
+         ↓
+2. Process Nextflow       →  nf-test --profile apptainer
+```
+
+Les deux sont nécessaires. L'un sans l'autre est insuffisant.
+
+---
+
+## Niveau 1 — tester le container seul
+
+```bash
+@test "version attendue présente" {
+    run apptainer exec fastqc_0.12.1.sif fastqc --version
+    [ "$status" -eq 0 ]
+    [[ "$output" =~ "FastQC v0.12.1" ]]
+}
+
+@test "outil accessible sans /home monté" {
+    run apptainer exec --no-home fastqc_0.12.1.sif fastqc --version
+    [ "$status" -eq 0 ]
+}
+```
+
+---
+
+## Niveau 2 — tester le process Nextflow
+
+```groovy
+// Process déclare son container
+process FASTQC {
+    container 'biocontainers/fastqc:0.12.1--hdfd78af_0'
+    ...
+}
+```
+
+```bash
+# nf-test active le container via le profil
+nf-test test fastqc.nf.test --profile apptainer
+```
+
+---
+
+## Fichier de définition — reproductibilité
+
+```singularity
+Bootstrap: docker
+From: biocontainers/fastqc:0.12.1--hdfd78af_0
+
+%labels
+    Tool    FastQC
+    Version 0.12.1
+    Source  BioContainers
+
+%test
+    fastqc --version
+    which fastqc
+```
+
+::: {.callout-important}
+Le `.def` est versionné dans le repo.
+Le `.sif` est archivé sur le stockage HPC, pas dans git.
+:::
+
+---
+
+## Sources d'images versionnées
+
+| Source | Usage |
+|--------|-------|
+| **BioContainers** | Images bioinformatiques, versionnées par release |
+| **Seqera Containers / Wave** | Build à la volée depuis conda/bioconda |
+| **Registry équipe** | Images custom, `.def` versionné obligatoire |
+
+→ Jamais `latest`. Toujours un tag exact.
+
+---
+
+## Politique d'équipe
+
+- Chaque process Nextflow déclare son container
+- Chaque container a un test `--version` dans les bats
+- Chaque process containerisé a un test nf-test avec `-profile apptainer`
+- Les `.def` sont versionnés dans le repo
+- Les `.sif` de production sont archivés sur le stockage HPC
+
+---
+
+## Exercice → Module 06
+
+Rendez-vous dans `exercises/06_testing_containers/`
+
+Objectif : tester le container FastQC avec bats, puis valider le process Nextflow avec nf-test et le profil apptainer.

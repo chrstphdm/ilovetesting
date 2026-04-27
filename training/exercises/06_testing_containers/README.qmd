@@ -1,0 +1,157 @@
+---
+title: "Exercice 06 — Tester les containers Apptainer/Singularity"
+format: html
+toc: true
+---
+
+## Objectif
+
+Comprendre pourquoi un container ne suffit pas à garantir la reproductibilité,
+et apprendre à tester un container **indépendamment** du pipeline, puis **intégré** dans un process Nextflow.
+
+---
+
+## Pourquoi tester les containers ?
+
+Un container versionné est une bonne base, mais ce n'est pas suffisant.
+
+::: {.callout-warning}
+**Un container non testé n'est pas une garantie.**
+
+L'image peut démarrer sans que l'outil soit accessible, que la version soit correcte,
+ou que le process Nextflow fonctionne réellement à l'intérieur.
+:::
+
+Il faut distinguer deux niveaux de test :
+
+| Niveau | Ce qu'on vérifie | Outil |
+|--------|-----------------|-------|
+| **Container seul** | L'image démarre, l'outil existe, la version est correcte | `bats` + `apptainer exec` |
+| **Process Nextflow containerisé** | Nextflow utilise bien le container, le process termine, les sorties sont correctes | `nf-test --profile apptainer` |
+
+---
+
+## Risques courants à éviter
+
+| Mauvaise pratique | Risque |
+|------------------|--------|
+| Tag `latest` | L'image change sans avertissement |
+| Pull réseau au moment critique | Timeout ou version inattendue en production |
+| Tester avec Docker, déployer avec Apptainer | Comportements différents (bind mounts, permissions) |
+| Image custom sans `.def` versionné | Impossible à reconstruire à l'identique |
+| Aucun test `--version` | La version installée est inconnue |
+| Écriture dans `/home` ou `/tmp` codée en dur | Chemin non reproductible selon l'environnement |
+| Container multi-outils sans justification | Mise à jour difficile, surface d'attaque élargie |
+
+---
+
+## Structure de cet exercice
+
+```
+06_testing_containers/
+├── containers/
+│   ├── fastqc.def                  # Définition Apptainer (reproductible)
+│   └── README.md                   # Comment obtenir l'image
+└── tests/
+    ├── container_fastqc.bats       # Tests du container seul (bats)
+    └── fastqc_container.nf.test    # Test du process Nextflow containerisé (nf-test)
+```
+
+---
+
+## Partie 1 — Tester le container seul
+
+### Obtenir l'image
+
+```bash
+cd training/exercises/06_testing_containers/containers
+
+# Option rapide : pull depuis BioContainers
+apptainer pull fastqc_0.12.1.sif \
+  docker://biocontainers/fastqc:0.12.1--hdfd78af_0
+
+# Option reproductible : build depuis le fichier de définition
+apptainer build fastqc_0.12.1.sif fastqc.def
+```
+
+### Exercice bats
+
+Compléter les tests dans `tests/container_fastqc.bats` :
+
+```bash
+@test "fastqc --version rapporte la version attendue" {
+    # TODO : exécuter fastqc --version dans le container
+    # TODO : vérifier le status et le contenu de la sortie
+}
+
+@test "fastqc est accessible sans monter /home" {
+    # TODO : utiliser --no-home
+    # TODO : vérifier que l'outil fonctionne quand même
+}
+```
+
+### Lancer les tests
+
+```bash
+bats training/exercises/06_testing_containers/tests/container_fastqc.bats
+```
+
+---
+
+## Partie 2 — Tester le process Nextflow containerisé
+
+### Comment Nextflow utilise le container
+
+Le process `FASTQC` déclare son container :
+
+```groovy
+process FASTQC {
+    container 'biocontainers/fastqc:0.12.1--hdfd78af_0'
+    ...
+}
+```
+
+Ce container est ignoré sans profil dédié.
+Il est activé avec `-profile apptainer` ou `-profile docker`.
+
+### Exercice nf-test
+
+Compléter `tests/fastqc_container.nf.test` pour vérifier :
+
+- que le process réussit avec le profil apptainer
+- que les sorties existent
+- qu'au moins une valeur métier est correcte
+
+### Lancer avec Apptainer
+
+```bash
+cd training/exercises/06_testing_containers/tests
+
+# Avec Apptainer (recommandé en HPC)
+nf-test test fastqc_container.nf.test --profile apptainer
+
+# Sans container (simulation, pour développement rapide)
+nf-test test fastqc_container.nf.test
+```
+
+---
+
+## Résultat attendu
+
+```bash
+# Tests bats container
+✓ SIF image file exists
+✓ fastqc --version exits cleanly and reports expected version
+✓ which fastqc returns a path inside /usr or /opt
+✓ fastqc is accessible without mounting /home
+✓ container is writable only in expected locations
+✓ apptainer exec fails clearly if image is missing
+
+# nf-test
+✔ reads valides → HTML et stats produits dans le container
+✔ fichier vide → process échoue dans le container
+```
+
+## Solution
+
+→ Voir [solution.qmd](solution.qmd)

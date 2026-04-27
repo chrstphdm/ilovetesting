@@ -1,0 +1,71 @@
+// nf-test: process FASTQC running inside its declared container.
+//
+// Requires: Apptainer installed and the container pull completed, OR Docker.
+//
+// Run with Apptainer:
+//   nf-test test fastqc_container.nf.test --profile apptainer
+//
+// Run with Docker:
+//   nf-test test fastqc_container.nf.test --profile docker
+//
+// Without a container profile, the process runs natively (no container).
+// This is acceptable for the pedagogical simulation, but in a real pipeline
+// the tool binary would only be available inside the container.
+
+nextflow_process {
+    name "Test FASTQC (containerised)"
+    script "../../../pipelines/minimal/modules/fastqc.nf"
+    process "FASTQC"
+
+    test("reads valides → HTML et stats produits dans le container") {
+        when {
+            process {
+                """
+                input[0] = [
+                    [id: "sample1", single_end: true],
+                    file("${projectDir}/../../../data/sample.fastq")
+                ]
+                """
+            }
+        }
+        then {
+            // ── Process-level assertions ────────────────────────────
+            assert process.success
+            assert process.exitStatus == 0
+
+            // ── Structural assertions ───────────────────────────────
+            assert process.out.html.size()  == 1
+            assert process.out.stats.size() == 1
+
+            // ── Business assertions — HTML ──────────────────────────
+            def html = path(process.out.html[0][1])
+            assert html.text.contains("sample1")
+            assert html.text.contains("Total reads")
+
+            // ── Business assertions — stats TSV ────────────────────
+            def stats_lines = path(process.out.stats[0][1]).readLines()
+            assert stats_lines.size() == 2
+            assert stats_lines[0].startsWith("total_reads\t")
+            assert stats_lines[0].split("\t")[1].toInteger() == 100
+
+            // ── Non-regression snapshot ────────────────────────────
+            assert snapshot(process.out.stats).match()
+        }
+    }
+
+    test("fichier vide → process échoue dans le container") {
+        when {
+            process {
+                """
+                input[0] = [
+                    [id: "empty", single_end: true],
+                    file("${projectDir}/../../../data/empty.fastq")
+                ]
+                """
+            }
+        }
+        then {
+            assert process.failed
+        }
+    }
+}

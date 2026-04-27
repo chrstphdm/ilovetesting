@@ -5,6 +5,14 @@ on:
     branches: [main, develop]
   pull_request:
     branches: [main, develop]
+  workflow_dispatch:
+    inputs:
+      run_container_tests:
+        description: "Run Apptainer container tests (requires self-hosted runner with Apptainer)"
+        required: false
+        default: "false"
+        type: choice
+        options: ["true", "false"]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -81,3 +89,24 @@ jobs:
         run: |
           cd training/tests/nf-test
           nf-test test --verbose
+
+  test-containers:
+    name: container tests (Apptainer)
+    # Only runs when manually triggered with run_container_tests=true.
+    # Requires a self-hosted runner that has Apptainer installed.
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_container_tests == 'true' }}
+    runs-on: [self-hosted, apptainer]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install bats
+        uses: bats-core/bats-action@2.0.0
+
+      - name: Pull FastQC SIF image
+        working-directory: training/exercises/06_testing_containers/containers
+        run: |
+          apptainer pull fastqc_0.12.1.sif \
+            docker://biocontainers/fastqc:0.12.1--hdfd78af_0
+
+      - name: Run container bats tests
+        run: bats training/exercises/06_testing_containers/tests/container_fastqc.bats

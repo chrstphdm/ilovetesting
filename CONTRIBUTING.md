@@ -107,3 +107,47 @@ Les hooks configurés (`.pre-commit-config.yaml`) vérifient :
 - ✅ Au moins 1 review approuvée
 
 Ne jamais pusher directement sur `main`.
+
+---
+
+## Politique containers
+
+### Règles obligatoires
+
+- Chaque process Nextflow déclare son container avec un tag exact (jamais `latest`)
+- Chaque container a un test `--version` dans les fichiers `.bats` correspondants
+- Chaque process containerisé a un test nf-test pouvant être lancé avec `-profile apptainer`
+- Les fichiers `.def` (définitions Apptainer) sont versionnés dans le repo
+- Les fichiers `.sif` (images compilées) **ne sont pas** commitées dans git — elles sont archivées sur le stockage HPC ou regénérées
+
+### Sources d'images autorisées
+
+| Source | Usage |
+|--------|-------|
+| **BioContainers** | Images bioinformatiques standard, tag par version de l'outil |
+| **Seqera Containers / Wave** | Build à la volée depuis conda/bioconda |
+| **Registry équipe** | Images custom — `.def` versionné obligatoire dans le repo |
+
+### Niveaux de test pour les containers
+
+| Niveau | Outil | Ce qu'on vérifie |
+|--------|-------|-----------------|
+| **Container seul** | `bats` + `apptainer exec` | Image démarre, outil accessible, bonne version, pas de dépendance à `$HOME` |
+| **Process Nextflow containerisé** | `nf-test --profile apptainer` | Nextflow utilise le container, le process termine, les sorties sont correctes |
+
+Les tests container bats (`exercises/06_testing_containers/tests/`) sont **locaux ou HPC** : ils nécessitent Apptainer et le fichier `.sif`. Ils ne s'exécutent pas automatiquement en CI standard — voir le job `test-containers` (déclenchement manuel via `workflow_dispatch`).
+
+### Structure attendue pour un module containerisé
+
+```
+modules/
+└── mon_outil.nf           # process avec container 'registry/image:tag'
+
+exercises/XX_mon_module/
+└── containers/
+    ├── mon_outil.def      # définition Apptainer (versionné dans git)
+    └── README.md          # instructions pull/build, politique .sif
+└── tests/
+    ├── container_mon_outil.bats   # tests bats du container seul
+    └── mon_outil_container.nf.test  # test nf-test avec profil apptainer
+```

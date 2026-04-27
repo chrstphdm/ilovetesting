@@ -1,0 +1,106 @@
+---
+title: "Solution 06 — Tester les containers Apptainer/Singularity"
+format: html
+toc: true
+---
+
+## Solution bats — container seul
+
+```bash
+#!/usr/bin/env bats
+
+CONTAINER_DIR="${BATS_TEST_DIRNAME}/../containers"
+IMAGE="${CONTAINER_DIR}/fastqc_0.12.1.sif"
+EXPECTED_VERSION="FastQC v0.12.1"
+
+require_image() {
+    if [ ! -f "${IMAGE}" ]; then
+        skip "SIF not found — pull: apptainer pull ${IMAGE} docker://biocontainers/fastqc:0.12.1--hdfd78af_0"
+    fi
+}
+
+@test "fastqc --version rapporte la version attendue" {
+    require_image
+    run apptainer exec "${IMAGE}" fastqc --version
+    [ "$status" -eq 0 ]
+    [[ "$output" =~ "${EXPECTED_VERSION}" ]]
+}
+
+@test "fastqc est accessible sans monter /home" {
+    require_image
+    run apptainer exec --no-home "${IMAGE}" fastqc --version
+    [ "$status" -eq 0 ]
+    [[ "$output" =~ "${EXPECTED_VERSION}" ]]
+}
+```
+
+## Solution nf-test — process containerisé
+
+```groovy
+nextflow_process {
+    name "Test FASTQC (containerisé)"
+    script "../../../pipelines/minimal/modules/fastqc.nf"
+    process "FASTQC"
+
+    test("reads valides → HTML et stats produits dans le container") {
+        when {
+            process {
+                """
+                input[0] = [
+                    [id: "sample1", single_end: true],
+                    file("${projectDir}/../../../data/sample.fastq")
+                ]
+                """
+            }
+        }
+        then {
+            assert process.success
+            assert process.out.html.size()  == 1
+            assert process.out.stats.size() == 1
+
+            def stats_lines = path(process.out.stats[0][1]).readLines()
+            assert stats_lines[0].split("\t")[1].toInteger() == 100
+
+            assert snapshot(process.out.stats).match()
+        }
+    }
+}
+```
+
+## Points clés
+
+**Pourquoi `require_image` et `skip` plutôt que `fail` ?**
+
+Les tests containers dépendent d'une infrastructure externe (image présente sur le système).
+Utiliser `skip` évite que l'absence de l'image transforme un run CI propre en rouge inutilement.
+Les tests sont documentés comme "locaux/HPC" — leur exécution est explicite et volontaire.
+
+**Pourquoi `--no-home` dans un test ?**
+
+Si un outil cherche un fichier de config dans `$HOME` au démarrage, il peut échouer en HPC
+où `$HOME` n'est pas monté dans le container. Tester avec `--no-home` détecte ce problème
+avant la mise en production.
+
+**Différence entre tester le container et tester le pipeline**
+
+| Test | Ce qu'il prouve |
+|------|----------------|
+| `apptainer exec ... fastqc --version` | L'image est correcte, l'outil existe |
+| `nf-test test --profile apptainer` | Nextflow exécute bien le process dans le container |
+| Les deux ensemble | Reproductibilité garantie de l'image à l'output |
+
+## Cycle complet recommandé
+
+```bash
+# 1. Construire ou récupérer l'image
+apptainer pull fastqc_0.12.1.sif docker://biocontainers/fastqc:0.12.1--hdfd78af_0
+
+# 2. Tester le container seul
+bats tests/container_fastqc.bats
+
+# 3. Tester le process Nextflow avec le container
+nf-test test tests/fastqc_container.nf.test --profile apptainer
+
+# 4. Tester le pipeline complet
+nextflow run pipelines/minimal/main.nf -profile test,apptainer
+```

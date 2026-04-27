@@ -39,3 +39,7 @@ Thumbs.db
 
 # Logs
 *.log
+
+# Apptainer/Singularity — images compilées (archivées sur HPC, pas dans git)
+*.sif
+*.img

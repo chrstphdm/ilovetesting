@@ -1,0 +1,51 @@
+# Apptainer definition file — FastQC 0.12.1
+#
+# Bootstraps from the official BioContainers Docker image.
+# This approach is preferred over reinstalling from scratch:
+#   - image is already built and tested by the BioContainers community
+#   - version is pinned (no `latest` tag)
+#   - fully reproducible: the same .def always produces equivalent images
+#
+# Build:
+#   apptainer build fastqc_0.12.1.sif fastqc.def
+#
+# Alternatively, pull the Docker image directly (no build required):
+#   apptainer pull fastqc_0.12.1.sif docker://biocontainers/fastqc:0.12.1--hdfd78af_0
+
+Bootstrap: docker
+From: biocontainers/fastqc:0.12.1--hdfd78af_0
+
+%labels
+    Tool        FastQC
+    Version     0.12.1
+    Source      BioContainers
+    Registry    docker://biocontainers/fastqc:0.12.1--hdfd78af_0
+    Maintainer  chrstphdm
+
+%help
+    FastQC v0.12.1 — quality control for high-throughput sequencing data.
+
+    Usage:
+        apptainer run fastqc_0.12.1.sif fastqc [options] <input.fastq>
+
+    Build from this definition file:
+        apptainer build fastqc_0.12.1.sif fastqc.def
+
+    Pull directly from BioContainers (no build needed):
+        apptainer pull fastqc_0.12.1.sif docker://biocontainers/fastqc:0.12.1--hdfd78af_0
+
+    Run tool version check:
+        apptainer exec fastqc_0.12.1.sif fastqc --version
+
+%environment
+    # Ensure locale is set for consistent output
+    export LC_ALL=C
+    export LANG=C
+
+%test
+    # Verify that the tool is accessible and returns the expected version.
+    # This section runs inside the container at build time (apptainer build --test).
+    echo "--- Running %test section ---"
+    fastqc --version
+    which fastqc
+    echo "--- %test passed ---"
