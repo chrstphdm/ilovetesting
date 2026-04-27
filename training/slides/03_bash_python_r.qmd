@@ -46,6 +46,20 @@ records.tsv
 
 ---
 
+## Les fichiers de test
+
+| Fichier | Contenu | Scénario couvert |
+|---------|---------|-----------------|
+| `records.tsv` | 20 lignes valides | happy path |
+| `empty.tsv` | en-tête seul, aucune donnée | fichier sans données |
+| `invalid_records.tsv` | valeur non numérique | contrainte de type |
+| `duplicated_records.tsv` | ID `S01` dupliqué | contrainte d'unicité |
+| `missing.tsv` | n'existe pas | fichier absent |
+
+Chaque fichier correspond à un cas de test précis dans les exemples suivants.
+
+---
+
 ## bats — Bash
 
 ```bash
