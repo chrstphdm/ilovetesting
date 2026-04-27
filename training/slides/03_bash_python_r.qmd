@@ -1,0 +1,111 @@
+---
+title: "Tester Bash, Python et R"
+subtitle: "Formation testing — Module 03"
+format:
+  revealjs:
+    theme: simple
+    slide-number: true
+    code-block-height: 400px
+---
+
+## Objectif
+
+Appliquer la même logique de test dans trois langages différents.
+
+---
+
+## Pourquoi tester les scripts hors Nextflow ?
+
+Les scripts `validate_fastq.sh`, `parse_counts.py`, `stats.R` :
+
+- sont appelés par le pipeline
+- peuvent casser silencieusement
+- sont réutilisés dans plusieurs projets
+
+. . .
+
+**Un bug dans un script = un bug dans le pipeline.**
+
+---
+
+## Arrange / Act / Assert
+
+```
+Arrange   préparer l'input minimal
+Act       exécuter la fonction ou le script
+Assert    vérifier le résultat attendu
+```
+
+La même structure dans tous les frameworks.
+
+---
+
+## bats — Bash
+
+```bash
+@test "fichier valide → exit 0 et 100 reads" {
+    # Arrange : données synthétiques dans data/
+    run bash validate_fastq.sh data/sample.fastq  # Act
+    [ "$status" -eq 0 ]                           # Assert
+    [[ "$output" =~ "100 reads" ]]                # Assert
+}
+```
+
+---
+
+## pytest — Python
+
+```python
+def test_load_valid_file():
+    # Arrange
+    path = DATA / "counts.tsv"
+    # Act
+    df = load_counts(path)
+    # Assert
+    assert df.shape == (20, 4)
+    assert (df >= 0).all().all()   # invariant métier
+```
+
+---
+
+## testthat — R
+
+```r
+test_that("résultat a les bonnes colonnes", {
+    # Arrange + Act
+    result <- compute_stats(make_counts())
+    # Assert
+    expect_named(result, c("gene", "mean", "sd", "zero_variance"))
+    expect_true(all(result$mean >= 0))  # invariant métier
+})
+```
+
+---
+
+## Même règle, trois syntaxes
+
+| Framework | Échec attendu | Cas limite |
+|-----------|--------------|------------|
+| bats | `[ "$status" -ne 0 ]` | fichier vide, absent |
+| pytest | `pytest.raises(ValueError)` | valeurs négatives |
+| testthat | `expect_error(...)` | data.frame vide |
+
+---
+
+## Message à retenir
+
+::: {.callout-important}
+**Arrange / Act / Assert.**
+
+La syntaxe change. La logique ne change pas.
+
+Tester les invariants métier (≥ 0, colonnes attendues) autant que le comportement.
+:::
+
+---
+
+## Exercices → Modules 01, 02, 03
+
+- `exercises/01_bash/` — bats sur `validate_fastq.sh`
+- `exercises/02_python/` — pytest sur `parse_counts.py`
+- `exercises/03_r/` — testthat sur `stats.R`

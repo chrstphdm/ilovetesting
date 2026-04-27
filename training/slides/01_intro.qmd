@@ -79,6 +79,33 @@ Chaque module → un fichier `.nf.test`.
 
 ---
 
+## Ce que les tests ne garantissent pas
+
+- ❌ Que la biologie est correcte
+- ❌ Que les paramètres sont optimaux
+- ❌ Que l'outil tiers fonctionne sans bug
+- ❌ Qu'il n'y a aucun autre bug
+
+. . .
+
+✅ Ils garantissent que **ce qu'on a écrit fait ce qu'on pense qu'il fait**.
+
+---
+
+## Organisation de la formation
+
+| Module | Sujet | Exercice |
+|--------|-------|----------|
+| 01 | Pourquoi tester | `01_bash/` |
+| 02 | Concepts | — |
+| 03 | Bash · Python · R | `01_bash/` `02_python/` `03_r/` |
+| 04 | nf-test | `04_nextflow/` |
+| 05 | Containers | `06_testing_containers/` |
+| 06 | Tests bioinformatiques | `05_metamorphic/` |
+| 07 | Stratégie équipe | — |
+
+---
+
 ## Exercice → Module 01
 
 Rendez-vous dans `exercises/01_bash/`

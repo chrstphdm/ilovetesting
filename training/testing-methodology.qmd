@@ -1,0 +1,89 @@
+---
+title: "Méthodologie de test"
+format:
+  html:
+    toc: true
+---
+
+## Arrange / Act / Assert
+
+Chaque test suit trois étapes :
+
+```
+Arrange   préparer l'input minimal
+Act       exécuter la fonction, le script ou le process
+Assert    vérifier le résultat
+```
+
+Exemple en bats :
+
+```bash
+@test "fichier valide → exit 0" {
+    # Arrange : données dans data/sample.fastq
+    run bash validate_fastq.sh data/sample.fastq   # Act
+    [ "$status" -eq 0 ]                            # Assert
+    [[ "$output" =~ "100 reads" ]]                 # Assert
+}
+```
+
+---
+
+## Les quatre types de tests
+
+| Type | Périmètre | Vitesse | Outil |
+|------|-----------|---------|-------|
+| **Unitaire** | une fonction, un process | rapide | pytest, bats, testthat, nf-test |
+| **Intégration** | plusieurs modules | moyen | nf-test workflow |
+| **Fonctionnel** | pipeline end-to-end | lent | nf-test pipeline |
+| **Non-régression** | comparaison avant/après | rapide | snapshots nf-test |
+
+---
+
+## Happy path et edge cases
+
+| Catégorie | Exemple | Attendu |
+|-----------|---------|---------|
+| **Happy path** | FASTQ valide, 100 reads | exit 0, sortie correcte |
+| **Négatif** | fichier vide | exit 1, message explicite |
+| **Négatif** | fichier absent | exit 1, "not found" |
+| **Négatif** | format invalide | exit ≠ 0, erreur claire |
+| **Invariant** | read_count ≥ 0 | toujours vrai |
+
+---
+
+## L'oracle problem
+
+En bioinformatique, on ne connaît souvent pas la "bonne réponse".
+
+Quatre stratégies :
+
+1. **Golden dataset** — input connu, output figé et versionné
+2. **Pseudo-oracle** — comparer deux implémentations indépendantes
+3. **Invariants métier** — propriétés toujours vraies (count ≥ 0, fraction ≤ 1)
+4. **Metamorphic testing** — vérifier une relation entre deux exécutions
+
+---
+
+## Metamorphic testing
+
+Plutôt que vérifier une valeur absolue, on vérifie une **relation** :
+
+| MR | Input A → Input B | Relation attendue |
+|----|-------------------|------------------|
+| Permutation | reads → reads réordonnés | même count |
+| Duplication | 100 reads → 200 reads | exactement 2× |
+| Sous-ensemble | 100 reads → 50 reads | output ≤ 100 |
+
+Référence : PMC5425734 (2017) — aligneurs sensibles à l'ordre des reads.
+
+---
+
+## Ce que les tests ne doivent pas faire
+
+- Vérifier seulement que le process tourne sans erreur
+- Dépendre de l'ordre des lignes si cet ordre n'est pas garanti
+- Figer des chemins temporaires (`/tmp/...`)
+- Tester des outputs de plusieurs gigas
+- Utiliser des données privées ou identifiables
+- Accepter un snapshot sans lire le diff
+- Utiliser le tag `latest` dans les containers

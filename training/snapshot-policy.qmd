@@ -1,0 +1,94 @@
+---
+title: "Politique des snapshots"
+format:
+  html:
+    toc: true
+---
+
+## Qu'est-ce qu'un snapshot nf-test ?
+
+Un snapshot est une **photographie du résultat attendu**, stockée dans un fichier `.snap`.
+
+```groovy
+// Créer ou comparer un snapshot
+assert snapshot(process.out.stats).match()
+```
+
+À la première exécution, le snapshot est **créé**.
+Aux exécutions suivantes, le résultat est **comparé** au snapshot.
+Si différent → le test échoue.
+
+---
+
+## Quand créer un snapshot
+
+- Pour capturer un format de sortie stable (TSV, JSON, checksums)
+- Après avoir validé manuellement que le résultat est correct
+- En complément d'au moins une assertion explicite sur la valeur
+
+---
+
+## Règle obligatoire : assertion explicite d'abord
+
+Un snapshot seul ne suffit pas. Toujours l'accompagner d'assertions sur les valeurs clés :
+
+```groovy
+then {
+    assert process.success
+    // Assertions explicites
+    assert process.out.stats.size() == 1
+    def lines = path(process.out.stats[0][1]).readLines()
+    assert lines[0].split("\t")[1].toInteger() == 100
+    // Snapshot en complément
+    assert snapshot(process.out.stats).match()
+}
+```
+
+---
+
+## Quand mettre à jour un snapshot
+
+Un snapshot peut changer pour deux raisons :
+
+| Raison | Action |
+|--------|--------|
+| **Changement intentionnel** du comportement | Relancer avec `--update-snapshot`, justifier dans la PR |
+| **Régression** non souhaitée | Investiguer, corriger le code, ne pas mettre à jour |
+
+```bash
+nf-test test --update-snapshot
+```
+
+::: {.callout-warning}
+**Ne jamais mettre à jour un snapshot sans lire le diff.**
+
+Un snapshot accepté sans vérification est une preuve invalidée.
+:::
+
+---
+
+## Ce qu'un snapshot détecte (et ne détecte pas)
+
+| Détecte | Ne détecte pas |
+|---------|----------------|
+| Changement de format de sortie | Que la valeur est scientifiquement correcte |
+| Ajout ou suppression d'un champ | Bug présent dès le début |
+| Modification d'un checksum | Valeur fausse mais stable |
+
+---
+
+## Fichiers snapshot
+
+- Stockés dans le même répertoire que le fichier `.nf.test`
+- Extension `.nf.test.snap`
+- Versionnés dans git
+- À relire lors de chaque PR qui les modifie
+
+---
+
+## Règle de PR
+
+Un snapshot qui change dans une PR doit être accompagné de :
+
+1. Une explication du changement dans le corps de la PR
+2. Une confirmation que le nouveau résultat a été vérifié

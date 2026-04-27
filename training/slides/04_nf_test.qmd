@@ -91,6 +91,36 @@ Fichier snapshot généré :
 
 ---
 
+## Assertions explicites d'abord
+
+```groovy
+then {
+    assert process.success
+    assert process.out.html.size() == 1          // structure
+    assert process.out.stats[0][1].readLines()   // valeur métier
+        .first().startsWith("total_reads\t")
+    assert snapshot(process.out.stats).match()   // non-régression
+}
+```
+
+::: {.callout-tip}
+Snapshot seul = boîte noire. Assertion explicite = documentation.
+:::
+
+---
+
+## Limites des snapshots
+
+| Ce qu'un snapshot détecte | Ce qu'il ne détecte pas |
+|--------------------------|------------------------|
+| Changement inattendu | Que la valeur est correcte |
+| Régression de format | Bug présent dès le début |
+| Modification d'un champ | Valeur scientifiquement fausse |
+
+→ Toujours combiner snapshot + au moins une assertion sur la valeur.
+
+---
+
 ## Mettre à jour un snapshot
 
 ```bash

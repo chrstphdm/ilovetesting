@@ -1,0 +1,99 @@
+---
+title: "Stratégie pour petite équipe"
+subtitle: "Formation testing — Module 07"
+format:
+  revealjs:
+    theme: simple
+    slide-number: true
+    code-block-height: 400px
+---
+
+## Objectif
+
+Choisir quoi tester en priorité avec des ressources limitées.
+
+---
+
+## Risk-based testing
+
+```
+Priorité = probabilité de casser × impact si ça casse
+```
+
+| Priorité | Ce qu'on teste | Ce qu'on peut reporter |
+|----------|---------------|----------------------|
+| **1 — toujours** | transformations, filtres, décisions métier | — |
+| **2 — dès que possible** | enchaînements de modules | — |
+| **3 — progressivement** | pipeline complet, containers | visualisations |
+
+---
+
+## Quoi tester en premier ?
+
+Tester ce qui peut casser **silencieusement** :
+
+1. Transformation de données (compter, filtrer, agréger)
+2. Décision scientifique ou métier
+3. Métrique reportée à l'utilisateur
+4. Format d'entrée/sortie entre modules
+
+---
+
+## CI rapide / tests lents séparés
+
+```
+PR → CI (< 5 min)
+    ├── pytest, bats, testthat
+    └── nf-test sur process isolés
+
+Nuit ou manuel
+    ├── pipeline complet
+    ├── tests containers (Apptainer)
+    └── golden dataset complet
+```
+
+---
+
+## Handover et bus factor
+
+Un pipeline sans test = risque si la personne qui le maintient part.
+
+Un test = documentation exécutable que la prochaine personne peut lancer.
+
+::: {.callout-tip}
+Écrire le test qu'on aurait voulu trouver en arrivant dans le projet.
+:::
+
+---
+
+## Maturité progressive
+
+```
+Niveau 1  exit code et fichier de sortie
+Niveau 2  assertions sur les valeurs clés
+Niveau 3  snapshots + non-régression
+Niveau 4  metamorphic tests + golden dataset
+Niveau 5  containers + CI complète
+```
+
+Ne pas viser le niveau 5 dès le premier sprint.
+
+---
+
+## Ce que les tests ne doivent pas faire
+
+- ❌ Vérifier seulement que le process tourne
+- ❌ Dépendre de l'ordre si l'ordre n'est pas garanti
+- ❌ Figer des chemins temporaires
+- ❌ Utiliser `latest`
+- ❌ Accepter un snapshot sans lire le diff
+
+---
+
+## Message à retenir
+
+::: {.callout-important}
+**Commencer petit. Écrire un test utile vaut mieux qu'un plan parfait.**
+
+Un test minimal sur le chemin critique > zéro test.
+:::

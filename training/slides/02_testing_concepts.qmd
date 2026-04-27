@@ -19,6 +19,48 @@ AND    il contient exactement 100 reads
 
 ---
 
+## Quatre types de tests
+
+| Type | Périmètre | Vitesse |
+|------|-----------|---------|
+| **Unitaire** | une fonction, un process | ⚡ rapide |
+| **Intégration** | plusieurs modules enchaînés | 🔶 moyen |
+| **Fonctionnel** | pipeline complet, end-to-end | 🐢 lent |
+| **Non-régression** | comparaison snapshot avant/après | ⚡ rapide |
+
+---
+
+## Happy path vs edge case
+
+```bash
+# Happy path — input valide
+run bash validate_fastq.sh sample.fastq
+[ "$status" -eq 0 ]
+
+# Edge case — fichier vide
+run bash validate_fastq.sh empty.fastq
+[ "$status" -eq 1 ]
+
+# Edge case — fichier absent
+run bash validate_fastq.sh /tmp/missing.fastq
+[ "$status" -eq 1 ]
+```
+
+---
+
+## Tests rapides vs tests lents
+
+| Rapides (< 1 min) | Lents (> 1 min) |
+|-------------------|-----------------|
+| Fonctions unitaires | Pipeline complet |
+| Process Nextflow | Tests containers |
+| Snapshots existants | Golden dataset |
+
+→ Les rapides passent à chaque PR.
+→ Les lents passent en CI nightly ou manuellement.
+
+---
+
 ## Assertions
 
 Une assertion = une vérification binaire.

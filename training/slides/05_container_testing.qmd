@@ -1,6 +1,6 @@
 ---
 title: "Tester les containers"
-subtitle: "Formation testing — Module 06"
+subtitle: "Formation testing — Module 05"
 format:
   revealjs:
     theme: simple
@@ -23,6 +23,19 @@ apptainer exec mon_outil.sif mon_outil --version
 . . .
 
 **Un container qui démarre ≠ un outil qui fonctionne.**
+
+---
+
+## Apptainer vs Docker en HPC
+
+| Sujet | Docker | Apptainer |
+|-------|--------|-----------|
+| Bind mounts | configurables | `/home`, `/tmp` montés par défaut |
+| Permissions | root dans le container | UID de l'utilisateur |
+| Écriture dans `/` | possible | read-only par défaut |
+| `$HOME` disponible | selon config | oui, sauf `--no-home` |
+
+→ Tester avec Apptainer, pas seulement Docker.
 
 ---
 
@@ -71,7 +84,6 @@ Les deux sont nécessaires. L'un sans l'autre est insuffisant.
 ## Niveau 2 — tester le process Nextflow
 
 ```groovy
-// Process déclare son container
 process FASTQC {
     container 'biocontainers/fastqc:0.12.1--hdfd78af_0'
     ...
@@ -79,7 +91,6 @@ process FASTQC {
 ```
 
 ```bash
-# nf-test active le container via le profil
 nf-test test fastqc.nf.test --profile apptainer
 ```
 
@@ -94,7 +105,6 @@ From: biocontainers/fastqc:0.12.1--hdfd78af_0
 %labels
     Tool    FastQC
     Version 0.12.1
-    Source  BioContainers
 
 %test
     fastqc --version
@@ -120,17 +130,17 @@ Le `.sif` est archivé sur le stockage HPC, pas dans git.
 
 ---
 
-## Politique d'équipe
+## Message à retenir
 
-- Chaque process Nextflow déclare son container
-- Chaque container a un test `--version` dans les bats
-- Chaque process containerisé a un test nf-test avec `-profile apptainer`
-- Les `.def` sont versionnés dans le repo
-- Les `.sif` de production sont archivés sur le stockage HPC
+::: {.callout-important}
+**Tester le container seul, puis le process Nextflow dedans.**
+
+Tag exact. `.def` dans git. `.sif` sur HPC.
+:::
 
 ---
 
-## Exercice → Module 06
+## Exercice → Module 05
 
 Rendez-vous dans `exercises/06_testing_containers/`
 
