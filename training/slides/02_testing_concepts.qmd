@@ -82,7 +82,7 @@ Scénario classique :
 
 ## Données de test
 
-**Règle nf-core :** les données de test doivent être **minimalistes**.
+**Bonne pratique :** les données de test doivent être **minimalistes**.
 
 ```
 data/

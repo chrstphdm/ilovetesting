@@ -93,7 +93,7 @@ nf-test test --update-snapshot
 tests/snapshots/fastqc.nf.test/
 ```
 
-## Pattern nf-core : test profile
+## Bonne pratique : profil test dédié
 
 Le pipeline exemple inclut un profil `test` dans `nextflow.config` :
 

@@ -3,7 +3,7 @@ nextflow_workflow {
     script "../../pipelines/minimal/workflows/qc_trim.nf"
     workflow "QC_TRIM"
 
-    test("pipeline complet → HTML et reads trimés produits") {
+    test("pipeline complet → rapport et reads trimés produits") {
         when {
             workflow {
                 """
@@ -16,14 +16,26 @@ nextflow_workflow {
         }
         then {
             assert workflow.success
+
+            // ── Assertions structurelles ─────────────────────────────
             assert workflow.out.html.size() == 1
             assert workflow.out.reads.size() == 1
             assert workflow.out.report.size() == 1
 
-            def trim_report = path(workflow.out.report[0][1])
-            assert trim_report.text.contains("input_reads")
-            assert trim_report.text.contains("output_reads")
+            // ── Assertions métier — rapport de trim ───────────────────
+            def report_text = path(workflow.out.report[0][1]).text
+            assert report_text.contains("input_reads\t100")
 
+            def output_reads = (report_text =~ /output_reads\t(\d+)/)[0][1].toInteger()
+            assert output_reads <= 100          // le trim ne peut qu'éliminer des reads
+            assert output_reads > 0             // au moins un read conservé
+
+            // ── Assertions métier — FASTQ trimmé ──────────────────────
+            def trimmed_lines = path(workflow.out.reads[0][1]).readLines().size()
+            assert trimmed_lines % 4 == 0       // format FASTQ valide
+            assert trimmed_lines == output_reads * 4  // cohérence rapport ↔ fichier
+
+            // ── Non-régression via snapshot ───────────────────────────
             assert snapshot(
                 workflow.out.stats,
                 workflow.out.report

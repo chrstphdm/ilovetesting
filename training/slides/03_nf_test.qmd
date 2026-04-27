@@ -12,7 +12,7 @@ format:
 
 nf-test = framework de test officiel pour les pipelines Nextflow.
 
-Standard adopté par **nf-core** pour tous les modules.
+Outil de référence dans l'écosystème Nextflow, utilisé notamment par nf-core.
 
 ---
 
@@ -104,7 +104,7 @@ Ne jamais mettre à jour un snapshot sans comprendre pourquoi il a changé.
 
 ---
 
-## Profil test (nf-core)
+## Profil test dédié
 
 ```groovy
 // nextflow.config

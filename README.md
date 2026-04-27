@@ -51,7 +51,7 @@ training/
 | 3 | Tests Python | pytest | 45 min |
 | 4 | Tests R | testthat | 45 min |
 | 5 | Tests Nextflow | nf-test | 90 min |
-| 6 | Bonnes pratiques nf-core | nf-test | 30 min |
+| 6 | Bonnes pratiques d'industrialisation | nf-test | 30 min |
 | 7 | Intégration CI | GitHub Actions | 30 min |
 
 ---
@@ -93,9 +93,17 @@ Avant chaque merge :
 
 ---
 
+## Positionnement
+
+Ce repo ne cherche pas à implémenter un pipeline nf-core ni à adopter toute sa structure.
+nf-core est utilisé comme **source d'inspiration sélective** pour certaines pratiques d'industrialisation :
+tests automatisés, profils dédiés, mini datasets, CI sur PR, reproductibilité.
+La structure reste légère et adaptée à une petite équipe avec des pipelines internes.
+
 ## Sources
 
 - [training.nextflow.io](https://training.nextflow.io/) — concepts Nextflow + nf-test
 - [nf-test.com/docs](https://www.nf-test.com/docs/) — syntaxe et patterns nf-test
-- [nf-co.re/docs/developing/testing](https://nf-co.re/docs/developing/testing/overview) — standards nf-core
+- [nf-co.re/docs/developing/testing](https://nf-co.re/docs/developing/testing/overview) — bonnes pratiques de test (référence, pas obligation)
 - [github.com/askimed/nf-test-examples](https://github.com/askimed/nf-test-examples) — exemples réels
+- [PMC5425734](https://pmc.ncbi.nlm.nih.gov/articles/PMC5425734/) — metamorphic testing en bioinfo

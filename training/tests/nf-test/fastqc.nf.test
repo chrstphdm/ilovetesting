@@ -16,13 +16,27 @@ nextflow_process {
         }
         then {
             assert process.success
+
+            // ── Assertions structurelles ─────────────────────────────
             assert process.out.html.size() == 1
             assert process.out.stats.size() == 1
 
+            // ── Assertions métier — HTML ──────────────────────────────
             def html_path = path(process.out.html[0][1])
             assert html_path.fileName.toString().endsWith(".html")
             assert html_path.text.contains("sample1")
+            assert html_path.text.contains("Total reads")
+            assert html_path.text.contains("100")   // 100 reads dans sample.fastq
 
+            // ── Assertions métier — stats TSV ─────────────────────────
+            def stats = path(process.out.stats[0][1])
+            def stats_lines = stats.readLines()
+            assert stats_lines.size() == 2                      // 2 lignes : total_reads + file
+            assert stats_lines[0].startsWith("total_reads\t")
+            assert stats_lines[0].split("\t")[1].toInteger() == 100
+            assert stats_lines[1].startsWith("file\t")
+
+            // ── Non-régression via snapshot ───────────────────────────
             assert snapshot(process.out.stats).match()
         }
     }

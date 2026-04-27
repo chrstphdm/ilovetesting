@@ -80,6 +80,26 @@ gh release create v0.2.0 --generate-notes
 
 ---
 
+## Pre-commit hooks (optionnel mais recommandé)
+
+```bash
+# Installer pre-commit (une fois)
+pip install pre-commit   # ou : conda install -c conda-forge pre-commit
+
+# Activer les hooks dans le repo
+pre-commit install
+
+# Lancer manuellement sur tous les fichiers
+pre-commit run --all-files
+```
+
+Les hooks configurés (`.pre-commit-config.yaml`) vérifient :
+- espaces en fin de ligne, fin de fichier, encodage YAML
+- fins de ligne LF
+- `shellcheck` sur les scripts `.sh` et `.bats`
+
+---
+
 ## Règles CI
 
 `main` est protégé : tout merge requiert :
