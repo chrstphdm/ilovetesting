@@ -28,18 +28,6 @@ Les scripts `validate_fastq.sh`, `parse_counts.py`, `stats.R` :
 
 ---
 
-## Arrange / Act / Assert
-
-```
-Arrange   préparer l'input minimal
-Act       exécuter la fonction ou le script
-Assert    vérifier le résultat attendu
-```
-
-La même structure dans tous les frameworks.
-
----
-
 ## bats — Bash
 
 ```bash

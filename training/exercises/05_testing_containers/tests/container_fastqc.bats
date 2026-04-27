@@ -10,7 +10,7 @@
 #     docker://biocontainers/fastqc:0.12.1--hdfd78af_0
 #
 # Run:
-#   bats training/exercises/06_testing_containers/tests/container_fastqc.bats
+#   bats training/exercises/05_testing_containers/tests/container_fastqc.bats
 
 CONTAINER_DIR="${BATS_TEST_DIRNAME}/../containers"
 IMAGE="${CONTAINER_DIR}/fastqc_0.12.1.sif"
@@ -29,9 +29,15 @@ require_image() {
 # Tests
 # ---------------------------------------------------------------------------
 
-@test "SIF image file exists" {
+@test "infrastructure — apptainer installé et image SIF présente" {
+    # Ce test s'exécute TOUJOURS — il rend l'état de l'infrastructure visible.
+    # SKIPPED = infrastructure absente → les tests suivants ne peuvent pas tourner.
+    # PASSED  = infrastructure prête → les tests suivants s'exécutent réellement.
+    if ! command -v apptainer &>/dev/null; then
+        skip "Apptainer non installé — lancer sur un nœud HPC ou installer Apptainer"
+    fi
     if [ ! -f "${IMAGE}" ]; then
-        skip "SIF not found — run: apptainer pull ${IMAGE} docker://biocontainers/fastqc:0.12.1--hdfd78af_0"
+        skip "Image SIF absente — lancer : apptainer pull ${IMAGE} docker://biocontainers/fastqc:0.12.1--hdfd78af_0"
     fi
     [ -f "${IMAGE}" ]
 }

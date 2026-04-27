@@ -142,6 +142,6 @@ Tag exact. `.def` dans git. `.sif` sur HPC.
 
 ## Exercice → Module 05
 
-Rendez-vous dans `exercises/06_testing_containers/`
+Rendez-vous dans `exercises/05_testing_containers/`
 
 Objectif : tester le container FastQC avec bats, puis valider le process Nextflow avec nf-test et le profil apptainer.

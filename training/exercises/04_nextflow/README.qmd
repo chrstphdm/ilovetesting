@@ -16,6 +16,14 @@ Le pipeline exemple (`pipelines/minimal/`) contient :
 - `modules/trim.nf` — process qui filtre les reads de mauvaise qualité
 - `workflows/qc_trim.nf` — enchaîne FASTQC → TRIM
 
+::: {.callout-note}
+**Ce pipeline est une simulation pédagogique.**
+
+Le module `FASTQC` ne lance pas le vrai outil FastQC. Il génère un HTML et un fichier de stats via un script bash. Les assertions que vous écrirez sur le contenu de ces fichiers fonctionnent parce que ce contenu est entièrement sous notre contrôle.
+
+En production, vous testerez des **propriétés observables** d'un vrai outil (nombre de reads, format du rapport, code de sortie) et non le texte exact codé en dur dans un script bash. La logique de test reste identique — la distinction est importante pour comprendre ce que vos assertions prouvent réellement.
+:::
+
 ## Données
 
 ```

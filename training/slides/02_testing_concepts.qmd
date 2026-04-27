@@ -11,11 +11,13 @@ format:
 ## Anatomie d'un test
 
 ```
-GIVEN  un fichier FASTQ avec 100 reads
-WHEN   je lance le process FASTQC
-THEN   le fichier de sortie existe
+GIVEN  un fichier FASTQ avec 100 reads   ← Arrange
+WHEN   je lance le process FASTQC        ← Act
+THEN   le fichier de sortie existe       ← Assert
 AND    il contient exactement 100 reads
 ```
+
+GIVEN / WHEN / THEN = Arrange / Act / Assert — même concept, deux notations.
 
 ---
 
@@ -147,9 +149,8 @@ Si ❌ : merge bloqué automatiquement.
 
 ---
 
-## Exercices → Modules 02 et 03
+## Suite → Module 03
 
-Ces concepts s'appliquent aux deux exercices suivants :
+Ces concepts s'appliquent aux exercices 01, 02 et 03.
 
-- `exercises/02_python/` — tester une fonction Python qui valide le format FASTQ (pytest)
-- `exercises/03_r/` — tester une fonction R équivalente (testthat)
+Le module suivant montre comment les appliquer concrètement en Bash, Python et R.

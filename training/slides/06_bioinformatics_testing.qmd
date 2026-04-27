@@ -132,6 +132,6 @@ Golden dataset + invariants + metamorphic = couverture sans oracle exact.
 
 ## Exercice → Module 06
 
-Rendez-vous dans `exercises/05_metamorphic/`
+Rendez-vous dans `exercises/06_metamorphic/`
 
 Objectif : écrire les tests MR1 et MR2 en bats sur les données `sample_shuffled.fastq` et `sample_doubled.fastq`.

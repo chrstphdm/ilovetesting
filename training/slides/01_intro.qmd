@@ -33,17 +33,6 @@ Nobody knows.
 
 ---
 
-## Les 4 types de tests
-
-| Type | Question | Exemple Nextflow |
-|------|----------|-----------------|
-| **Unitaire** | Cette fonction marche ? | Un process |
-| **Intégration** | Ces modules s'enchaînent ? | Un workflow |
-| **Fonctionnel** | Le pipeline produit le bon résultat ? | Pipeline complet |
-| **Non-régression** | On n'a pas cassé quelque chose ? | Snapshot comparaison |
-
----
-
 ## Mapping Nextflow
 
 ```
@@ -100,8 +89,8 @@ Chaque module → un fichier `.nf.test`.
 | 02 | Concepts | — |
 | 03 | Bash · Python · R | `01_bash/` `02_python/` `03_r/` |
 | 04 | nf-test | `04_nextflow/` |
-| 05 | Containers | `06_testing_containers/` |
-| 06 | Tests bioinformatiques | `05_metamorphic/` |
+| 05 | Containers | `05_testing_containers/` |
+| 06 | Tests bioinformatiques | `06_metamorphic/` |
 | 07 | Stratégie équipe | — |
 
 ---

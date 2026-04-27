@@ -1,5 +1,5 @@
 ---
-title: "Exercice 06 — Tester les containers Apptainer/Singularity"
+title: "Exercice 05 — Tester les containers Apptainer/Singularity"
 format: html
 toc: true
 ---
@@ -48,7 +48,7 @@ Il faut distinguer deux niveaux de test :
 ## Structure de cet exercice
 
 ```
-06_testing_containers/
+05_testing_containers/
 ├── containers/
 │   ├── fastqc.def                  # Définition Apptainer (reproductible)
 │   └── README.md                   # Comment obtenir l'image
@@ -64,7 +64,7 @@ Il faut distinguer deux niveaux de test :
 ### Obtenir l'image
 
 ```bash
-cd training/exercises/06_testing_containers/containers
+cd training/exercises/05_testing_containers/containers
 
 # Option rapide : pull depuis BioContainers
 apptainer pull fastqc_0.12.1.sif \
@@ -93,8 +93,16 @@ Compléter les tests dans `tests/container_fastqc.bats` :
 ### Lancer les tests
 
 ```bash
-bats training/exercises/06_testing_containers/tests/container_fastqc.bats
+bats training/exercises/05_testing_containers/tests/container_fastqc.bats
 ```
+
+::: {.callout-warning}
+**SKIPPED ≠ PASSED.**
+
+Si le premier test (`infrastructure — apptainer installé et image SIF présente`) est SKIPPED,
+tous les tests suivants seront aussi skippés. Cela signifie qu'**aucun container n'a été vérifié**.
+Les tests doivent être lancés sur un nœud HPC avec Apptainer installé et l'image SIF présente.
+:::
 
 ---
 
@@ -125,7 +133,7 @@ Compléter `tests/fastqc_container.nf.test` pour vérifier :
 ### Lancer avec Apptainer
 
 ```bash
-cd training/exercises/06_testing_containers/tests
+cd training/exercises/05_testing_containers/tests
 
 # Avec Apptainer (recommandé en HPC)
 nf-test test fastqc_container.nf.test --profile apptainer

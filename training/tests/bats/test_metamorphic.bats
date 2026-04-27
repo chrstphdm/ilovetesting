@@ -18,10 +18,13 @@ count_reads() {
     [ "$doubled" -eq $(( original * 2 )) ]
 }
 
-@test "MR3 — sous-ensemble : validate_fastq valide original ET shuffled" {
-    SCRIPT="${BATS_TEST_DIRNAME}/../../pipelines/minimal/scripts/validate_fastq.sh"
-    run bash "$SCRIPT" "$DATA/sample.fastq"
-    [ "$status" -eq 0 ]
-    run bash "$SCRIPT" "$DATA/sample_shuffled.fastq"
-    [ "$status" -eq 0 ]
+@test "MR3 — composition : count(doubled) == count(original) + count(shuffled)" {
+    # Relation métamorphique composite : on vérifie une RELATION entre trois exécutions
+    # indépendantes de count_reads. Si MR1 garantit shuffled == original et MR2 garantit
+    # doubled == 2×original, alors doubled == original + shuffled doit aussi tenir.
+    # Un échec ici signale une incohérence entre les trois invariants, pas juste un crash.
+    original=$(count_reads "$DATA/sample.fastq")
+    shuffled=$(count_reads "$DATA/sample_shuffled.fastq")
+    doubled=$(count_reads "$DATA/sample_doubled.fastq")
+    [ "$doubled" -eq $(( original + shuffled )) ]
 }

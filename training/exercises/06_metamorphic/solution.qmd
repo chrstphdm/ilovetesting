@@ -71,10 +71,11 @@ nextflow_process {
         }
         then {
             assert process.success
-            def counts = process.out.stats.collect { meta, f ->
-                path(f).readLines()[0].split("\t")[1].toInteger()
-            }.sort()
-            assert counts[1] == counts[0] * 2
+            // Indexer les counts par meta.id pour éviter toute dépendance à l'ordre d'émission
+            def counts = process.out.stats.collectEntries { meta, f ->
+                [ meta.id, path(f).readLines()[0].split("\t")[1].toInteger() ]
+            }
+            assert counts["doubled"] == counts["original"] * 2
         }
     }
 }

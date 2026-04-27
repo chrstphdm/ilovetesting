@@ -103,10 +103,10 @@ jobs:
         uses: bats-core/bats-action@2.0.0
 
       - name: Pull FastQC SIF image
-        working-directory: training/exercises/06_testing_containers/containers
+        working-directory: training/exercises/05_testing_containers/containers
         run: |
           apptainer pull fastqc_0.12.1.sif \
             docker://biocontainers/fastqc:0.12.1--hdfd78af_0
 
       - name: Run container bats tests
-        run: bats training/exercises/06_testing_containers/tests/container_fastqc.bats
+        run: bats training/exercises/05_testing_containers/tests/container_fastqc.bats

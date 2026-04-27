@@ -56,7 +56,7 @@ Corriger le bug. Le test doit maintenant passer.
 4. Relancer les tests bats du container :
 
 ```bash
-bats exercises/06_testing_containers/tests/container_fastqc.bats
+bats exercises/05_testing_containers/tests/container_fastqc.bats
 ```
 
 5. Relancer le test nf-test avec le profil apptainer :
@@ -119,7 +119,7 @@ cd training/tests/nf-test && nf-test test --verbose
 cd training && quarto check
 
 # Tests containers (si disponibles)
-bats training/exercises/06_testing_containers/tests/container_fastqc.bats
+bats training/exercises/05_testing_containers/tests/container_fastqc.bats
 ```
 
 La CI vérifie automatiquement les quatre premiers blocs à chaque PR.
