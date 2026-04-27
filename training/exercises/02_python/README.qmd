@@ -6,93 +6,112 @@ toc: true
 
 ## Objectif
 
-Tester une fonction Python qui parse et valide un fichier de comptage de gènes (TSV).
+Tester une fonction Python qui charge et valide un fichier TSV de données tabulaires.
 
 ## Contexte
 
-En RNA-seq, on produit des matrices de comptage (gènes × échantillons).
-Avant d'analyser, on veut s'assurer que :
+Avant de traiter un fichier de données, on veut s'assurer que :
 
 - le fichier existe et est lisible
-- les colonnes attendues sont présentes
-- il n'y a pas de valeurs négatives
+- il contient des données (pas seulement un en-tête)
+- les valeurs sont numériques et positives
+- les identifiants sont uniques
 
 ## Données
 
 ```
-training/data/counts.tsv    # Matrice valide : 20 gènes × 4 échantillons
-training/data/bad_counts.tsv  # Colonne manquante + valeurs négatives
+training/data/records.tsv           # TSV valide : 20 lignes (id, group, value)
+training/data/invalid_records.tsv   # Valeur non numérique
+training/data/empty.tsv             # En-tête seul, aucune donnée
+training/data/duplicated_records.tsv # Id S01 dupliqué
 ```
 
 ## Code de départ
 
-`training/pipelines/minimal/scripts/parse_counts.py` :
+`training/pipelines/minimal/scripts/parse_records.py` :
 
 ```python
-import pandas as pd
 from pathlib import Path
+import pandas as pd
 
 
-def load_counts(path: str) -> pd.DataFrame:
+def load_records(path: str) -> pd.DataFrame:
     p = Path(path)
     if not p.exists():
         raise FileNotFoundError(f"File not found: {path}")
-    df = pd.read_csv(p, sep="\t", index_col=0)
+    df = pd.read_csv(p, sep="\t")
+    if df.empty:
+        raise ValueError(f"File has no data rows: {path}")
     return df
 
 
-def validate_counts(df: pd.DataFrame, required_cols: list[str]) -> None:
-    missing = [c for c in required_cols if c not in df.columns]
+def validate_records(df: pd.DataFrame) -> None:
+    required = {"id", "group", "value"}
+    missing = required - set(df.columns)
     if missing:
         raise ValueError(f"Missing columns: {missing}")
-    if (df < 0).any().any():
-        raise ValueError("Negative counts found")
+    if not pd.api.types.is_numeric_dtype(df["value"]):
+        raise ValueError("Column 'value' must be numeric")
+    if (df["value"] < 0).any():
+        raise ValueError("Column 'value' contains negative values")
+    duplicated = df[df["id"].duplicated(keep=False)]["id"].unique().tolist()
+    if duplicated:
+        raise ValueError(f"Duplicate ids: {duplicated}")
 ```
 
 ## Exercice
 
-Compléter `tests/pytest/test_parse_counts.py` :
+Compléter `tests/pytest/test_parse_records.py` :
 
 ```python
 import pytest
 import pandas as pd
 from pathlib import Path
-from training.pipelines.minimal.scripts.parse_counts import load_counts, validate_counts
+from parse_records import load_records, validate_records
 
 DATA = Path("training/data")
 
 
 def test_load_valid_file():
-    # TODO : vérifier que load_counts retourne un DataFrame
-    # et que le shape est correct (20 lignes, 4 colonnes)
+    # TODO : vérifier shape (20, 3) et colonnes ["id", "group", "value"]
     pass
 
 
 def test_load_missing_file():
-    # TODO : vérifier que FileNotFoundError est levée
+    # TODO : vérifier FileNotFoundError
+    pass
+
+
+def test_load_empty_file():
+    # TODO : vérifier ValueError sur empty.tsv
     pass
 
 
 def test_validate_ok():
-    # TODO : vérifier qu'aucune exception n'est levée sur counts.tsv
+    # TODO : vérifier qu'aucune exception n'est levée sur records.tsv
     pass
 
 
-def test_validate_missing_column():
-    # TODO : vérifier que ValueError est levée si une colonne manque
+def test_validate_non_numeric_value():
+    # TODO : vérifier ValueError sur invalid_records.tsv
     pass
 
 
-def test_validate_negative_values():
-    # TODO : vérifier que ValueError est levée sur bad_counts.tsv
+def test_validate_duplicate_ids():
+    # TODO : vérifier ValueError sur duplicated_records.tsv
+    pass
+
+
+def test_all_values_non_negative():
+    # TODO : vérifier l'invariant (df["value"] >= 0).all()
     pass
 ```
 
 ## Résultat attendu
 
 ```
-tests/pytest/test_parse_counts.py .....  [100%]
-5 passed in 0.3s
+tests/pytest/test_parse_records.py .......  [100%]
+7 passed in 0.3s
 ```
 
 ## Solution

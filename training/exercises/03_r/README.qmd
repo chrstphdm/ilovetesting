@@ -6,61 +6,74 @@ toc: true
 
 ## Objectif
 
-Tester une fonction R qui calcule des statistiques de base sur une matrice de comptage RNA-seq.
+Tester une fonction R qui calcule des statistiques par groupe sur un fichier TSV.
 
 ## Contexte
 
-La fonction `compute_stats()` calcule par gène : moyenne, écart-type, et flag si la variance est nulle.
+La fonction `compute_stats()` lit un data.frame avec colonnes `id`, `group`, `value`
+et retourne la moyenne et l'écart-type par groupe.
 
 ## Code de départ
 
-`training/pipelines/minimal/scripts/stats.R` :
+`training/pipelines/minimal/scripts/stats_records.R` :
 
 ```r
-compute_stats <- function(counts_df) {
-  stopifnot(is.data.frame(counts_df))
-  stopifnot(nrow(counts_df) > 0)
+load_records <- function(path) {
+    if (!file.exists(path)) stop(paste("File not found:", path))
+    df <- read.table(path, header = TRUE, sep = "\t", stringsAsFactors = FALSE)
+    if (nrow(df) == 0) stop("File has no data rows")
+    df
+}
 
-  result <- data.frame(
-    gene    = rownames(counts_df),
-    mean    = rowMeans(counts_df),
-    sd      = apply(counts_df, 1, sd),
-    row.names = NULL
-  )
-  result$zero_variance <- result$sd == 0
-  result
+compute_stats <- function(df) {
+    stopifnot(is.data.frame(df))
+    required <- c("id", "group", "value")
+    missing <- setdiff(required, names(df))
+    if (length(missing) > 0) stop(paste("Missing columns:", paste(missing, collapse = ", ")))
+
+    groups <- unique(df$group)
+    data.frame(
+        group = groups,
+        mean  = sapply(groups, function(g) mean(df$value[df$group == g])),
+        sd    = sapply(groups, function(g) sd(df$value[df$group == g])),
+        row.names = NULL
+    )
 }
 ```
 
 ## Exercice
 
-Compléter `tests/testthat/test_stats.R` :
+Compléter `tests/testthat/test_stats_records.R` :
 
 ```r
 library(testthat)
-source("training/pipelines/minimal/scripts/stats.R")
+source("training/pipelines/minimal/scripts/stats_records.R")
+
+make_records <- function() {
+  # TODO : créer un petit data.frame avec colonnes id, group, value
+}
 
 test_that("résultat est un data.frame avec les bonnes colonnes", {
   # TODO
 })
 
-test_that("moyenne calculée correctement", {
-  # TODO : créer un df simple et vérifier la moyenne
+test_that("moyenne par groupe calculée correctement", {
+  # TODO : vérifier la moyenne du groupe A et du groupe B
 })
 
-test_that("zero_variance détecté", {
-  # TODO : gène avec valeurs identiques → zero_variance == TRUE
+test_that("toutes les moyennes sont non négatives", {
+  # TODO
 })
 
-test_that("erreur si df vide", {
-  # TODO : vérifier que stopifnot lève une erreur
+test_that("erreur si colonne manquante", {
+  # TODO
 })
 ```
 
 ## Résultat attendu
 
 ```
-[ FAIL 0 | WARN 0 | SKIP 0 | PASS 4 ]
+[ FAIL 0 | WARN 0 | SKIP 0 | PASS 5 ]
 ```
 
 ## Solution

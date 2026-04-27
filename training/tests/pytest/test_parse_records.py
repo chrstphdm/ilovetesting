@@ -1,12 +1,3 @@
----
-title: "Solution 02 — Tests Python avec pytest"
-format: html
-toc: true
----
-
-## Solution complète
-
-```python
 import pytest
 import pandas as pd
 from pathlib import Path
@@ -55,41 +46,3 @@ def test_validate_duplicate_ids():
 def test_all_values_non_negative():
     df = load_records(DATA / "records.tsv")
     assert (df["value"] >= 0).all()
-```
-
-## Points clés
-
-- `pytest.raises(ExcType, match="...")` : vérifie type ET message de l'exception
-- `isinstance(df, pd.DataFrame)` : vérifier le type de retour
-- Invariant métier : `(df["value"] >= 0).all()` — propriété qui doit toujours être vraie
-
-## Patterns avancés
-
-### Fixture pytest
-
-```python
-@pytest.fixture
-def valid_df():
-    return load_records(DATA / "records.tsv")
-
-
-def test_validate_ok(valid_df):
-    validate_records(valid_df)
-
-
-def test_all_values_non_negative(valid_df):
-    assert (valid_df["value"] >= 0).all()
-```
-
-### Parametrize
-
-```python
-@pytest.mark.parametrize("bad_file", [
-    "invalid_records.tsv",
-    "duplicated_records.tsv",
-])
-def test_validate_rejects_bad_data(bad_file):
-    df = load_records(DATA / bad_file)
-    with pytest.raises(ValueError):
-        validate_records(df)
-```

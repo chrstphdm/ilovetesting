@@ -1,12 +1,3 @@
----
-title: "Solution 03 — Tests R avec testthat"
-format: html
-toc: true
----
-
-## Solution complète
-
-```r
 library(testthat)
 
 this_dir <- tryCatch(
@@ -33,8 +24,8 @@ test_that("résultat est un data.frame avec les bonnes colonnes", {
 
 test_that("moyenne par groupe calculée correctement", {
   result <- compute_stats(make_records())
-  expect_equal(result$mean[result$group == "A"], 30)  # (10+30+50)/3
-  expect_equal(result$mean[result$group == "B"], 40)  # (20+40+60)/3
+  expect_equal(result$mean[result$group == "A"], 30)
+  expect_equal(result$mean[result$group == "B"], 40)
 })
 
 test_that("toutes les moyennes sont non négatives", {
@@ -50,23 +41,3 @@ test_that("erreur si colonne manquante", {
 test_that("erreur si data.frame vide", {
   expect_error(compute_stats(data.frame()), "Missing columns")
 })
-```
-
-## Points clés
-
-- `expect_s3_class()` : vérifier le type d'objet R
-- `expect_named()` : vérifier les noms de colonnes exactement
-- `expect_equal()` : comparaison valeur par valeur (avec tolérance numérique)
-- `expect_error(expr, "pattern")` : vérifie qu'une erreur est levée avec le bon message
-
-## Pour aller plus loin
-
-```r
-# Tester avec les vraies données
-test_that("fonctionne sur records.tsv complet", {
-  df <- load_records("training/data/records.tsv")
-  result <- compute_stats(df)
-  expect_equal(nrow(result), 2)        # deux groupes A et B
-  expect_true(all(result$mean >= 0))   # invariant métier
-})
-```

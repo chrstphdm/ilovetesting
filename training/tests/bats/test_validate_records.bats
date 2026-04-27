@@ -1,12 +1,3 @@
----
-title: "Solution 01 — Tests Bash avec bats"
-format: html
-toc: true
----
-
-## Solution complète
-
-```bash
 #!/usr/bin/env bats
 
 SCRIPT="${BATS_TEST_DIRNAME}/../../pipelines/minimal/scripts/validate_records.sh"
@@ -41,25 +32,3 @@ DATA="${BATS_TEST_DIRNAME}/../../data"
     [ "$status" -eq 1 ]
     [[ "$output" == *"usage"* ]]
 }
-```
-
-## Points clés
-
-- `run` : exécute la commande et capture `$status` + `$output`
-- `[ "$status" -eq N ]` : vérifie le code de sortie
-- `[[ "$output" == *"..."* ]]` : vérifie le contenu du message
-
-## Pour aller plus loin
-
-- Tester avec `duplicated_records.tsv` si le script détecte les doublons
-- Utiliser `setup` / `teardown` pour créer/nettoyer des fichiers temporaires :
-
-```bash
-setup() {
-    TMPFILE=$(mktemp /tmp/test_XXXXXX.tsv)
-}
-
-teardown() {
-    rm -f "$TMPFILE"
-}
-```
