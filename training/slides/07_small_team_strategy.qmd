@@ -39,6 +39,19 @@ Tester ce qui peut casser **silencieusement** :
 
 ---
 
+## Matrice de décision
+
+| Si... | Alors... |
+|-------|---------|
+| ça transforme une donnée critique | test unitaire + assertion comportementale |
+| ça enchaîne deux étapes | test workflow |
+| ça produit un livrable | test pipeline |
+| ça a déjà cassé | test de non-régression |
+| ça dépend d'un outil externe | test container + version |
+| ça coûte cher à exécuter | test minimal en PR + test long nightly |
+
+---
+
 ## CI rapide / tests lents séparés
 
 ```
@@ -66,9 +79,40 @@ Un test = documentation exécutable que la prochaine personne peut lancer.
 
 ---
 
+## Minimum viable test
+
+Pour toute nouvelle étape du pipeline :
+
+```
+1. un input minimal
+2. une sortie attendue
+3. une assertion comportementale
+4. un cas d'erreur
+5. une commande documentée
+```
+
+C'est suffisant pour commencer.
+
+---
+
+## Quand ne pas tester
+
+- ❌ code exploratoire jetable
+- ❌ visualisation temporaire
+- ❌ wrapper trivial déjà couvert ailleurs
+- ❌ sortie volumineuse jamais relue
+- ❌ cas non critique et très coûteux à tester
+
+. . .
+
+**Mais documenter pourquoi** — une décision explicite vaut mieux qu'un oubli silencieux.
+
+---
+
 ## Maturité progressive
 
 ```
+Niveau 0  aucun test
 Niveau 1  exit code et fichier de sortie
 Niveau 2  assertions sur les valeurs clés
 Niveau 3  snapshots + non-régression

@@ -36,15 +36,15 @@ GIVEN / WHEN / THEN = Arrange / Act / Assert — même concept, deux notations.
 
 ```bash
 # Happy path — input valide
-run bash validate_fastq.sh sample.fastq
+run bash validate_records.sh records.tsv
 [ "$status" -eq 0 ]
 
 # Edge case — fichier vide
-run bash validate_fastq.sh empty.fastq
+run bash validate_records.sh empty.tsv
 [ "$status" -eq 1 ]
 
 # Edge case — fichier absent
-run bash validate_fastq.sh /tmp/missing.fastq
+run bash validate_records.sh /tmp/missing.tsv
 [ "$status" -eq 1 ]
 ```
 
@@ -82,14 +82,14 @@ assert output.suffix == ".html"
 
 ---
 
-## Les assertions clés en bioinfo
+## Les assertions utiles
 
 | Ce qu'on vérifie | Exemple |
 |-----------------|---------|
 | Fichier existe | `assert path.exists()` |
-| Nombre de lignes | `assert lines == 400` (4×100 reads FASTQ) |
-| En-têtes colonnes | `assert "sample_id" in header` |
-| Format valide | `assert line.startswith("@")` |
+| Nombre de lignes | `assert len(df) == 20` |
+| Colonnes attendues | `assert "id" in df.columns` |
+| Valeur dans une borne | `assert (df["value"] >= 0).all()` |
 | Code de sortie | `assert returncode == 0` |
 
 ---
@@ -107,8 +107,10 @@ assert snapshot(output).match()
 - Exécutions suivantes → compare avec le snapshot
 - Si différent → le test échoue
 
-::: {.callout-tip}
-Les snapshots détectent les régressions invisibles à l'œil nu.
+::: {.callout-warning}
+Un snapshot ne dit pas que la sortie est **correcte**.
+
+Il dit seulement qu'elle n'a **pas changé**.
 :::
 
 ---

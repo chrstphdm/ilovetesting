@@ -8,19 +8,27 @@ format:
     code-block-height: 400px
 ---
 
-## Le problème sans tests
+## Le danger le plus courant
 
-```bash
-# Ça marchait hier...
-$ nextflow run pipeline.nf
-ERROR ~ Process terminated with an exit code 1
-```
+Le pipeline passe. Le rapport est généré.
 
 . . .
 
-**Quand ? Pourquoi ? Sur quels données ?**
+Mais trois lignes ont disparu après une jointure de table.
 
-Nobody knows.
+. . .
+
+Personne ne le voit avant la livraison.
+
+---
+
+## Le vrai problème
+
+::: {.callout-warning}
+Le danger principal n'est pas l'erreur visible.
+
+**Le danger principal est la régression silencieuse.**
+:::
 
 ---
 
