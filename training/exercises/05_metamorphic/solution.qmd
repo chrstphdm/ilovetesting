@@ -1,0 +1,94 @@
+---
+title: "Solution 05 — Metamorphic testing"
+format: html
+toc: true
+---
+
+## Solution bats
+
+```bash
+#!/usr/bin/env bats
+
+DATA="${BATS_TEST_DIRNAME}/../../data"
+
+count_reads() {
+    awk 'NR%4==1' "$1" | wc -l
+}
+
+@test "MR1 — permutation : reads réordonnés → même nombre de reads valides" {
+    original=$(count_reads "$DATA/sample.fastq")
+    shuffled=$(count_reads "$DATA/sample_shuffled.fastq")
+
+    [ "$original" -eq "$shuffled" ]
+}
+
+@test "MR2 — duplication : 2× l'input → exactement 2× les reads" {
+    original=$(count_reads "$DATA/sample.fastq")
+    doubled=$(count_reads "$DATA/sample_doubled.fastq")
+
+    [ "$doubled" -eq $(( original * 2 )) ]
+}
+```
+
+## Solution nf-test (niveau avancé)
+
+```groovy
+nextflow_process {
+    name "Test FASTQC — metamorphic"
+    script "../../pipelines/minimal/modules/fastqc.nf"
+    process "FASTQC"
+
+    test("MR1 — permutation : reads réordonnés → même total_reads") {
+        when {
+            process {
+                """
+                input[0] = Channel.of(
+                    [[id: "original"], file("${projectDir}/../../data/sample.fastq")],
+                    [[id: "shuffled"], file("${projectDir}/../../data/sample_shuffled.fastq")]
+                )
+                """
+            }
+        }
+        then {
+            assert process.success
+            def counts = process.out.stats.collect { meta, f ->
+                path(f).readLines()[0].split("\t")[1].toInteger()
+            }
+            assert counts[0] == counts[1]   // même nombre de reads
+        }
+    }
+
+    test("MR2 — duplication : doubled → 2× total_reads") {
+        when {
+            process {
+                """
+                input[0] = Channel.of(
+                    [[id: "original"], file("${projectDir}/../../data/sample.fastq")],
+                    [[id: "doubled"],  file("${projectDir}/../../data/sample_doubled.fastq")]
+                )
+                """
+            }
+        }
+        then {
+            assert process.success
+            def counts = process.out.stats.collect { meta, f ->
+                path(f).readLines()[0].split("\t")[1].toInteger()
+            }.sort()
+            assert counts[1] == counts[0] * 2
+        }
+    }
+}
+```
+
+## Points clés
+
+- Le metamorphic testing ne remplace pas les tests classiques : il les **complète**
+- Il est particulièrement utile quand l'oracle est difficile à définir (données réelles, résultats biologiques complexes)
+- Chaque MR teste une propriété du domaine, pas une valeur absolue
+- En bioinfo : permutation, duplication, sous-ensemble, inversion de strand sont des MR naturelles
+
+## Pour aller plus loin
+
+- MR sur un aligner : `bwa mem` sur reads ordonnés vs non ordonnés → même couverture ?
+- MR sur DESeq2 : doubler tous les counts → les log2FC ne changent pas ?
+- MR sur un variant caller : ajouter des reads non-informatifs → pas de nouveaux variants ?

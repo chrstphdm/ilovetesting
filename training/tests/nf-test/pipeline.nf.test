@@ -1,0 +1,56 @@
+nextflow_pipeline {
+    name "Test pipeline minimal end-to-end"
+    script "../../pipelines/minimal/main.nf"
+
+    test("pipeline complet → FASTQC + TRIM sur sample.fastq") {
+        when {
+            params {
+                input  = "${projectDir}/../../data/sample.fastq"
+                outdir = "${outputDir}"
+            }
+        }
+        then {
+            assert workflow.success
+            assert workflow.exitStatus == 0
+
+            // 2 tâches lancées : FASTQC + TRIM
+            assert workflow.trace.tasks().size() == 2
+            assert workflow.trace.succeeded().size() == 2
+            assert workflow.trace.failed().size() == 0
+
+            // Rapport HTML produit
+            def html = file("${outputDir}/fastqc/sample_fastqc.html")
+            assert html.exists()
+            assert html.text.contains("sample")
+            assert html.text.contains("Total reads")
+
+            // Reads trimés produits
+            def trimmed = file("${outputDir}/trim/sample_trimmed.fastq")
+            assert trimmed.exists()
+            def trimmed_lines = trimmed.readLines().size()
+            assert trimmed_lines % 4 == 0      // format FASTQ valide
+            assert trimmed_lines > 0           // au moins un read conservé
+
+            // Rapport de trim : valeurs métier
+            def trim_report = file("${outputDir}/trim/sample_trim_report.txt")
+            assert trim_report.exists()
+            def report_text = trim_report.text
+            assert report_text.contains("input_reads\t100")
+            def output_reads = (report_text =~ /output_reads\t(\d+)/)[0][1].toInteger()
+            assert output_reads <= 100
+            assert output_reads > 0
+        }
+    }
+
+    test("pipeline échoue si input vide") {
+        when {
+            params {
+                input  = "${projectDir}/../../data/empty.fastq"
+                outdir = "${outputDir}"
+            }
+        }
+        then {
+            assert workflow.failed
+        }
+    }
+}

@@ -1,5 +1,5 @@
 {
-    "pipeline complet \u2192 HTML et reads trim\u00e9s produits": {
+    "pipeline complet \u2192 rapport et reads trim\u00e9s produits": {
         "content": [
             [
                 [
@@ -20,7 +20,7 @@
                 ]
             ]
         ],
-        "timestamp": "2026-04-24T16:47:08.038216788",
+        "timestamp": "2026-04-27T09:09:39.780343023",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "25.10.4"

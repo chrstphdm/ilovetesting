@@ -1,0 +1,88 @@
+---
+title: "Metamorphic testing"
+subtitle: "Formation testing — Module avancé"
+format:
+  revealjs:
+    theme: simple
+    slide-number: true
+    code-block-height: 400px
+---
+
+## Le problème de l'oracle
+
+Comment vérifier qu'un résultat est **correct** quand on ne connaît pas la bonne réponse ?
+
+. . .
+
+→ C'est l'**oracle problem** — particulièrement fréquent en bioinfo.
+
+---
+
+## Metamorphic testing : l'idée
+
+Plutôt que vérifier une valeur absolue, on vérifie une **relation** entre deux exécutions.
+
+```
+f(input_A)  ──┐
+              ├── relation attendue ?
+f(input_B)  ──┘
+```
+
+Si la relation est violée → **bug détecté**, sans connaître la "bonne" réponse.
+
+---
+
+## Relations métamorphiques (MR) en bioinfo
+
+| MR | Input A → Input B | Relation |
+|----|-------------------|----------|
+| **Permutation** | reads normaux → reads réordonnés | même nombre en sortie |
+| **Duplication** | 100 reads → 200 reads (×2) | exactement 2× en sortie |
+| **Sous-ensemble** | 100 reads → 50 reads | sortie ≤ 100 |
+
+---
+
+## Exemple concret — bats
+
+```bash
+count_reads() { awk 'NR%4==1' "$1" | wc -l; }
+
+@test "MR1 — permutation : ordre n'affecte pas le count" {
+    original=$(count_reads sample.fastq)
+    shuffled=$(count_reads sample_shuffled.fastq)
+    [ "$original" -eq "$shuffled" ]
+}
+
+@test "MR2 — duplication : 2× input → 2× output" {
+    original=$(count_reads sample.fastq)
+    doubled=$(count_reads sample_doubled.fastq)
+    [ "$doubled" -eq $(( original * 2 )) ]
+}
+```
+
+---
+
+## Pourquoi c'est puissant ?
+
+Un bug trouvé par PMC5425734 (2017) :
+
+> BWA et Bowtie produisaient des alignements **différents** selon l'ordre des reads en entrée.
+
+→ Les tests classiques passaient. Le metamorphic test l'aurait détecté.
+
+---
+
+## Quand l'utiliser dans nos pipelines ?
+
+- Outil dont on ne maîtrise pas l'implémentation (aligneur, variant caller)
+- Données réelles sans ground truth
+- Après refactoring : vérifier que le comportement relatif est préservé
+- Paramètres qui ne devraient pas changer le résultat (ex : ordre des inputs)
+
+---
+
+## Exercice → Module 5
+
+Rendez-vous dans `exercises/05_metamorphic/`
+
+Objectif : écrire les tests MR1 et MR2 en bats sur les données `sample_shuffled.fastq` et `sample_doubled.fastq`.
