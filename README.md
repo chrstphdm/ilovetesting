@@ -1,5 +1,10 @@
 # ilovetesting
 
+[![Tests](https://github.com/chrstphdm/ilovetesting/actions/workflows/test.yml/badge.svg)](https://github.com/chrstphdm/ilovetesting/actions/workflows/test.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Version](https://img.shields.io/github/v/tag/chrstphdm/ilovetesting?label=version)](https://github.com/chrstphdm/ilovetesting/releases)
+[![nf-test](https://img.shields.io/badge/tested_with-nf--test-337ab7)](https://www.nf-test.com)
+
 Formation interne à l'écriture de tests dans les pipelines bioinformatiques.
 
 Couvre : **Nextflow + nf-test · Bash + bats · Python + pytest · R + testthat**
