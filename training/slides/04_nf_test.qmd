@@ -71,13 +71,68 @@ pipeline main.nf               ← test fonctionnel (nextflow_pipeline)
 
 ---
 
-## Les 3 niveaux de test
+## Tester un workflow
 
 ```groovy
-nextflow_process { ... }   // ← process seul
-nextflow_workflow { ... }  // ← workflow (plusieurs process)
-nextflow_pipeline { ... }  // ← pipeline complet (main.nf)
+nextflow_workflow {
+    name "Test PROCESS_TABLE"
+    script "workflows/process_table.nf"
+    workflow "PROCESS_TABLE"
+
+    test("TSV valide → count et stats produits") {
+        when {
+            workflow {
+                input[0] = Channel.of([[id:"records"], file("data/records.tsv")])
+            }
+        }
+        then {
+            assert workflow.success
+            assert workflow.out.count.size() == 1
+            assert workflow.out.stats.size() == 1
+            assert snapshot(workflow.out.count, workflow.out.stats).match()
+        }
+    }
+}
 ```
+
+---
+
+## Tester un pipeline
+
+```groovy
+nextflow_pipeline {
+    name "Test pipeline complet"
+    script "../../pipelines/minimal/main.nf"
+
+    test("pipeline complet — 2 tâches, sorties présentes") {
+        when {
+            params {
+                input  = "${projectDir}/data/records.tsv"
+                outdir = "${outputDir}"
+            }
+        }
+        then {
+            assert workflow.success
+            assert workflow.trace.succeeded().size() == 2   // 2 tâches
+
+            def f = file("${outputDir}/count_lines/records.count")
+            assert f.exists()
+            assert f.text.trim().toInteger() == 20
+        }
+    }
+}
+```
+
+---
+
+## Ce qui change entre les niveaux
+
+| | `nextflow_process` | `nextflow_workflow` | `nextflow_pipeline` |
+|--|:--:|:--:|:--:|
+| **Déclare** | `process "NOM"` | `workflow "NOM"` | *(rien)* |
+| **Input** | `input[0] = [...]` | `Channel.of([...])` | `params { }` |
+| **Sorties** | `process.out.xxx` | `workflow.out.xxx` | `file("${outputDir}/...")` |
+| **Trace** | — | `workflow.trace` | `workflow.trace` |
 
 ---
 
