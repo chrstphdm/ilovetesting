@@ -1,5 +1,5 @@
 ---
-title: "Exercice 05 — Metamorphic testing"
+title: "Exercice 06 — Metamorphic testing"
 format: html
 toc: true
 ---
