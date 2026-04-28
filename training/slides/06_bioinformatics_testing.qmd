@@ -12,7 +12,7 @@ format:
 
 | Comme tout logiciel | Spécifique à la bioinfo |
 |---------------------|------------------------|
-| Structure AAA, CI, non-régression | Output souvent inconnu ou non déterministe |
+| GIVEN/WHEN/THEN, CI, non-régression | Output souvent inconnu ou non déterministe |
 | Snapshots, contrats d'interface | Outils tiers = boîte noire non auditable |
 | Tests unitaires, intégration | Calculs longs, données volumineuses |
 | Valeur incorrecte → test échoue | Résultat **biologiquement plausible mais faux** |
