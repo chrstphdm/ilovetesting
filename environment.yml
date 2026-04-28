@@ -20,6 +20,7 @@ dependencies:
   - python=3.11
   - pandas
   - pytest
+  - pytest-cov
 
   # Quarto
   - quarto
