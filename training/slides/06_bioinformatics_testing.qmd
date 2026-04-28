@@ -8,18 +8,22 @@ format:
     code-block-height: 400px
 ---
 
-## Tester en bioinfo : ce qui change
+## Tester en bioinfo : les mêmes outils, un défi supplémentaire
 
-| Comme tout logiciel | Spécifique à la bioinfo |
-|---------------------|------------------------|
-| GIVEN/WHEN/THEN, CI, non-régression | Output souvent inconnu ou non déterministe |
-| Snapshots, contrats d'interface | Outils tiers = boîte noire non auditable |
-| Tests unitaires, intégration | Calculs longs, données volumineuses |
-| Valeur incorrecte → test échoue | Résultat **biologiquement plausible mais faux** |
+Les mêmes frameworks. Les mêmes patterns. GIVEN/WHEN/THEN, CI, snapshots, non-régression.
 
 . . .
 
-La dernière ligne est le problème central : un pipeline peut produire un résultat crédible qui passe tous les tests structurels — et être scientifiquement faux.
+Ce qui s'ajoute : vérifier les **invariants du domaine** — des propriétés qui doivent être vraies après chaque exécution, quelle que soit l'entrée.
+
+. . .
+
+Pourquoi ? Parce qu'un résultat biologiquement plausible peut passer tous les tests structurels — et être scientifiquement faux.
+
+::: {.callout-note}
+Le cas anvi'o / MicrobeAnnotator (module 01) : le pipeline tournait, les fichiers étaient produits, le format était correct. Mais 65 % des annotations étaient fausses — faute de tests sur les invariants du filtrage.
+:::
+
 
 ---
 
