@@ -72,24 +72,7 @@ Références :
 
 ## Assertions
 
-Une assertion = une vérification binaire.
-
-```python
-# Python / pytest
-assert output.exists()
-assert line_count(output) == 100
-assert output.suffix == ".html"
-```
-
-```bash
-# Bash / bats
-[ -f "$output" ]
-[ "$(wc -l < "$output")" -eq 100 ]
-```
-
----
-
-## Les assertions utiles
+Une assertion = une vérification binaire : vrai → test passe, faux → test échoue.
 
 | Ce qu'on vérifie | Exemple |
 |-----------------|---------|
@@ -191,21 +174,6 @@ data/
 ```
 
 Pourquoi petit ? Tests rapides, CI rapide, pas de dépendance aux gros fichiers.
-
----
-
-## CI/CD
-
-```
-Push → GitHub Actions → Tests → OK ou ÉCHEC
-```
-
-| Déclencheur | Tests lancés |
-|-------------|-------------|
-| Chaque PR | pytest, bats, testthat, nf-test |
-| Manuel | tests containers (Apptainer) |
-
-Si ÉCHEC : merge bloqué automatiquement.
 
 ---
 
