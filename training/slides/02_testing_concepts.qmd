@@ -52,25 +52,23 @@ run bash validate_records.sh /tmp/missing.tsv
 
 ## Le bug que Python ne signale pas
 
-**Bug 2 — comparaison de scores numériques lus comme chaînes**
-
 ```python
-# Scores lus depuis un fichier texte → type str par défaut
-"80.6"  > "407.9"   # → True   (ordre alphabétique)
- 80.6   >  407.9    # → False  (ordre numérique)
+def filter_by_threshold(df, threshold=45):
+    return df[df["value"] > threshold]   # > au lieu de >=
 ```
 
 . . .
 
-Le programme ne plante pas — il sélectionne le mauvais "meilleur hit".
+Le programme ne plante pas. S02 (value=45) est silencieusement exclu.
 
 ```python
-# Test minimal
-assert best_hit(["407.9", "80.6"]) == pytest.approx(407.9)
+# Test qui passe quand même
+result = filter_by_threshold(df, threshold=45)
+assert len(result) < len(df)   # True — mais combien de lignes manquent ?
 ```
 
 ::: {.callout-tip}
-Toujours convertir les valeurs numériques lues depuis un fichier avant de les comparer.
+Un bug silencieux ne lève pas d'exception — il produit un résultat légèrement faux.
 :::
 
 ---
@@ -124,32 +122,18 @@ assert output.suffix == ".html"
 Un snapshot = **photographie** de la sortie attendue.
 
 ```groovy
-// nf-test
+// nf-test — première exécution : crée le snapshot
 assert snapshot(output).match()
+// exécutions suivantes : compare — différence → échec
 ```
 
-- Première exécution → crée le snapshot
-- Exécutions suivantes → compare avec le snapshot
-- Si différent → le test échoue
+Scénario type : refactoring → `nf-test test` → diff détecté → bug identifié avant merge.
 
 ::: {.callout-warning}
-Un snapshot ne dit pas que la sortie est **correcte**.
-
-Il dit seulement qu'elle n'a **pas changé**.
+Un snapshot ne dit pas que la sortie est **correcte**. Il dit qu'elle n'a **pas changé**.
 
 Snapshot seul = filet de non-régression. Snapshot + assertion explicite = test utile.
 :::
-
----
-
-## Non-régression
-
-Scénario classique :
-
-1. Pipeline fonctionnel → snapshot créé
-2. Refactoring du code
-3. `nf-test test` → snapshot comparé
-4. Différence détectée → bug identifié avant merge
 
 ---
 
@@ -172,6 +156,11 @@ Pourquoi petit ? Tests rapides, CI rapide, pas de dépendance aux gros fichiers.
 ```
 Push → GitHub Actions → Tests → OK ou ÉCHEC
 ```
+
+| Déclencheur | Tests lancés |
+|-------------|-------------|
+| Chaque PR | pytest, bats, testthat, nf-test |
+| Manuel | tests containers (Apptainer) |
 
 Si ÉCHEC : merge bloqué automatiquement.
 
