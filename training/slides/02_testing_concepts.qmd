@@ -19,6 +19,10 @@ AND    la sortie indique "20 records validés"
 
 GIVEN / WHEN / THEN = Arrange / Act / Assert — même concept, deux notations.
 
+. . .
+
+Le nom du test **est** la spécification : `test_filtre_exclut_valeurs_sous_seuil` dit ce que le code doit faire — avant même de le lire.
+
 ---
 
 ## Assertions
@@ -52,6 +56,31 @@ assert output.suffix == ".html"
 
 ---
 
+## Isolation des tests
+
+Chaque test doit pouvoir tourner seul, dans n'importe quel ordre.
+
+```python
+# Mauvais — test B dépend silencieusement de test A
+def test_A():
+    Path("/tmp/result.tsv").write_text("ok")
+
+def test_B():
+    assert Path("/tmp/result.tsv").exists()   # échoue si test_A ne tourne pas avant
+```
+
+. . .
+
+```python
+# Correct — test B crée ses propres préconditions
+def test_B(tmp_path):
+    result = tmp_path / "result.tsv"
+    result.write_text("ok")
+    assert result.exists()
+```
+
+---
+
 ## Quatre types de tests
 
 | Type | Périmètre | Vitesse |
@@ -79,6 +108,30 @@ run bash validate_records.sh empty.tsv    # WHEN
 # GIVEN fichier absent                    ← edge case
 run bash validate_records.sh missing.tsv  # WHEN
 [ "$status" -eq 1 ]                       # THEN
+```
+
+---
+
+## Tests paramétrés
+
+Même test, inputs différents — sans dupliquer le code.
+
+```python
+# pytest — un seul test, deux cas couverts
+@pytest.mark.parametrize("path,exc", [
+    ("empty.tsv",   ValueError),
+    ("missing.tsv", FileNotFoundError),
+])
+def test_inputs_invalides(path, exc):
+    with pytest.raises(exc):
+        load_records(DATA / path)
+```
+
+```bash
+# bats — même logique
+for f in empty.tsv invalid_records.tsv; do
+  @test "$f → exit 1" { run bash validate_records.sh "$f"; [ "$status" -eq 1 ]; }
+done
 ```
 
 ---
