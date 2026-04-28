@@ -18,7 +18,7 @@ Ce qui s'ajoute : vérifier les **invariants du domaine** — des propriétés q
 
 . . .
 
-Pourquoi ? Parce qu'un résultat biologiquement plausible peut passer tous les tests structurels — et être scientifiquement faux.
+Pourquoi ? Parce qu'un résultat peut paraître normal — format correct, valeurs dans les bons ordres de grandeur, aucune erreur visible — et être incorrect par rapport à la réalité qu'il est censé mesurer.
 
 ::: {.callout-note}
 Le cas anvi'o / MicrobeAnnotator (module 01) : le pipeline tournait, les fichiers étaient produits, le format était correct. Mais 65 % des annotations étaient fausses — faute de tests sur les invariants du filtrage.
