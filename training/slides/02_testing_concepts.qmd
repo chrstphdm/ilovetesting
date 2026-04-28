@@ -156,29 +156,6 @@ def test_inputs_invalides(path, exc):
 
 ---
 
-## Le bug que Python ne signale pas
-
-```python
-def filter_by_threshold(df, threshold=45):
-    return df[df["value"] > threshold]   # > au lieu de >=
-```
-
-. . .
-
-Le programme ne plante pas. S02 (value=45) est silencieusement exclu.
-
-```python
-# Test qui passe quand même
-result = filter_by_threshold(df, threshold=45)
-assert len(result) < len(df)   # True — mais combien de lignes manquent ?
-```
-
-::: {.callout-tip}
-Un bug silencieux ne lève pas d'exception — il produit un résultat légèrement faux.
-:::
-
----
-
 ## Snapshots
 
 Un snapshot = **photographie** de la sortie attendue. Pas un concept Nextflow — tous les frameworks le supportent.
@@ -244,10 +221,12 @@ filter_and_summarise.py         14      0   100%
 5 passed in 0.4s
 ```
 
-::: {.callout-warning}
-La couverture mesure si les lignes sont **exécutées**.
+. . .
 
-Elle ne mesure pas si vos assertions **prouvent quelque chose**.
+::: {.callout-warning}
+Un bug silencieux ne lève pas d'exception — il produit un résultat légèrement faux.
+
+La couverture mesure si les lignes sont **exécutées**, pas si les assertions **prouvent quelque chose**.
 :::
 
 ---
