@@ -128,29 +128,9 @@ def test_valeurs_positives():
 
 ---
 
-## Happy path vs edge case
-
-Le même pattern — le GIVEN change, pas la structure.
-
-```bash
-# GIVEN records.tsv (20 lignes valides)   ← happy path
-run bash validate_records.sh records.tsv  # WHEN
-[ "$status" -eq 0 ]                       # THEN
-
-# GIVEN empty.tsv (en-tête seul)          ← edge case
-run bash validate_records.sh empty.tsv    # WHEN
-[ "$status" -eq 1 ]                       # THEN
-
-# GIVEN fichier absent                    ← edge case
-run bash validate_records.sh missing.tsv  # WHEN
-[ "$status" -eq 1 ]                       # THEN
-```
-
----
-
 ## Tests paramétrés
 
-Même test, inputs différents — sans dupliquer le code.
+**Happy path** (input nominal) + **edge cases** (limites, invalides) — sans dupliquer le code.
 
 ```python
 # pytest — un seul test, deux cas couverts
