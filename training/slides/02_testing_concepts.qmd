@@ -25,6 +25,51 @@ Le nom du test **est** la spécification : `test_filtre_exclut_valeurs_sous_seui
 
 ---
 
+## La pyramide des tests
+
+```
+        ▲  Fonctionnel      — pipeline complet, lent, peu nombreux
+       ▲▲  Intégration      — modules enchaînés, vitesse moyenne
+      ▲▲▲  Unitaire         — fonctions, process isolés, rapides, nombreux
+```
+
+| Type | Périmètre | En nf-test |
+|------|-----------|------------|
+| **Unitaire** | une fonction, un process | `nextflow_process` |
+| **Intégration** | plusieurs modules enchaînés | `nextflow_workflow` |
+| **Fonctionnel** | pipeline complet | `nextflow_pipeline` |
+| **Non-régression** | comparaison avant/après | snapshots |
+
+::: {.notes}
+Référence : Martin Fowler, TestPyramid — https://martinfowler.com/bliki/TestPyramid.html
+:::
+
+---
+
+## Les termes varient selon les communautés
+
+| Ce deck | Autres noms courants |
+|---------|---------------------|
+| Fonctionnel | End-to-end, acceptance test, e2e, system test |
+| Non-régression | Regression test, change detection |
+| Unitaire | Component test (certains frameworks JS) |
+| — | Smoke test : test minimal, vérifie que ça démarre |
+
+. . .
+
+En bioinfo : un "test unitaire" de module FASTQC lit des fichiers et appelle un exécutable.
+
+→ Google l'appelle **Medium test**, pas unit test — car il touche le filesystem.
+
+::: {.notes}
+Références :
+- Fowler TestPyramid : https://martinfowler.com/bliki/TestPyramid.html
+- Google Test Sizes : https://testing.googleblog.com/2010/12/test-sizes.html
+- ISTQB Glossary : https://glossary.istqb.org/en_US/term
+:::
+
+---
+
 ## Assertions
 
 Une assertion = une vérification binaire.
@@ -80,17 +125,6 @@ def test_valeurs_positives():
     df = load_records("records.tsv")       # pas de dépendance externe
     assert (df["value"] >= 0).all()
 ```
-
----
-
-## Quatre types de tests
-
-| Type | Périmètre | Vitesse |
-|------|-----------|---------|
-| **Unitaire** | une fonction, un process | rapide |
-| **Intégration** | plusieurs modules enchaînés | moyen |
-| **Fonctionnel** | pipeline complet, end-to-end | lent |
-| **Non-régression** | comparaison avec une sortie attendue | variable |
 
 ---
 
@@ -163,7 +197,7 @@ Un bug silencieux ne lève pas d'exception — il produit un résultat légèrem
 
 ## Snapshots
 
-Un snapshot = **photographie** de la sortie attendue.
+Un snapshot = **photographie** de la sortie attendue. Pas un concept Nextflow — tous les frameworks le supportent.
 
 ```r
 expect_snapshot(compute_stats(df))   # testthat
