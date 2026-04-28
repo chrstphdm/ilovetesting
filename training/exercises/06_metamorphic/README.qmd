@@ -34,6 +34,7 @@ Si la relation n'est pas respectée, il y a un bug — même sans connaître le 
 training/data/sample.fastq          # 100 reads
 training/data/sample_shuffled.fastq # mêmes 100 reads, ordre aléatoire
 training/data/sample_doubled.fastq  # 200 reads (sample × 2)
+training/data/sample_subset.fastq   # 50 premiers reads (sous-ensemble)
 ```
 
 ## Code de départ
@@ -57,6 +58,13 @@ count_reads() { awk 'NR%4==1' "$1" | wc -l; }
     # 2. compter les reads dans sample_doubled.fastq
     # 3. vérifier que doubled = original × 2
 }
+
+@test "MR3 — sous-ensemble : 50 reads → count ≤ count original" {
+    # TODO :
+    # 1. compter les reads dans sample.fastq
+    # 2. compter les reads dans sample_subset.fastq
+    # 3. vérifier que subset ≤ original
+}
 ```
 
 ## Exercice
@@ -68,6 +76,7 @@ Compléter le fichier `training/tests/bats/test_metamorphic.bats`.
 ```
 ✓ MR1 — permutation : reads réordonnés → même nombre de reads valides
 ✓ MR2 — duplication : 2× l'input → exactement 2× les reads
+✓ MR3 — sous-ensemble : 50 reads → count ≤ count original
 ```
 
 ## Pourquoi c'est utile ?
