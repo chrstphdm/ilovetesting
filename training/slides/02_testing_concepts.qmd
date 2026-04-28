@@ -161,15 +161,19 @@ Un bug silencieux ne lève pas d'exception — il produit un résultat légèrem
 
 ## Snapshots
 
-Un snapshot = **photographie** de la sortie attendue.
+Un snapshot = **photographie** de la sortie attendue. Pas un concept Nextflow — tous les frameworks le supportent.
 
+```r
+expect_snapshot(compute_stats(df))   # testthat
+```
 ```groovy
-// nf-test — première exécution : crée le snapshot
-assert snapshot(output).match()
-// exécutions suivantes : compare — différence → échec
+assert snapshot(process.out).match() // nf-test
+```
+```bash
+diff <(bash validate_records.sh records.tsv) expected.txt  # bats
 ```
 
-Scénario type : refactoring → `nf-test test` → diff détecté → bug identifié avant merge.
+Première exécution → crée la référence. Exécutions suivantes → compare — différence → échec.
 
 ::: {.callout-warning}
 Un snapshot ne dit pas que la sortie est **correcte**. Il dit qu'elle n'a **pas changé**.
