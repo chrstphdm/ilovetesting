@@ -33,10 +33,11 @@ Avant de traiter un fichier de données, on veut s'assurer que :
 ## Données
 
 ```
-training/data/records.tsv           # TSV valide : 20 lignes (id, group, value)
-training/data/invalid_records.tsv   # Valeur non numérique
-training/data/empty.tsv             # En-tête seul, aucune donnée
+training/data/records.tsv            # TSV valide : 20 lignes (id, group, value)
+training/data/invalid_records.tsv    # Valeur non numérique
+training/data/empty.tsv              # En-tête seul, aucune donnée
 training/data/duplicated_records.tsv # Id S01 dupliqué
+training/data/missing.tsv            # Fichier inexistant (déclenche FileNotFoundError)
 ```
 
 ## Code de départ
