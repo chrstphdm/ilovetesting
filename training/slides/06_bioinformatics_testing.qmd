@@ -16,41 +16,53 @@ Les mêmes frameworks. Les mêmes patterns. GIVEN/WHEN/THEN, CI, snapshots, non-
 
 Ce qui s'ajoute : vérifier les **invariants du domaine** — des propriétés qui doivent être vraies après chaque exécution, quelle que soit l'entrée.
 
-. . .
+```python
+assert (df["value"] >= 0).all()           # valeurs positives
+assert total_out <= total_in              # filtre ne crée pas de lignes
+assert len(ids) == len(set(ids))          # pas de doublon
+```
 
-Pourquoi ? Parce qu'un résultat peut paraître normal — format correct, valeurs dans les bons ordres de grandeur, aucune erreur visible — et être incorrect par rapport à la réalité qu'il est censé mesurer.
-
-::: {.callout-note}
-Le cas anvi'o / MicrobeAnnotator (module 01) : le pipeline tournait, les fichiers étaient produits, le format était correct. Mais 65 % des annotations étaient fausses — faute de tests sur les invariants du filtrage.
+::: {.notes}
+Référence méthodologique : Kamali et al. (2015) "How to test bioinformatics software?" — Biophysical Reviews 7(3):343–352. PMID:28510230. DOI:10.1007/s12551-015-0177-3
 :::
 
 
 ---
 
-## Le problème de l'oracle
+## Mais les invariants ne suffisent pas toujours
 
-Comment vérifier qu'un résultat est **correct** quand on ne connaît pas la bonne réponse ?
+Un outil peut respecter tous les invariants... et produire des résultats biologiquement incorrects.
 
 . . .
 
-→ C'est l'**oracle problem** — particulièrement fréquent en bioinfo.
+> BWA-MEM et Bowtie2 produisaient des alignements **différents** selon l'ordre des reads en entrée.
+> Les fichiers SAM étaient valides. Tous les reads étaient présents. Aucune erreur visible.
+
+::: {.notes}
+Giannoulatou et al. (2014) "Verification and validation of bioinformatics software without a gold standard: a case study of BWA and Bowtie" — BMC Bioinformatics 15 Suppl 16:S15. PMID:25521810. PMC:PMC4290646.
+:::
+
+. . .
+
+Sur des données réelles, on ne peut pas toujours vérifier si chaque résultat individuel est correct.
+
+→ C'est l'**oracle problem**.
 
 ---
 
-## Quatre approches
+## Trois stratégies face au problème de l'oracle
 
 | Approche | Principe |
 |----------|----------|
-| **Golden dataset** | Input connu, output attendu figé |
+| **Golden dataset** | Données synthétiques — output défini *par construction* |
 | **Pseudo-oracle** | Comparer deux implémentations indépendantes |
-| **Invariants métier** | Vérifier des propriétés toujours vraies |
 | **Metamorphic testing** | Vérifier une relation entre deux exécutions |
 
 ---
 
 ## Golden dataset
 
-Un jeu de données de référence avec résultat attendu.
+Un jeu de données synthétiques avec résultat attendu défini par construction.
 
 ```
 data/
@@ -84,49 +96,6 @@ Le cas anvi'o / MicrobeAnnotator (module 01) est un pseudo-oracle : deux outils 
 
 ---
 
-## Contrôles positifs et négatifs
-
-| Type | Input | Attendu |
-|------|-------|---------|
-| **Positif** | FASTQ valide | exit 0, fichier de sortie |
-| **Négatif** | FASTQ vide | exit 1, message d'erreur |
-| **Négatif** | paramètre incohérent | échec explicite |
-
-Les deux sont nécessaires.
-
----
-
-## Invariants métier
-
-Des propriétés qui doivent toujours être vraies.
-
-```python
-assert (df["value"] >= 0).all()              # valeurs positives
-assert 0.0 <= ratio <= 1.0                   # ratio dans [0, 1]
-assert len(output_rows) <= len(input_rows)   # filtre ne crée pas de lignes
-assert len(ids) == len(set(ids))             # pas de doublon d'identifiant
-```
-
----
-
-## Cas réel dans la littérature
-
-> Certains outils d'alignement ont produit des résultats **différents** selon l'ordre des reads en entrée.
-
-Les tests classiques passaient. Aucune erreur visible.
-
-. . .
-
-→ Un test de **permutation** l'aurait détecté.
-
-Comment écrire ce test sans connaître la bonne réponse ?
-
-::: {.notes}
-Référence : Li H et al. (2017) — PMC5425734. BWA-MEM et Bowtie2 produisaient des alignements différents sur les mêmes reads selon leur ordre dans le fichier FASTQ.
-:::
-
----
-
 ## Metamorphic testing : l'idée
 
 Vérifier une **relation** entre deux exécutions plutôt qu'une valeur absolue.
@@ -136,6 +105,10 @@ f(input_A)  ──┐
               ├── relation attendue ?
 f(input_B)  ──┘
 ```
+
+::: {.notes}
+Référence fondatrice appliquée à la bioinfo : Chen et al. (2009) "An innovative approach for testing bioinformatics programs using metamorphic testing" — BMC Bioinformatics 10:24. PMID:19152705. PMC:PMC2657898.
+:::
 
 ---
 
@@ -172,7 +145,7 @@ count_reads() { awk 'NR%4==1' "$1" | wc -l; }
 ::: {.callout-important}
 **Tester les propriétés, pas seulement les valeurs.**
 
-Golden dataset + invariants + metamorphic = couverture sans oracle exact.
+Invariants + golden dataset + pseudo-oracle + metamorphic = couverture sans oracle exact.
 :::
 
 ---
