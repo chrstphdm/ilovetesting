@@ -61,6 +61,37 @@ Utile pour la non-régression à long terme.
 
 ---
 
+## Pseudo-oracle
+
+Comparer deux implémentations indépendantes sur le même input.
+
+```
+output_A = outil_A(input)
+output_B = outil_B(input)
+# les différences sont-elles attendues et explicables ?
+assert output_A ≈ output_B
+```
+
+. . .
+
+::: {.callout-tip}
+Le cas anvi'o / MicrobeAnnotator (module 01) est un pseudo-oracle : deux outils annotent le même génome — les incohérences inattendues ont révélé des bugs.
+:::
+
+---
+
+## Contrôles positifs et négatifs
+
+| Type | Input | Attendu |
+|------|-------|---------|
+| **Positif** | FASTQ valide | exit 0, fichier de sortie |
+| **Négatif** | FASTQ vide | exit 1, message d'erreur |
+| **Négatif** | paramètre incohérent | échec explicite |
+
+Les deux sont nécessaires.
+
+---
+
 ## Invariants métier
 
 Des propriétés qui doivent toujours être vraies.
@@ -74,15 +105,21 @@ assert len(ids) == len(set(ids))             # pas de doublon d'identifiant
 
 ---
 
-## Contrôles positifs et négatifs
+## Cas réel dans la littérature
 
-| Type | Input | Attendu |
-|------|-------|---------|
-| **Positif** | FASTQ valide | exit 0, fichier de sortie |
-| **Négatif** | FASTQ vide | exit 1, message d'erreur |
-| **Négatif** | paramètre incohérent | échec explicite |
+> Certains outils d'alignement ont produit des résultats **différents** selon l'ordre des reads en entrée.
 
-Les deux sont nécessaires.
+Les tests classiques passaient. Aucune erreur visible.
+
+. . .
+
+→ Un test de **permutation** l'aurait détecté.
+
+Comment écrire ce test sans connaître la bonne réponse ?
+
+::: {.notes}
+Référence : Li H et al. (2017) — PMC5425734. BWA-MEM et Bowtie2 produisaient des alignements différents sur les mêmes reads selon leur ordre dans le fichier FASTQ.
+:::
 
 ---
 
@@ -123,19 +160,6 @@ count_reads() { awk 'NR%4==1' "$1" | wc -l; }
     [ "$(count_reads sample_doubled.fastq)" -eq $(( original * 2 )) ]
 }
 ```
-
----
-
-## Cas réel dans la littérature
-
-> Certains outils d'alignement ont produit des résultats **différents** selon l'ordre des reads en entrée.
-
-Les tests classiques passaient.
-Un test MR de permutation l'aurait détecté.
-
-::: {.notes}
-Référence : Li H et al. (2017) — PMC5425734. BWA-MEM et Bowtie2 produisaient des alignements différents sur les mêmes reads selon leur ordre dans le fichier FASTQ.
-:::
 
 ---
 
