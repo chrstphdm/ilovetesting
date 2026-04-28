@@ -34,18 +34,20 @@ GIVEN / WHEN / THEN = Arrange / Act / Assert — même concept, deux notations.
 
 ## Happy path vs edge case
 
+Le même pattern — le GIVEN change, pas la structure.
+
 ```bash
-# Happy path — input valide
-run bash validate_records.sh records.tsv
-[ "$status" -eq 0 ]
+# GIVEN records.tsv (20 lignes valides)   ← happy path
+run bash validate_records.sh records.tsv  # WHEN
+[ "$status" -eq 0 ]                       # THEN
 
-# Edge case — fichier vide
-run bash validate_records.sh empty.tsv
-[ "$status" -eq 1 ]
+# GIVEN empty.tsv (en-tête seul)          ← edge case
+run bash validate_records.sh empty.tsv    # WHEN
+[ "$status" -eq 1 ]                       # THEN
 
-# Edge case — fichier absent
-run bash validate_records.sh /tmp/missing.tsv
-[ "$status" -eq 1 ]
+# GIVEN fichier absent                    ← edge case
+run bash validate_records.sh missing.tsv  # WHEN
+[ "$status" -eq 1 ]                       # THEN
 ```
 
 ---
