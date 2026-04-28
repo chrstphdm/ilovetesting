@@ -80,4 +80,22 @@ format:
 
 3 — tester progressivement
     pipeline complet, containers, golden dataset
+
+4 — si container custom
+    version d'outil figée, comportement Apptainer
 ```
+
+---
+
+## Maturité progressive
+
+```
+Niveau 0  aucun test
+Niveau 1  smoke test (exit 0, fichier produit)
+Niveau 2  tests unitaires scripts + assertions comportementales
+Niveau 3  test fonctionnel pipeline sur mini-data
+Niveau 4  golden dataset + tests de non-régression
+Niveau 5  containers critiques versionnés + handover documenté
+```
+
+Ne pas viser le niveau 5 dès le premier sprint. Un test minimal sur le chemin critique > zéro test.
