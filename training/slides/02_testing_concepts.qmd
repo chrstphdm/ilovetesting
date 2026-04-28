@@ -61,6 +61,10 @@ En bioinfo : un "test unitaire" de module FASTQC lit des fichiers et appelle un 
 
 → Google l'appelle **Medium test**, pas unit test — car il touche le filesystem.
 
+. . .
+
+**Dans ce cours : Unitaire / Intégration / Fonctionnel / Non-régression.**
+
 ::: {.notes}
 Références :
 - Fowler TestPyramid : https://martinfowler.com/bliki/TestPyramid.html
@@ -81,6 +85,16 @@ Une assertion = une vérification binaire : vrai → test passe, faux → test �
 | Colonnes attendues | `assert "id" in df.columns` |
 | Valeur dans une borne | `assert (df["value"] >= 0).all()` |
 | Code de sortie | `assert returncode == 0` |
+
+. . .
+
+```python
+assert result is not None        # trop vague — ne détecte rien de précis
+assert len(result) == 10         # exact — détecte une perte de données
+assert result["A"] == 65.25      # valeur métier — détecte un calcul faux
+```
+
+Une assertion utile détecte **précisément** ce qui peut être faux.
 
 ---
 
@@ -116,32 +130,33 @@ def test_valeurs_positives():
 **Happy path** (input nominal) + **edge cases** (limites, invalides) — sans dupliquer le code.
 
 ```python
-# ❌ boucle dans un test — s'arrête au premier échec, nom opaque
-def test_edge_cases():
-    for path in ["empty.tsv", "missing.tsv"]:
-        with pytest.raises(...): load_records(path)
-```
+def test_records_valides():              # happy path — 1 cas nominal
+    df = load_records(DATA / "records.tsv")
+    assert len(df) == 20
 
-. . .
-
-```python
-# ✓ parametrize — chaque cas est un test séparé, nommé
-@pytest.mark.parametrize("path,exc", [
+@pytest.mark.parametrize("path,exc", [  # edge cases — sans dupliquer
     ("empty.tsv",   ValueError),
     ("missing.tsv", FileNotFoundError),
 ])
 def test_inputs_invalides(path, exc):
     with pytest.raises(exc):
         load_records(DATA / path)
-# PASSED test_inputs_invalides[empty.tsv-ValueError]
-# FAILED test_inputs_invalides[missing.tsv-FileNotFoundError]
+```
+
+. . .
+
+```python
+# ❌ boucle dans un test — s'arrête au premier échec, nom opaque
+def test_edge_cases():
+    for path in ["empty.tsv", "missing.tsv"]:
+        with pytest.raises(...): load_records(path)
 ```
 
 ---
 
 ## Snapshots
 
-Un snapshot = **photographie** de la sortie attendue. Pas un concept Nextflow — tous les frameworks le supportent.
+Un snapshot = **photographie** de la sortie attendue. Disponible dans tous les frameworks.
 
 ```r
 expect_snapshot(compute_stats(df))   # testthat
@@ -165,7 +180,7 @@ Snapshot seul = filet de non-régression. Snapshot + assertion explicite = test 
 
 ## Données de test
 
-**Bonne pratique :** les données de test doivent être **minimalistes**.
+**Règle : la taille minimale qui déclenche le comportement à tester.**
 
 ```
 data/
@@ -173,7 +188,8 @@ data/
 └── empty.tsv      # en-tête seul, aucune donnée
 ```
 
-Pourquoi petit ? Tests rapides, CI rapide, pas de dépendance aux gros fichiers.
+20 lignes suffisent pour un filtre ou un calcul de stats.
+100 reads suffisent pour un process FASTQC.
 
 ---
 
