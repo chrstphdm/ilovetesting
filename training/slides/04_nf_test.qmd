@@ -31,7 +31,7 @@ nf-test version
 
 ---
 
-## Structure d'un test nf-test
+## Tester un process
 
 ```groovy
 nextflow_process {
