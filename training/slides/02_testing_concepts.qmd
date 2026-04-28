@@ -235,6 +235,9 @@ assert isinstance(result, pd.DataFrame)     # ← type explicite
 
 ## Suite → Module 03
 
-Ces concepts s'appliquent aux exercices 01, 02 et 03.
+Les exercices 01, 02 et 03 mettent en pratique :
+anatomie, assertions, isolation, tests paramétrés, données minimalistes.
 
-Le module suivant montre comment les appliquer concrètement en Bash, Python et R.
+Les snapshots apparaissent dans l'exercice 04 (nf-test).
+
+Le module suivant montre comment appliquer tout cela concrètement en Bash, Python et R.
