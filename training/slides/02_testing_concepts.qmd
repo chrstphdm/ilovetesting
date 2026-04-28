@@ -75,19 +75,6 @@ Un bug silencieux ne lève pas d'exception — il produit un résultat légèrem
 
 ---
 
-## Tests rapides vs tests lents
-
-| Rapides (< 1 min) | Lents (> 1 min) |
-|-------------------|-----------------|
-| Fonctions unitaires | Pipeline complet |
-| Process Nextflow | Tests containers |
-| Snapshots existants | Golden dataset |
-
-→ Les rapides passent à chaque PR.
-→ Les lents passent en CI nightly ou manuellement.
-
----
-
 ## Assertions
 
 Une assertion = une vérification binaire.
