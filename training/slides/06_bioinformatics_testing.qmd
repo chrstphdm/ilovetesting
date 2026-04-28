@@ -8,6 +8,21 @@ format:
     code-block-height: 400px
 ---
 
+## Tester en bioinfo : ce qui change
+
+| Comme tout logiciel | Spécifique à la bioinfo |
+|---------------------|------------------------|
+| Structure AAA, CI, non-régression | Output souvent inconnu ou non déterministe |
+| Snapshots, contrats d'interface | Outils tiers = boîte noire non auditable |
+| Tests unitaires, intégration | Calculs longs, données volumineuses |
+| Valeur incorrecte → test échoue | Résultat **biologiquement plausible mais faux** |
+
+. . .
+
+La dernière ligne est le problème central : un pipeline peut produire un résultat crédible qui passe tous les tests structurels — et être scientifiquement faux.
+
+---
+
 ## Le problème de l'oracle
 
 Comment vérifier qu'un résultat est **correct** quand on ne connaît pas la bonne réponse ?
