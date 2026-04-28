@@ -14,6 +14,11 @@ nf-test = framework de référence pour tester des process, workflows et pipelin
 
 Utilisé notamment par nf-core comme standard communautaire.
 
+::: {.notes}
+Exemples officiels nf-test (RNA-seq pipeline complet, process isolés, snapshots) :
+https://github.com/askimed/nf-test-examples
+:::
+
 ---
 
 ## Installation
