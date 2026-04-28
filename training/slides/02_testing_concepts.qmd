@@ -133,7 +133,16 @@ def test_valeurs_positives():
 **Happy path** (input nominal) + **edge cases** (limites, invalides) — sans dupliquer le code.
 
 ```python
-# pytest — un seul test, deux cas couverts
+# ❌ boucle dans un test — s'arrête au premier échec, nom opaque
+def test_edge_cases():
+    for path in ["empty.tsv", "missing.tsv"]:
+        with pytest.raises(...): load_records(path)
+```
+
+. . .
+
+```python
+# ✓ parametrize — chaque cas est un test séparé, nommé
 @pytest.mark.parametrize("path,exc", [
     ("empty.tsv",   ValueError),
     ("missing.tsv", FileNotFoundError),
@@ -141,13 +150,8 @@ def test_valeurs_positives():
 def test_inputs_invalides(path, exc):
     with pytest.raises(exc):
         load_records(DATA / path)
-```
-
-```bash
-# bats — même logique
-for f in empty.tsv invalid_records.tsv; do
-  @test "$f → exit 1" { run bash validate_records.sh "$f"; [ "$status" -eq 1 ]; }
-done
+# PASSED test_inputs_invalides[empty.tsv-ValueError]
+# FAILED test_inputs_invalides[missing.tsv-FileNotFoundError]
 ```
 
 ---
