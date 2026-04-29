@@ -38,7 +38,7 @@ Pourquoi *hors* Nextflow ? Feedback immédiat, pas de surcharge Nextflow, débog
 
 ---
 
-## Les scripts que nous allons tester
+## Les scripts que nous allons tester {.smaller}
 
 | Script | Entrée | Ce qu'il fait |
 |--------|--------|---------------|
@@ -50,7 +50,7 @@ Ces trois scripts sont appelés par le pipeline. Tester leur contrat = tester le
 
 ---
 
-## Le dataset commun
+## Le dataset commun {.smaller}
 
 `records.tsv` — 20 lignes valides · colonnes : id, group, value · **données de référence (happy path)**
 

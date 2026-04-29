@@ -116,7 +116,7 @@ nextflow_pipeline {
 
 ---
 
-## What changes between levels
+## What changes between levels {.smaller}
 
 | | `nextflow_process` | `nextflow_workflow` | `nextflow_pipeline` |
 |--|:--:|:--:|:--:|
@@ -170,7 +170,7 @@ Snapshot alone = black box. Explicit assertion = documentation.
 
 ---
 
-## Snapshots — limits and updates
+## Snapshots — limits and updates {.smaller}
 
 | What a snapshot detects | What it does not detect |
 |--------------------------|------------------------|

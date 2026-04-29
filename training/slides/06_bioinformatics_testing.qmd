@@ -54,7 +54,7 @@ Sur des données réelles, on ne peut pas toujours vérifier si chaque résultat
 
 ---
 
-## Trois stratégies face au problème de l'oracle
+## Trois stratégies face au problème de l'oracle {.smaller}
 
 | Approche | Principe |
 |----------|----------|
@@ -123,7 +123,7 @@ Référence fondatrice appliquée à la bioinfo : Chen et al. (2009) "An innovat
 
 ---
 
-## Relations métamorphiques (MR)
+## Relations métamorphiques (MR) {.smaller}
 
 | MR | Input A → Input B | Relation |
 |----|-------------------|----------|
