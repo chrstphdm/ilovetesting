@@ -235,9 +235,13 @@ assert isinstance(result, pd.DataFrame)     # ← type explicite
 
 ## Suite → Module 03
 
-Les exercices 01, 02 et 03 mettent en pratique :
-anatomie, assertions, isolation, tests paramétrés, données minimalistes.
+Avant d'ouvrir le module 03 : voici comment GIVEN/WHEN/THEN se traduit en bats.
 
-Les snapshots apparaissent dans l'exercice 04 (nf-test).
+```bash
+# GIVEN  records.tsv valide    →  DATA="training/data"
+# WHEN   validate_records.sh   →  run bash validate_records.sh "$DATA/records.tsv"
+# THEN   exit 0                →  [ "$status" -eq 0 ]
+# THEN   message avec count    →  [[ "$output" =~ "20 records" ]]
+```
 
-Le module suivant montre comment appliquer tout cela concrètement en Bash, Python et R.
+Le module 03 montre les trois syntaxes — bats, pytest, testthat — sur ce même exemple.

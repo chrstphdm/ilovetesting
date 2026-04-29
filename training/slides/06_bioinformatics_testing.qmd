@@ -10,11 +10,15 @@ format:
 
 ## Tester en bioinfo : les mêmes outils, un défi supplémentaire
 
-Les mêmes frameworks. Les mêmes patterns. GIVEN/WHEN/THEN, CI, snapshots, non-régression.
+Tu sais écrire des tests pour des scripts et des process Nextflow.
 
 . . .
 
-Ce qui s'ajoute : vérifier les **invariants du domaine** — des propriétés qui doivent être vraies après chaque exécution, quelle que soit l'entrée.
+Mais que faire quand tu ne connais pas la **bonne réponse** ?
+
+. . .
+
+Les mêmes frameworks. Les mêmes patterns. Ce qui s'ajoute : vérifier les **invariants du domaine** — des propriétés qui doivent être vraies après chaque exécution, quelle que soit l'entrée.
 
 ```python
 assert (df["value"] >= 0).all()           # valeurs positives
@@ -156,6 +160,18 @@ count_reads() { awk 'NR%4==1' "$1" | wc -l; }
 Les invariants sont le socle. Face à l'oracle problem :
 golden dataset + pseudo-oracle + metamorphic = trois stratégies complémentaires.
 :::
+
+---
+
+## Suite → Module 07
+
+Tu sais maintenant écrire des tests à tous les niveaux — scripts, process, workflows, et sans oracle exact.
+
+. . .
+
+La dernière question : **par où commencer et quoi prioriser** dans ton équipe ?
+
+→ Module 07 — Stratégie pour petite équipe.
 
 ---
 
