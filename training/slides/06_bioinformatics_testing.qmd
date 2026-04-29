@@ -14,7 +14,7 @@ Tu sais écrire des tests pour des scripts et des process Nextflow.
 
 . . .
 
-Mais que faire quand tu ne connais pas la **bonne réponse** ?
+Mais que faire quand tu ne connais pas le **résultat attendu** ?
 
 ---
 
