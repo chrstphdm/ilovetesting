@@ -26,15 +26,9 @@ It does not teach these languages — it teaches how to **test** them.
 
 ---
 
-## Installing the test frameworks
+## Test frameworks
 
-All frameworks are available through the provided conda environment:
-
-```bash
-# Install the environment (once only)
-bash setup.sh
-conda activate ilovetesting
-```
+Installation is described on the [home page](index.qmd) (`bash setup.sh` + `conda activate ilovetesting`).
 
 What gets installed: `bats-core`, `pytest`, `pytest-cov`, `r-testthat`, `nf-test`.
 

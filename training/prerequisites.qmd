@@ -22,15 +22,9 @@ Elle n'enseigne pas ces langages — elle enseigne comment les **tester**.
 
 ---
 
-## Installation des frameworks de test
+## Frameworks de test
 
-Les frameworks sont tous disponibles via l'environnement conda fourni :
-
-```bash
-# Installer l'environnement (une seule fois)
-bash setup.sh
-conda activate ilovetesting
-```
+L'installation est décrite sur la [page d'accueil](index.qmd) (`bash setup.sh` + `conda activate ilovetesting`).
 
 Ce qui est installé : `bats-core`, `pytest`, `pytest-cov`, `r-testthat`, `nf-test`.
 
