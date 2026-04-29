@@ -43,10 +43,8 @@ Un outil peut respecter tous les invariants... et produire des résultats biolog
 
 > BWA-MEM et Bowtie2 produisaient des alignements **différents** selon l'ordre des reads en entrée.
 > Les fichiers SAM étaient valides. Tous les reads étaient présents. Aucune erreur visible.
-
-::: {.notes}
-Giannoulatou et al. (2014) "Verification and validation of bioinformatics software without a gold standard: a case study of BWA and Bowtie" — BMC Bioinformatics 15 Suppl 16:S15. PMID:25521810. PMC:PMC4290646.
-:::
+>
+> — [Giannoulatou et al. 2014, BMC Bioinformatics](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4290646/)
 
 . . .
 
