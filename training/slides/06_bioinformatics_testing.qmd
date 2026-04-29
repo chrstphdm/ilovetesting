@@ -16,9 +16,11 @@ Tu sais écrire des tests pour des scripts et des process Nextflow.
 
 Mais que faire quand tu ne connais pas la **bonne réponse** ?
 
-. . .
+---
 
-Les mêmes frameworks. Les mêmes patterns. Ce qui s'ajoute : vérifier les **invariants du domaine** — des propriétés qui doivent être vraies après chaque exécution, quelle que soit l'entrée.
+## Les invariants du domaine — premier outil
+
+Des propriétés qui doivent être vraies après chaque exécution, quelle que soit l'entrée.
 
 ```python
 assert (df["value"] >= 0).all()           # valeurs positives
