@@ -47,17 +47,18 @@ Ces trois scripts sont appelés par le pipeline. Tester leur contrat = tester le
 
 ## Le dataset commun
 
-```
-records.tsv  — 20 lignes · colonnes : id, group, value · valeurs numériques positives
-```
+`records.tsv` — 20 lignes valides · colonnes : id, group, value · **données de référence (happy path)**
 
-| Fichier | Scénario couvert |
-|---------|-----------------|
-| `records.tsv` | happy path |
-| `empty.tsv` | fichier sans données |
-| `invalid_records.tsv` | contrainte de type |
-| `duplicated_records.tsv` | contrainte d'unicité |
+Chaque fichier d'erreur viole une seule règle :
+
+| Fichier | Règle violée |
+|---------|-------------|
+| `empty.tsv` | pas de données |
+| `invalid_records.tsv` | valeur non numérique |
+| `duplicated_records.tsv` | id non unique |
 | `missing.tsv` | fichier absent |
+
+Un fichier = une règle violée = un test diagnostique.
 
 ---
 
