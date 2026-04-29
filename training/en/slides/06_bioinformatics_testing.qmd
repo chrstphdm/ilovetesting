@@ -1,0 +1,188 @@
+---
+title: "Testing without an exact oracle"
+subtitle: "Testing training — Module 06"
+format:
+  revealjs:
+    theme: simple
+    slide-number: true
+    code-block-height: 400px
+---
+
+## Testing in bioinformatics: the same tools, an extra challenge
+
+You know how to write tests for scripts and Nextflow processes.
+
+. . .
+
+But what do you do when you don't know the **expected output**?
+
+---
+
+## Domain invariants — first tool
+
+Properties that must hold true after every run, regardless of the input.
+
+```python
+assert (df["value"] >= 0).all()           # positive values
+assert total_out <= total_in              # filter doesn't create rows
+assert len(ids) == len(set(ids))          # no duplicates
+```
+
+::: {.notes}
+Methodological reference: Kamali et al. (2015) "How to test bioinformatics software?" — Biophysical Reviews 7(3):343–352. PMID:28510230. DOI:10.1007/s12551-015-0177-3
+:::
+
+
+---
+
+## But invariants are not always enough
+
+A tool can satisfy all invariants... and still produce biologically incorrect results.
+
+. . .
+
+> BWA-MEM and Bowtie2 produced **different** alignments depending on the order of reads in the input.
+> The SAM files were valid. All reads were present. No visible error.
+>
+> — [Giannoulatou et al. 2014, BMC Bioinformatics](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4290646/)
+
+. . .
+
+On real data, it is not always possible to verify whether each individual result is correct.
+
+→ This is the **oracle problem**.
+
+---
+
+## Three strategies for the oracle problem
+
+| Approach | Principle |
+|----------|----------|
+| **Golden dataset** | Synthetic data — output defined *by construction* |
+| **Pseudo-oracle** | Compare two independent implementations |
+| **Metamorphic testing** | Verify a relation between two runs |
+
+---
+
+## Golden dataset
+
+A synthetic dataset with the expected result defined by construction.
+
+```
+data/
+├── sample.fastq          # 100 synthetic reads
+├── sample_expected.txt   # frozen expected result
+```
+
+```bash
+@test "golden dataset — count matches reference result" {
+    run bash count_reads.sh sample.fastq
+    [ "$output" = "$(cat sample_expected.txt)" ]
+}
+```
+
+::: {.callout-tip}
+Small, stable, versioned in the repo. Useful for long-term regression testing.
+:::
+
+---
+
+## Pseudo-oracle
+
+Compare two independent implementations on the same input.
+
+```bash
+@test "pseudo-oracle — two tools give the same read count" {
+    count_A=$(tool_A sample.fastq | awk 'NR%4==1' | wc -l)
+    count_B=$(tool_B sample.fastq | awk 'NR%4==1' | wc -l)
+    [ "$count_A" -eq "$count_B" ]
+}
+```
+
+. . .
+
+::: {.callout-tip}
+The anvi'o / MicrobeAnnotator case (module 01) is a pseudo-oracle: two tools annotate the same genome — unexpected discrepancies revealed bugs.
+:::
+
+---
+
+## Metamorphic testing: the idea
+
+Verify a **relation** between two runs rather than an absolute value.
+
+```
+f(input_A)  ──┐
+              ├── expected relation ?
+f(input_B)  ──┘
+```
+
+::: {.notes}
+Founding reference applied to bioinformatics: Chen et al. (2009) "An innovative approach for testing bioinformatics programs using metamorphic testing" — BMC Bioinformatics 10:24. PMID:19152705. PMC:PMC2657898.
+:::
+
+---
+
+## Metamorphic relations (MR)
+
+| MR | Input A → Input B | Relation |
+|----|-------------------|----------|
+| **Permutation** | reads → reordered reads | same count in output |
+| **Duplication** | 100 reads → 200 reads | exactly 2× in output |
+| **Subset** | 100 reads → 50 reads | output ≤ 100 |
+
+---
+
+## Example — bats
+
+```bash
+count_reads() { awk 'NR%4==1' "$1" | wc -l; }
+
+@test "MR1 — permutation: order does not affect count" {
+    [ "$(count_reads sample.fastq)" -eq "$(count_reads sample_shuffled.fastq)" ]
+}
+@test "MR2 — duplication: 2× input → 2× output" {
+    original=$(count_reads sample.fastq)
+    [ "$(count_reads sample_doubled.fastq)" -eq $(( original * 2 )) ]
+}
+@test "MR3 — subset: count ≤ original count" {
+    [ "$(count_reads sample_subset.fastq)" -le "$(count_reads sample.fastq)" ]
+}
+```
+
+---
+
+## Key takeaway
+
+::: {.callout-important}
+**Test properties, not just values.**
+
+Invariants are the foundation. Facing the oracle problem:
+golden dataset + pseudo-oracle + metamorphic = three complementary strategies.
+:::
+
+---
+
+## Next → Module 07
+
+You now know how to write tests at every level — scripts, processes, workflows, and without an exact oracle.
+
+. . .
+
+The final question: **where to start and what to prioritise** in your team?
+
+→ Module 07 — Strategy for a small team.
+
+---
+
+## Exercise → Module 06
+
+Go to `exercises/06_metamorphic/`
+
+The exercise focuses on **metamorphic testing** — the newest of the three patterns.
+
+- 1 MR1 test — permutation → same count
+- 1 MR2 test — duplication → 2× count
+- 1 MR3 test — subset → count ≤ original
+
+Bonus: apply the golden dataset pattern to the same data.

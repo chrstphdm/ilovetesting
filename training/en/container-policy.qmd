@@ -1,0 +1,119 @@
+---
+title: "Container Policy"
+format:
+  html:
+    toc: true
+---
+
+::: {.callout-note}
+🇫🇷 [Version française](../container-policy.qmd)
+:::
+
+## Mandatory rules
+
+- Every Nextflow process declares its container with an **exact tag**
+- Never `latest`
+- `.def` files are versioned in the repo
+- `.sif` files are **not** committed (archived on HPC or regenerated)
+- Every container has a `--version` test in a bats file
+- Every containerised process has an nf-test test runnable with `-profile apptainer`
+
+---
+
+## Authorised image sources
+
+| Source | Usage |
+|--------|-------|
+| **BioContainers** | Standard bioinformatics images, tagged by version |
+| **Seqera Containers / Wave** | Built on the fly from conda/bioconda |
+| **Team registry** | Custom images — versioned `.def` required |
+
+---
+
+## The two test levels
+
+### Level 1 — container alone
+
+```bash
+# Verify the tool exists and has the right version
+apptainer exec fastqc_0.12.1.sif fastqc --version
+
+# Verify the tool works without $HOME mounted
+apptainer exec --no-home fastqc_0.12.1.sif fastqc --version
+```
+
+Implemented with bats (`container_<tool>.bats`).
+
+### Level 2 — Nextflow process in its container
+
+```groovy
+process FASTQC {
+    container 'biocontainers/fastqc:0.12.1--hdfd78af_0'
+    ...
+}
+```
+
+```bash
+nf-test test fastqc.nf.test --profile apptainer
+```
+
+---
+
+## Apptainer vs Docker differences in HPC
+
+| Topic | Docker | Apptainer |
+|-------|--------|-----------|
+| Bind mounts | configurable | `/home`, `/tmp` mounted by default |
+| Permissions | root inside the container | user's UID |
+| Writing to `/` | possible | read-only by default |
+| `$HOME` available | depends on config | yes, unless `--no-home` |
+
+Always test with Apptainer in an HPC environment.
+
+---
+
+## Expected structure
+
+```
+modules/
+└── my_tool.nf              # process with container 'registry/image:tag'
+
+exercises/XX_module/
+└── containers/
+    ├── my_tool.def         # Apptainer definition (versioned in git)
+    └── README.md           # pull/build instructions
+└── tests/
+    ├── container_my_tool.bats      # bats tests for the container alone
+    └── my_tool_container.nf.test   # nf-test with apptainer profile
+```
+
+---
+
+## Skip pattern in bats
+
+Container tests require a `.sif` image present locally.
+Use `skip` to avoid failures in standard CI:
+
+```bash
+require_image() {
+    if [ ! -f "${IMAGE}" ]; then
+        skip "SIF not found — pull: apptainer pull ${IMAGE} docker://..."
+    fi
+}
+
+@test "correct version" {
+    require_image
+    run apptainer exec "${IMAGE}" fastqc --version
+    [ "$status" -eq 0 ]
+    [[ "$output" =~ "FastQC v0.12.1" ]]
+}
+```
+
+---
+
+## Container CI
+
+Container tests do not run in standard CI.
+They run via `workflow_dispatch` on a self-hosted runner with Apptainer.
+
+See `.github/workflows/test.yml`, job `test-containers`.

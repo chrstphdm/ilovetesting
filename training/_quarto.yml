@@ -6,6 +6,9 @@ website:
   title: "ilovetesting"
   description: "Formation aux tests dans les pipelines bioinformatiques"
   navbar:
+    right:
+      - text: "🇬🇧 English"
+        href: en/index.qmd
     left:
       - text: "Accueil"
         href: index.qmd

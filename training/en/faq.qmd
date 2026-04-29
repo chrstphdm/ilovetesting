@@ -1,0 +1,129 @@
+---
+title: "FAQ"
+format:
+  html:
+    toc: true
+---
+
+::: {.callout-note}
+🇫🇷 [Version française](../faq.qmd)
+:::
+
+## I am new to the team: where do I start?
+
+1. Run `bash setup.sh` to install the environment
+2. Read slides [01](slides/01_intro.qmd) and [02](slides/02_testing_concepts.qmd)
+3. Do exercise [01_bash](exercises/01_bash/README.qmd) — it is the shortest
+4. Run the existing tests to verify everything is green:
+
+```bash
+pytest -v --tb=short
+bats training/tests/bats/
+Rscript -e "testthat::test_dir('training/tests/testthat/')"
+cd training/tests/nf-test && nf-test test --verbose
+```
+
+---
+
+## I am modifying a Nextflow process: which tests should I add?
+
+1. Check whether a `.nf.test` file exists for this process
+2. If not: create a test that covers the happy path + an empty input
+3. Add at least one assertion on a business value (not just `process.success`)
+4. Run `nf-test test` from `training/tests/nf-test/`
+
+See exercise [04_nextflow](exercises/04_nextflow/README.qmd) for a complete example.
+
+---
+
+## I am fixing a bug: what test should I write?
+
+Write the test that **reproduces the bug** first — it must fail.
+Fix the bug. The test should now pass.
+
+```bash
+# bats example: the bug was "missing file → no error message"
+@test "missing file → exit 1 and error message" {
+    run bash validate_records.sh /tmp/missing.tsv
+    [ "$status" -eq 1 ]
+    [[ "$output" =~ "not found" ]]
+}
+```
+
+---
+
+## I am changing a container: what should I verify?
+
+1. Update the exact tag in the Nextflow process
+2. Update the corresponding `.def` file
+3. Rebuild or re-pull the `.sif` locally
+4. Re-run the container bats tests:
+
+```bash
+bats exercises/05_testing_containers/tests/container_fastqc.bats
+```
+
+5. Re-run the nf-test test with the apptainer profile:
+
+```bash
+cd training/tests/nf-test
+nf-test test fastqc.nf.test --profile apptainer
+```
+
+See [container-policy.qmd](container-policy.qmd) for the full rules.
+
+---
+
+## A snapshot changed: what should I do?
+
+1. **Read the diff** — understand what changed and why
+2. If it is an **intentional** change: accept with `--update-snapshot` and explain it in the PR
+3. If it is a **regression**: do not update, fix the code
+
+```bash
+# View the diff before accepting
+nf-test test --verbose
+
+# Accept only if the change is justified
+nf-test test --update-snapshot
+```
+
+See [snapshot-policy.qmd](snapshot-policy.qmd) for the full policy.
+
+---
+
+## CI is red: how do I diagnose it?
+
+1. Check which job failed (pytest / bats / testthat / nf-test)
+2. Run that job locally with the same commands
+3. Read the full error message — `--tb=short` for pytest, `--verbose` for nf-test
+4. Check whether a snapshot is stale → `nf-test test --clean-snapshot` if needed
+
+```bash
+# Reproduce locally
+pytest -v --tb=long
+bats training/tests/bats/ --verbose
+cd training/tests/nf-test && nf-test test --verbose
+```
+
+---
+
+## I am preparing a release: which tests should I run?
+
+Before merging to `main`:
+
+```bash
+# All unit and process tests
+pytest -v --tb=short
+bats training/tests/bats/
+Rscript -e "testthat::test_dir('training/tests/testthat/')"
+cd training/tests/nf-test && nf-test test --verbose
+
+# Verify the site renders
+cd training && quarto check
+
+# Container tests (if available)
+bats training/exercises/05_testing_containers/tests/container_fastqc.bats
+```
+
+CI automatically checks the first four blocks on every PR.

@@ -1,0 +1,123 @@
+---
+title: "Strategy for a small team"
+subtitle: "Testing training — Module 07"
+format:
+  revealjs:
+    theme: simple
+    slide-number: true
+    code-block-height: 400px
+---
+
+## Typical situation: new pipeline, no tests yet
+
+I coded quickly to validate an idea. The pipeline runs, the results look consistent.
+
+. . .
+
+It's a preliminary version — but now it needs tests.
+
+. . .
+
+**I don't know where to start.**
+
+---
+
+## Risk-based testing
+
+```
+Priority = probability of breaking × impact if it breaks
+```
+
+| Priority | What we test |
+|----------|-------------|
+| **1 — always** | transformations, filters, business decisions |
+| **2 — as soon as possible** | chains of modules |
+| **3 — as soon as deliverable** | full pipeline on mini-data |
+| **4 — if custom container** | pinned version, Apptainer behaviour |
+
+For the full details → [testing-matrix.qmd](../testing-matrix.qmd)
+
+---
+
+## Fast CI / slow tests separated
+
+```
+PR → CI (< 5 min)
+    ├── pytest, bats, testthat
+    └── nf-test on isolated processes
+
+Nightly or manual
+    ├── full pipeline
+    ├── container tests (Apptainer)
+    └── full golden dataset
+```
+
+::: {.callout-tip}
+At the start: even a single `pytest` in CI is enough. What matters is that the gate exists.
+:::
+
+---
+
+## Minimum viable test
+
+For every new pipeline step:
+
+```
+1. a minimal input
+2. an expected output
+3. a behavioral assertion
+4. an error case
+5. a documented command
+```
+
+That is enough to get started.
+
+---
+
+## Handover and bus factor
+
+A pipeline without tests = risk if the person maintaining it leaves.
+
+A test = executable documentation that the next person can run.
+
+::: {.callout-tip}
+Write the test you would have wanted to find when joining the project.
+:::
+
+---
+
+## When not to test
+
+- throwaway exploratory code
+- temporary visualisation
+- trivial wrapper already covered elsewhere
+- voluminous output that is never reviewed
+- non-critical case that is very costly to test
+
+. . .
+
+**But document why** — an explicit decision is better than a silent omission.
+
+---
+
+## Strategy anti-patterns
+
+- Waiting until there is time — the right moment never comes
+- Aiming for 100% coverage before the first PR — exhausting and counterproductive
+- Writing all tests at the end of the project — too late to catch anything
+- Testing only locally, never in CI — invisible to the team
+- Not documenting no-test decisions — a silent omission becomes debt
+
+. . .
+
+For maturity levels → [testing-matrix.qmd](../testing-matrix.qmd)
+
+---
+
+## Key takeaway
+
+::: {.callout-important}
+**Where to start?** The first useful test verifies the most critical business rule in the pipeline — the calculation, filter, or decision whose wrong result would not be visible without a test.
+
+Start small. A minimal test on the critical path > zero tests.
+:::
