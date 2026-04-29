@@ -10,22 +10,17 @@ format:
 
 ## Un pipeline peut réussir… et produire une sortie fausse
 
-Cas réel — annotation KEGG / KOfam
-
-Deux outils annotent les mêmes gènes avec la même base de données KOfam.
+Cas réel — [blog anvi'o 2022](https://anvio.org/blog/bioinformatics-bugs/)
 
 . . .
 
-Résultat attendu : des différences limitées, explicables par la méthode.
-Résultat observé : des annotations incohérentes — jusqu'à 65 % de faux positifs.
+- Deux outils annotent les mêmes gènes avec la même base KOfam
+- Résultat attendu : différences limitées, explicables par la méthode
+- Résultat observé : jusqu'à **65 % de faux positifs**
 
 . . .
 
 Le pipeline tourne. Les fichiers sont générés. **Aucune erreur visible.**
-
-::: {.notes}
-Le blog anvi'o (2022) décrit une comparaison entre anvi'o et MicrobeAnnotator pour annoter des KEGG Orthologs à partir de KOfam. Les auteurs s'attendaient à des différences méthodologiques, mais ont observé des résultats très incohérents. L'investigation a révélé deux erreurs de code : (1) un filtrage utilisant le seuil du premier KO d'un lot plutôt que le seuil propre à chaque KO, (2) une comparaison de scores numériques lus comme chaînes de caractères. Source : https://anvio.org/blog/bioinformatics-bugs/
-:::
 
 ---
 
