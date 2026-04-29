@@ -16,6 +16,14 @@ Tests for scripts and Nextflow processes are now covered.
 
 But what to do when the **expected output** is unknown?
 
+::: {.notes}
+Natural transition from the previous modules: we know how to write tests when we know the expected output (`assert n == 20`, `assert len(df) == 20`). But in bioinformatics, we don't always know the "right" answer.
+
+Concrete examples to mention: aligning a read to a genome — multiple positions are possible, which is correct? Protein structure prediction — no crystallography reference available. Cell clustering in single-cell — the number of clusters is a decision, not a truth.
+
+Don't answer the "but what to do?" question right away — let it hang for 3–4 seconds. The rest of the module covers it.
+:::
+
 ---
 
 ## Domain invariants — first tool
@@ -32,6 +40,15 @@ assert len(ids) == len(set(ids))          # no duplicates
 → [Kamali et al. 2015 — How to test bioinformatics software?](https://pubmed.ncbi.nlm.nih.gov/28510230/)
 :::
 
+::: {.notes}
+Invariants are mathematical or biological properties that must hold regardless of the specific input. They don't say what the right value is — they say what cannot possibly be true.
+
+`total_out <= total_in`: a filter cannot create data. If we filter 100 reads and output 120, there's a bug. This property holds regardless of the read composition.
+
+`len(ids) == len(set(ids))`: no duplicates. If a deduplication pipeline produces duplicates, this assertion catches it — without knowing the exact data.
+
+These invariants are often documented in bioinformatics publications — the Kamali 2015 reference lists several for NGS tools. It's a good starting point for identifying invariants in your own pipelines.
+:::
 
 ---
 
@@ -52,6 +69,14 @@ On real data, it is not always possible to verify whether each individual result
 
 → This is the **oracle problem**.
 
+::: {.notes}
+The BWA-MEM / Bowtie2 case is real. Both tools produced valid alignments (correct SAM format, all reads present, coordinates within genome bounds). All standard invariants held. But the order of reads in the input changed the result — which shouldn't happen for a deterministic alignment algorithm.
+
+The "oracle problem" is a term from software testing literature: an oracle is a source that says whether a result is correct. In classical software, the oracle is often a formal specification. In bioinformatics, the oracle is often biological reality — which can't always be consulted.
+
+This problem has no perfect solution. The three strategies that follow are useful approximations, not complete solutions.
+:::
+
 ---
 
 ## Three strategies for the oracle problem {.smaller}
@@ -61,6 +86,18 @@ On real data, it is not always possible to verify whether each individual result
 | **Golden dataset** | Synthetic data — output defined *by construction* |
 | **Pseudo-oracle** | Compare two independent implementations |
 | **Metamorphic testing** | Verify a relation between two runs |
+
+::: {.notes}
+The three strategies are complementary — they can be combined.
+
+Golden dataset: you know what the tool should produce because you constructed the data so the answer is known. Ideal for long-term regression testing.
+
+Pseudo-oracle: if two independent tools give very different results on the same input, there's likely a bug in one of them. This is what revealed the anvi'o bug from module 01 — two annotation tools gave very divergent results.
+
+Metamorphic testing: you don't know the correct absolute value, but you know relations between inputs and outputs. If you double the data, the count should double. If you reorder the reads, the alignment result should be the same.
+
+Present the three briefly — the following slides detail each one.
+:::
 
 ---
 
@@ -85,6 +122,16 @@ data/
 Small, stable, versioned in the repo. Useful for long-term regression testing.
 :::
 
+::: {.notes}
+"Defined by construction" is the key: you create the data and compute the correct answer independently of the tool being tested. For example, generate 100 synthetic reads for which you know exactly how many pass the quality filter — then verify the tool gives the same result.
+
+The `sample_expected.txt` file is committed to the repo alongside the data. This is different from an nf-test snapshot: here, the expected result was built before even writing the tool.
+
+The downside: creating synthetic data takes time. And if the synthetic data doesn't capture a rare real-world case, the golden dataset won't protect against it.
+
+For NGS pipelines, tools like `dwgsim`, `art_illumina`, or `badread` can simulate reads with controlled characteristics.
+:::
+
 ---
 
 ## Pseudo-oracle
@@ -105,6 +152,16 @@ Compare two independent implementations on the same input.
 The anvi'o / MicrobeAnnotator case (module 01) is a pseudo-oracle: two tools annotate the same genome — unexpected discrepancies revealed bugs.
 :::
 
+::: {.notes}
+The pseudo-oracle doesn't say which tool is correct — it says they are inconsistent, which warrants investigation.
+
+When to use a pseudo-oracle? When you have two independent implementations of the same algorithm (two aligners, two assemblers, two counting tools). Divergence between them is the warning signal.
+
+Limitation: if both tools have the same bug (implement the same error the same way), the pseudo-oracle doesn't detect it. That's why "independent" matters — two tools sharing the same internal library aren't truly independent.
+
+The reference to the anvi'o case from module 01 is intentional: reminding that the strategies in this module are grounded in real cases, not theoretical exercises.
+:::
+
 ---
 
 ## Metamorphic testing: the idea
@@ -121,6 +178,16 @@ f(input_B)  ──┘
 → [Chen et al. 2009 — Metamorphic testing for bioinformatics programs](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2657898/)
 :::
 
+::: {.notes}
+Metamorphic testing starts from an observation: even without knowing the "right" answer, you can often derive relations between inputs and outputs.
+
+Simple example: if you double the input file size (by duplicating the reads exactly), the read count should double. You don't need to know how many reads there are to verify this relation.
+
+"Metamorphic relation" (MR) is the technical term: a transformation of the input that implies a predictable transformation of the output. The next slide gives three concrete examples.
+
+This technique is particularly powerful in bioinformatics because it doesn't require reference data — just an understanding of the mathematical properties of the algorithm.
+:::
+
 ---
 
 ## Metamorphic relations (MR) {.smaller}
@@ -130,6 +197,18 @@ f(input_B)  ──┘
 | **Permutation** | reads → reordered reads | same count in output |
 | **Duplication** | 100 reads → 200 reads | exactly 2× in output |
 | **Subset** | 100 reads → 50 reads | output ≤ 100 |
+
+::: {.notes}
+These three relations are the most common in NGS. They seem trivial — and that's precisely why they're useful: if a tool violates such an obvious property, there's clearly a bug.
+
+MR1 (Permutation): alignment, counting, and filtering algorithms should be invariant to read order. If BWA-MEM produces different results depending on order, that's a bug — exactly the Giannoulatou 2014 bug.
+
+MR2 (Duplication): if you duplicate the FASTQ file exactly (each read appears twice), the total count should double. A deduplication tool should not create more duplicates.
+
+MR3 (Subset): the count of a subset cannot exceed the count of the full set. Obvious, but some tools have off-by-one bugs that violate this property.
+
+Ask the group: "What other metamorphic relations apply to your pipelines?" A useful reflection exercise.
+:::
 
 ---
 
@@ -150,6 +229,16 @@ count_reads() { awk 'NR%4==1' "$1" | wc -l; }
 }
 ```
 
+::: {.notes}
+`count_reads()` is a helper function defined outside the tests — best practice in bats to avoid code duplication.
+
+The files `sample_shuffled.fastq`, `sample_doubled.fastq`, `sample_subset.fastq` are variants of the same file, generated once and committed to the repo. They don't change from one run to the next.
+
+MR2 uses bash arithmetic `$(( original * 2 ))` — watch out for quotes and spaces in bash arithmetic expressions.
+
+These tests are deliberately simple: metamorphic testing is applied to `count_reads` which is trivial, so participants can focus on the pattern rather than tool complexity. In real projects, you'd apply this to aligners, assemblers, or annotation tools.
+:::
+
 ---
 
 ## Key takeaway
@@ -159,6 +248,17 @@ count_reads() { awk 'NR%4==1' "$1" | wc -l; }
 
 Invariants are the foundation. Facing the oracle problem:
 golden dataset + pseudo-oracle + metamorphic = three complementary strategies.
+:::
+
+::: {.notes}
+"Test properties" is the key phrase to retain. A property (`total_out <= total_in`, `order doesn't matter`, `2x input → 2x output`) is testable even without knowing the exact value.
+
+The three strategies are not exclusive — in practice, combine them:
+- Golden dataset for regression testing on known cases
+- Pseudo-oracle to detect divergence between tools
+- Metamorphic testing for universal properties
+
+In bioinformatics, a perfect oracle is rare. But with these tools, you can detect a wide class of bugs without knowing the "right" answer.
 :::
 
 ---
@@ -173,6 +273,14 @@ The final question: **where to start and what to prioritise** in the team?
 
 → Module 07 — Strategy for a small team.
 
+::: {.notes}
+At this point, participants have seen all the tools and techniques: bats, pytest, testthat, nf-test, invariants, golden dataset, pseudo-oracle, metamorphic testing. The natural question is: "That's great, but where do I start in my current project?"
+
+That's exactly what module 07 covers. The transition is natural — moving from techniques to strategy.
+
+If the group looks tired, this is a good moment for a break before the last module. Module 07 is shorter and more operational — no new technical content, just strategy.
+:::
+
 ---
 
 ## Exercise → Module 06
@@ -186,3 +294,13 @@ The exercise focuses on **metamorphic testing** — the newest of the three patt
 - 1 MR3 test — subset → count ≤ original
 
 Bonus: apply the golden dataset pattern to the same data.
+
+::: {.notes}
+The exercise is deliberately focused on metamorphic testing — it's the least intuitive of the three and the one that benefits most from practice.
+
+The files `sample.fastq`, `sample_shuffled.fastq`, `sample_doubled.fastq`, `sample_subset.fastq` are already in the exercise directory — participants only need to write the tests.
+
+The golden dataset bonus consists of creating an `expected.txt` file and writing a test that compares `count_reads.sh` output against it.
+
+Estimated time: 20–30 minutes for the 3 MR tests + 15 minutes for the bonus.
+:::

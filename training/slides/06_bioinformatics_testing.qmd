@@ -16,6 +16,14 @@ Les tests pour scripts et process Nextflow sont maintenant maîtrisés.
 
 Mais que faire quand le **résultat attendu** est inconnu ?
 
+::: {.notes}
+Transition naturelle depuis les modules précédents : on sait écrire des tests quand on connaît la sortie attendue (`assert n == 20`, `assert len(df) == 20`). Mais en bioinformatique, on ne connaît pas toujours la "bonne" réponse.
+
+Exemples concrets à citer : l'alignement d'un read sur un génome — plusieurs positions sont possibles, quelle est la bonne ? La prédiction de structure de protéine — on n'a pas de cristallographie de référence. Le clustering de cellules en single-cell — le nombre de clusters est une décision, pas une vérité.
+
+Ne pas répondre à la question "Mais que faire ?" tout de suite — laisser résonner 3-4 secondes. C'est ce que couvre le reste du module.
+:::
+
 ---
 
 ## Les invariants du domaine — premier outil
@@ -30,6 +38,16 @@ assert len(ids) == len(set(ids))          # pas de doublon
 
 ::: {style="font-size:0.55em; color:#666; margin-top:0.5em;"}
 → [Kamali et al. 2015 — How to test bioinformatics software?](https://pubmed.ncbi.nlm.nih.gov/28510230/)
+:::
+
+::: {.notes}
+Les invariants sont des propriétés mathématiques ou biologiques qui doivent être vraies indépendamment de l'input spécifique. Ils ne disent pas quelle est la bonne valeur — ils disent ce qui ne peut pas être vrai.
+
+`total_out <= total_in` : un filtre ne peut pas créer de données. Si on filtre 100 reads et qu'on en ressort 120, il y a un bug. Cette propriété est vraie quelle que soit la composition des reads.
+
+`len(ids) == len(set(ids))` : pas de doublon. Si un pipeline de déduplication produit des doublons, cette assertion l'attrape — sans connaître les données exactes.
+
+Ces invariants sont souvent documentés dans les publications bioinformatiques — la référence Kamali 2015 en liste plusieurs pour les outils NGS. C'est un bon point de départ pour identifier les invariants de ses propres pipelines.
 :::
 
 
@@ -52,6 +70,14 @@ Sur des données réelles, on ne peut pas toujours vérifier si chaque résultat
 
 → C'est l'**oracle problem**.
 
+::: {.notes}
+Le cas BWA-MEM / Bowtie2 est réel. Les deux outils produisaient des alignements valides (format SAM correct, tous les reads présents, coordonnées dans les bornes du génome). Tous les invariants classiques étaient respectés. Mais l'ordre des reads dans l'input changeait le résultat — ce qui ne devrait pas arriver pour un algorithme d'alignement déterministe.
+
+L'"oracle problem" est un terme de la littérature de test logiciel : un oracle est une source qui dit si un résultat est correct. En informatique classique, l'oracle est souvent une spécification formelle. En bioinformatique, l'oracle est souvent la biologie réelle — qu'on ne peut pas toujours consulter.
+
+Ce problème n'a pas de solution parfaite. Les trois stratégies qui suivent sont des approximations utiles, pas des solutions complètes.
+:::
+
 ---
 
 ## Trois stratégies face au problème de l'oracle {.smaller}
@@ -61,6 +87,18 @@ Sur des données réelles, on ne peut pas toujours vérifier si chaque résultat
 | **Golden dataset** | Données synthétiques — output défini *par construction* |
 | **Pseudo-oracle** | Comparer deux implémentations indépendantes |
 | **Metamorphic testing** | Vérifier une relation entre deux exécutions |
+
+::: {.notes}
+Les trois stratégies sont complémentaires — on peut les combiner.
+
+Golden dataset : on sait ce que doit produire l'outil parce qu'on a construit les données pour que la réponse soit connue. Idéal pour la non-régression à long terme.
+
+Pseudo-oracle : si deux outils indépendants donnent des résultats très différents sur le même input, il y a probablement un bug dans l'un des deux. C'est ce qui a révélé le bug anvi'o du module 01 — deux outils d'annotation donnaient des résultats très divergents.
+
+Metamorphic testing : on ne connaît pas la valeur absolue correcte, mais on connaît des relations entre inputs et outputs. Si on double les données, le count doit doubler. Si on réordonne les reads, le résultat d'alignement doit être le même.
+
+Présenter rapidement les trois — les slides suivantes détaillent chacune.
+:::
 
 ---
 
@@ -85,6 +123,16 @@ data/
 Petit, stable, versionné dans le repo. Utile pour la non-régression à long terme.
 :::
 
+::: {.notes}
+"Défini par construction" est la clé : on crée les données et on calcule la réponse correcte indépendamment de l'outil à tester. Par exemple, on génère 100 reads synthétiques dont on sait exactement combien passent le filtre de qualité — puis on vérifie que l'outil donne le même résultat.
+
+Le fichier `sample_expected.txt` est commité dans le repo avec les données. C'est différent d'un snapshot nf-test : ici, on a construit le résultat attendu avant même d'écrire l'outil.
+
+L'inconvénient : créer des données synthétiques prend du temps. Et si les données synthétiques ne capturent pas un cas réel rare, le golden dataset ne protège pas contre ce cas.
+
+Pour les pipelines NGS, des outils comme `dwgsim`, `art_illumina` ou `badread` permettent de simuler des reads avec des caractéristiques contrôlées.
+:::
+
 ---
 
 ## Pseudo-oracle
@@ -105,6 +153,16 @@ Comparer deux implémentations indépendantes sur le même input.
 Le cas anvi'o / MicrobeAnnotator (module 01) est un pseudo-oracle : deux outils annotent le même génome — les incohérences inattendues ont révélé des bugs.
 :::
 
+::: {.notes}
+Le pseudo-oracle ne dit pas lequel des deux outils est correct — il dit qu'ils sont incohérents, ce qui mérite investigation.
+
+Quand utiliser un pseudo-oracle ? Quand on a deux implémentations indépendantes du même algorithme (deux aligneurs, deux assembleurs, deux outils de comptage). La divergence entre les deux est le signal d'alerte.
+
+Limite : si les deux outils ont le même bug (implémentent la même erreur de la même façon), le pseudo-oracle ne le détecte pas. C'est pourquoi "indépendant" est important — deux outils qui partagent la même bibliothèque interne ne sont pas vraiment indépendants.
+
+La référence au cas anvi'o du module 01 est intentionnelle : rappeler que les stratégies de ce module sont ancrées dans des cas réels, pas des exercices théoriques.
+:::
+
 ---
 
 ## Metamorphic testing : l'idée
@@ -121,6 +179,16 @@ f(input_B)  ──┘
 → [Chen et al. 2009 — Metamorphic testing for bioinformatics programs](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2657898/)
 :::
 
+::: {.notes}
+Le metamorphic testing part d'une observation : même sans connaître la "bonne" réponse, on peut souvent déduire des relations entre inputs et outputs.
+
+Exemple simple : si on double la taille du fichier d'entrée (en dupliquant exactement les reads), le count de reads doit doubler. On n'a pas besoin de savoir combien de reads il y a pour vérifier cette relation.
+
+"Metamorphic relation" (MR) est le terme technique : une transformation de l'input qui implique une transformation prévisible de l'output. La slide suivante donne trois exemples concrets.
+
+Cette technique est particulièrement puissante en bioinfo car elle ne nécessite pas de données de référence — juste une compréhension des propriétés mathématiques de l'algorithme.
+:::
+
 ---
 
 ## Relations métamorphiques (MR) {.smaller}
@@ -130,6 +198,18 @@ f(input_B)  ──┘
 | **Permutation** | reads → reads réordonnés | même count en sortie |
 | **Duplication** | 100 reads → 200 reads | exactement 2× en sortie |
 | **Sous-ensemble** | 100 reads → 50 reads | sortie ≤ 100 |
+
+::: {.notes}
+Ces trois relations sont les plus courantes en NGS. Elles semblent triviales — et c'est précisément pourquoi elles sont utiles : si un outil viole une propriété aussi évidente, il y a clairement un bug.
+
+MR1 (Permutation) : les algorithmes d'alignement, de comptage, et de filtrage devraient être invariants à l'ordre des reads. Si BWA-MEM produit des résultats différents selon l'ordre, c'est un bug — c'est exactement le bug de Giannoulatou 2014.
+
+MR2 (Duplication) : si on duplique exactement le fichier FASTQ (chaque read apparaît deux fois), le count total devrait doubler. Un outil de déduplication ne devrait pas dupliquer davantage.
+
+MR3 (Sous-ensemble) : le count d'un sous-ensemble ne peut pas dépasser le count du set complet. Évident, mais certains outils ont des bugs de off-by-one qui violent cette propriété.
+
+Demander au groupe : "Quelles autres relations métamorphiques s'appliquent à vos pipelines ?" C'est un bon exercice de réflexion.
+:::
 
 ---
 
@@ -150,6 +230,16 @@ count_reads() { awk 'NR%4==1' "$1" | wc -l; }
 }
 ```
 
+::: {.notes}
+`count_reads()` est une fonction helper définie en dehors des tests — c'est la bonne pratique bats pour éviter la duplication de code.
+
+Les fichiers `sample_shuffled.fastq`, `sample_doubled.fastq`, `sample_subset.fastq` sont des variantes du même fichier, générées une fois et commitées dans le repo. Ils ne changent pas d'une exécution à l'autre.
+
+MR2 utilise l'arithmétique bash `$(( original * 2 ))` — attention aux guillemets et aux espaces dans les expressions arithmétiques bash.
+
+Ces tests sont délibérément simples : on applique le metamorphic testing sur `count_reads` qui est trivial, pour que les participants puissent se concentrer sur le pattern plutôt que sur la complexité de l'outil. Dans la vraie vie, on l'appliquerait à des outils d'alignement, d'assemblage, ou d'annotation.
+:::
+
 ---
 
 ## Message à retenir
@@ -159,6 +249,17 @@ count_reads() { awk 'NR%4==1' "$1" | wc -l; }
 
 Les invariants sont le socle. Face à l'oracle problem :
 golden dataset + pseudo-oracle + metamorphic = trois stratégies complémentaires.
+:::
+
+::: {.notes}
+"Tester les propriétés" est la formulation clé à retenir. Une propriété (`total_out <= total_in`, `order doesn't matter`, `2x input → 2x output`) est testable même sans connaître la valeur exacte.
+
+Les trois stratégies ne sont pas exclusives — en pratique, on en combine plusieurs :
+- Golden dataset pour la non-régression sur les cas connus
+- Pseudo-oracle pour détecter les divergences entre outils
+- Metamorphic testing pour les propriétés universelles
+
+En bioinfo, il est rare d'avoir un oracle parfait. Mais avec ces outils, on peut détecter une large classe de bugs sans connaître la "bonne" réponse.
 :::
 
 ---
@@ -173,6 +274,14 @@ La dernière question : **par où commencer et quoi prioriser** dans l'équipe ?
 
 → Module 07 — Stratégie pour petite équipe.
 
+::: {.notes}
+À ce stade, les participants ont vu tous les outils et techniques : bats, pytest, testthat, nf-test, invariants, golden dataset, pseudo-oracle, metamorphic testing. La question naturelle est : "C'est bien, mais par où commencer dans mon projet actuel ?"
+
+C'est exactement ce que couvre le module 07. La transition est naturelle — on passe des techniques à la stratégie.
+
+Si le groupe est fatigué, c'est un bon moment pour une pause avant le dernier module. Le module 07 est plus court et plus opérationnel — pas de nouveau contenu technique, juste de la stratégie.
+:::
+
 ---
 
 ## Exercice → Module 06
@@ -186,3 +295,13 @@ L'exercice se concentre sur le **metamorphic testing** — le plus nouveau des t
 - 1 test MR3 — sous-ensemble → count ≤ original
 
 Bonus : appliquer le pattern golden dataset sur les mêmes données.
+
+::: {.notes}
+L'exercice est volontairement ciblé sur le metamorphic testing — c'est la technique la moins intuitive des trois et celle qui mérite le plus de pratique.
+
+Les fichiers `sample.fastq`, `sample_shuffled.fastq`, `sample_doubled.fastq`, `sample_subset.fastq` sont déjà présents dans le répertoire de l'exercice — les participants n'ont qu'à écrire les tests.
+
+Le bonus golden dataset peut être fait si le temps le permet. Il consiste à créer un fichier `expected.txt` et à écrire un test qui compare la sortie de `count_reads.sh` avec ce fichier.
+
+Durée estimée : 20-30 minutes pour les 3 tests MR + 15 minutes pour le bonus.
+:::

@@ -30,6 +30,14 @@ GIVEN / WHEN / THEN = Arrange / Act / Assert — same concept, two notations.
 
 The test name **is** the specification: `test_filter_excludes_values_below_threshold` says what the code must do — before even reading it.
 
+::: {.notes}
+GIVEN/WHEN/THEN comes from BDD (Behaviour-Driven Development). AAA comes from the xUnit tradition. Both describe the exact same structure — just two different vocabularies used by different communities. This course uses GIVEN/WHEN/THEN because it reads more naturally aloud.
+
+On test names: this is often underestimated. A test named `test_filter` says nothing. `test_filter_excludes_values_below_threshold` states what the code guarantees. If someone breaks that behaviour, the failing test name is enough to understand what went wrong — without reading the code.
+
+Useful question for the group: "If your test fails at 3am in CI, does the test name alone tell you what broke?"
+:::
+
 ---
 
 ## The test pyramid {.smaller}
@@ -49,6 +57,14 @@ The test name **is** the specification: `test_filter_excludes_values_below_thres
 
 ::: {style="font-size:0.55em; color:#666; margin-top:0.5em;"}
 → [TestPyramid — Martin Fowler](https://martinfowler.com/bliki/TestPyramid.html)
+:::
+
+::: {.notes}
+The pyramid is not a strict rule — it's a proportion guide. Many fast unit tests, few slow functional tests. If the pyramid is inverted (more slow tests than fast ones), CI becomes slow and developers start ignoring results.
+
+In bioinformatics, the situation is particular: a "unit test" for a FASTQC process reads files, calls an executable, and touches the filesystem. That's not a pure unit test in the strict software engineering sense — Google would call it a Medium test. But in our context, we call it a unit test because it tests a single isolated component.
+
+If someone asks "how many tests of each type?", the honest answer is: as many unit tests as needed to cover the business rules, a few integration tests for critical chains, one or two functional tests for the main paths. No magic formula.
 :::
 
 ---
@@ -76,6 +92,14 @@ In bioinformatics: a "unit test" for a FASTQC module reads files and calls an ex
 → [TestPyramid](https://martinfowler.com/bliki/TestPyramid.html) · [Google Test Sizes](https://testing.googleblog.com/2010/12/test-sizes.html) · [ISTQB Glossary](https://glossary.istqb.org/en_US/term)
 :::
 
+::: {.notes}
+This slide exists to defuse terminology debates. If someone comes from a JavaScript context and says "but that's not a unit test", you can say: "You're right by the strict definition, but in this course we use 'unit' to mean 'one isolated component'."
+
+Smoke test deserves a mention: it's the test that just checks the program starts and doesn't immediately crash. Often the first test written. Useful but not sufficient on its own.
+
+Don't spend more than 2–3 minutes on this slide. The goal is to fix vocabulary for the rest of the course, not to survey every existing taxonomy.
+:::
+
 ---
 
 ## Assertions {.smaller}
@@ -99,6 +123,16 @@ assert result["A"] == 65.25      # business value — detects a wrong calculatio
 ```
 
 A useful assertion detects **precisely** what can be wrong.
+
+::: {.notes}
+`assert result is not None` is the most common antipattern. It passes if the function returns anything at all — an empty list, an empty DataFrame, a wrong dictionary. It protects almost nothing.
+
+The question to ask for every assertion: "If this test fails, what does it tell me?" If the answer is "not much", the assertion is too vague.
+
+`assert result["A"] == 65.25` is a good business assertion: it checks a specific calculation. If the module 01 bug (filter applied with the wrong threshold) were present, this assertion would catch it. `assert result is not None` would not.
+
+Don't go into `pytest.approx` for floats here — that's covered in module 03.
+:::
 
 ---
 
@@ -126,6 +160,16 @@ def test_positive_values():
     df = load_records("records.tsv")       # no external dependency
     assert (df["value"] >= 0).all()
 ```
+
+::: {.notes}
+The problem with the "bad" example: if `test_load_file` doesn't run first (or if pytest runs them in a different order), `test_positive_values` fails — but the cause is invisible. In parallel CI, this type of bug is hard to reproduce.
+
+`/tmp` is a common antipattern: the file may already exist from a previous run, may be modified by another test running in parallel, or may not exist at all depending on execution order.
+
+In pytest, the correct solution is to use the `tmp_path` fixture, which creates a unique temporary directory per test. This is covered in module 03.
+
+Useful question: "Has anyone had a test that sometimes passed and sometimes failed with no apparent reason?" That's almost always an isolation problem.
+:::
 
 ---
 
@@ -156,6 +200,14 @@ def test_edge_cases():
         with pytest.raises(...): load_records(path)
 ```
 
+::: {.notes}
+The critical difference between `parametrize` and a loop inside a test: with `parametrize`, each case is an independent test with its own name. If `empty.tsv` fails but `missing.tsv` passes, you see it clearly. With a loop, the test stops at the first failure — you don't know if the other cases pass or not.
+
+In practice, `parametrize` generates automatic names like `test_invalid_inputs[empty.tsv-ValueError]`. Readable in the test report.
+
+The happy path should always exist separately. Parametrised tests are for variations of the same behaviour — not for mixing the nominal case with error cases in the same test.
+:::
+
 ---
 
 ## Snapshots
@@ -180,6 +232,16 @@ A snapshot does not say the output is **correct**. It says it has **not changed*
 Snapshot alone = non-regression safety net. Snapshot + explicit assertion = useful test.
 :::
 
+::: {.notes}
+The most common snapshot mistake: updating them automatically without checking why they changed. A snapshot change may be intentional (you changed the behaviour) or reveal a bug. If you blindly accept the new snapshot, the bug is now the "new reference".
+
+Correct workflow: snapshot fails → understand why → if intentional change, update → if bug, fix the code.
+
+In nf-test, `--update-snapshot` regenerates snapshots. Only use it after verifying that the change is expected.
+
+Good analogy: a snapshot is like a passport photo. If the photo changes, either someone aged (normal) or someone falsified the document (bug). Check before accepting.
+:::
+
 ---
 
 ## Test data
@@ -194,6 +256,16 @@ data/
 
 20 rows are enough for a filter or a stats calculation.
 100 reads are enough for a FASTQC process.
+
+::: {.notes}
+The temptation is to use "realistic" data — thousands of rows, real FASTQs. Two problems: tests become slow, and when a test fails it's hard to understand why on a large file.
+
+20 rows for `records.tsv` is not arbitrary: it's enough to have two groups (A and B), values to filter, stats to compute — but small enough to check manually if needed.
+
+The error files (`empty.tsv`, `invalid_records.tsv`, etc.) each violate a single rule. This is intentional: one file = one violated rule = one diagnostic test. If multiple rules are violated in one file, you don't know which one caused the failure.
+
+Never put real biological data in `training/data/` — confidentiality, size, and reproducibility issues.
+:::
 
 ---
 
@@ -217,6 +289,16 @@ A silent bug does not raise an exception — it produces a slightly wrong result
 Coverage measures whether lines are **executed**, not whether assertions **prove anything**.
 :::
 
+::: {.notes}
+This slide is the main argument against "we have 100% coverage, we're covered". Coverage measures which lines were executed — not whether the assertions checked anything useful.
+
+The file `test_coverage_demo.py` is in the repo — a live demo is possible if time allows: run the tests, see 100%, then show the 3 bugs on the next slide.
+
+The 3 bugs are: (1) `>` instead of `>=` in the filter — S02 with value=45 is silently excluded; (2) stats computed on the full DataFrame instead of the filtered one; (3) the function returns a Series instead of a DataFrame. All 5 tests still pass.
+
+Question to ask: "What coverage percentage do you aim for in your current projects?" If someone says "100%", this is the moment to explain that it's neither achievable nor desirable as an absolute target.
+:::
+
 ---
 
 ## What coverage does not see
@@ -235,6 +317,18 @@ assert isinstance(result, pd.DataFrame)     # ← explicit type
 
 → Coverage tells you what you have **not tested**. Not whether what you have tested is **correct**.
 
+::: {.notes}
+Walk through each correction line by line, explaining what it catches.
+
+Bug 1: `assert len(filtered) == 10` catches over- or under-filtering. `assert 45 in filtered["value"].values` is the boundary invariant — strict equality (`>=`) must include the threshold value.
+
+Bug 2: `pytest.approx` is needed for floats — don't use `== 65.25` directly. The value 65.25 is the correct mean on the filtered data.
+
+Bug 3: the type is often forgotten. A function can return a pandas Series instead of a DataFrame — no exception, but code downstream may fail in unexpected ways.
+
+Emphasise the final message: coverage is a useful tool for finding untested areas, but high coverage does not guarantee that the tests are good.
+:::
+
 ---
 
 ## Next → Module 03
@@ -249,3 +343,13 @@ Before opening module 03: here is how GIVEN/WHEN/THEN translates to bats.
 ```
 
 Module 03 shows the three syntaxes — bats, pytest, testthat — on this same example.
+
+::: {.notes}
+This slide bridges the abstract concepts of module 02 with the concrete practice of module 03. The GIVEN/WHEN/THEN structure maps directly to bats syntax.
+
+`run` is the central keyword in bats: it executes the command and captures `$status` (exit code) and `$output` (standard output). Without `run`, those variables are not available.
+
+Resist explaining the full bats syntax here — module 03 does that. This slide is only the transition.
+
+If the group looks tired, this is a good moment for a 5-minute break before starting module 03.
+:::
