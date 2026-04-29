@@ -7,6 +7,8 @@
 
 Formation interne à l'écriture de tests dans les pipelines bioinformatiques.
 
+**Site de formation → [chrstphdm.github.io/ilovetesting](https://chrstphdm.github.io/ilovetesting/)**
+
 Couvre : **Nextflow + nf-test · Bash + bats · Python + pytest · R + testthat**
 
 ---
