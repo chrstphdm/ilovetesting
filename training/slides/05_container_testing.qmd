@@ -26,7 +26,7 @@ apptainer exec mon_outil.sif mon_outil --version
 
 ---
 
-## Apptainer vs Docker en HPC
+## Apptainer vs Docker en HPC {.smaller}
 
 | Sujet | Docker | Apptainer |
 |-------|--------|-----------|
@@ -41,7 +41,7 @@ Les montages exacts dépendent de la configuration du cluster.
 
 ---
 
-## Les risques classiques
+## Les risques classiques {.smaller}
 
 | Problème | Conséquence |
 |----------|-------------|
@@ -120,7 +120,7 @@ Le `.sif` est archivé sur le stockage HPC, pas dans git.
 
 ---
 
-## Sources d'images versionnées
+## Sources d'images versionnées {.smaller}
 
 | Source | Usage |
 |--------|-------|
@@ -142,7 +142,7 @@ Tag exact. `.def` dans git. `.sif` sur HPC.
 
 ---
 
-## CI vs HPC — qui exécute quoi
+## CI vs HPC — qui exécute quoi {.smaller}
 
 | Contexte | Ce qu'on teste |
 |----------|---------------|

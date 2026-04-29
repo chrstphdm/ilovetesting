@@ -22,7 +22,7 @@ C'est une version préliminaire — mais maintenant il faut des tests.
 
 ---
 
-## Risk-based testing
+## Risk-based testing {.smaller}
 
 ```
 Priorité = probabilité de casser × impact si ça casse

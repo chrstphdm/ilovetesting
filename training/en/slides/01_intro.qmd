@@ -80,7 +80,7 @@ Every module → a `.nf.test` file.
 
 ---
 
-## The tools
+## The tools {.smaller}
 
 | Language | Framework |
 |---------|-----------|
@@ -104,7 +104,7 @@ They automatically verify the behaviours that have been explicitly defined.
 
 ---
 
-## Training overview
+## Training overview {.smaller}
 
 | Module | Topic | Exercise |
 |--------|-------|----------|

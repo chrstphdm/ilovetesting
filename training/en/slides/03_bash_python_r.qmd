@@ -45,7 +45,7 @@ Why *outside* Nextflow? Immediate feedback, no Nextflow overhead, targeted debug
 
 ---
 
-## The scripts we will test
+## The scripts we will test {.smaller}
 
 | Script | Input | What it does |
 |--------|-------|--------------|
@@ -57,7 +57,7 @@ These three scripts are called by the pipeline. Testing their contract = testing
 
 ---
 
-## The common dataset
+## The common dataset {.smaller}
 
 `records.tsv` — 20 valid rows · columns: id, group, value · **reference data (happy path)**
 

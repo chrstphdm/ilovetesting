@@ -22,7 +22,7 @@ It's a preliminary version — but now it needs tests.
 
 ---
 
-## Risk-based testing
+## Risk-based testing {.smaller}
 
 ```
 Priority = probability of breaking × impact if it breaks

@@ -73,7 +73,7 @@ Chaque module → un fichier `.nf.test`.
 
 ---
 
-## Les outils
+## Les outils {.smaller}
 
 | Langage | Framework |
 |---------|-----------|
@@ -97,7 +97,7 @@ Ils vérifient automatiquement les comportements que l'on a explicitement défin
 
 ---
 
-## Organisation de la formation
+## Organisation de la formation {.smaller}
 
 | Module | Sujet | Exercice |
 |--------|-------|----------|

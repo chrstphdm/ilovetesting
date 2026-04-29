@@ -32,7 +32,7 @@ The test name **is** the specification: `test_filter_excludes_values_below_thres
 
 ---
 
-## The test pyramid
+## The test pyramid {.smaller}
 
 ```
         ▲  Functional    — full pipeline, slow, few
@@ -53,7 +53,7 @@ Reference: Martin Fowler, TestPyramid — https://martinfowler.com/bliki/TestPyr
 
 ---
 
-## Terms vary across communities
+## Terms vary across communities {.smaller}
 
 | This deck | Other common names |
 |---------|---------------------|
@@ -81,7 +81,7 @@ References:
 
 ---
 
-## Assertions
+## Assertions {.smaller}
 
 An assertion = a binary check: true → test passes, false → test fails.
 

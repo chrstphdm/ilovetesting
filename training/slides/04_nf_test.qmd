@@ -116,7 +116,7 @@ nextflow_pipeline {
 
 ---
 
-## Ce qui change entre les niveaux
+## Ce qui change entre les niveaux {.smaller}
 
 | | `nextflow_process` | `nextflow_workflow` | `nextflow_pipeline` |
 |--|:--:|:--:|:--:|
@@ -170,7 +170,7 @@ Snapshot seul = boîte noire. Assertion explicite = documentation.
 
 ---
 
-## Snapshots — limites et mise à jour
+## Snapshots — limites et mise à jour {.smaller}
 
 | Ce qu'un snapshot détecte | Ce qu'il ne détecte pas |
 |--------------------------|------------------------|

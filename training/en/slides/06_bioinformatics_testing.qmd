@@ -54,7 +54,7 @@ On real data, it is not always possible to verify whether each individual result
 
 ---
 
-## Three strategies for the oracle problem
+## Three strategies for the oracle problem {.smaller}
 
 | Approach | Principle |
 |----------|----------|
@@ -123,7 +123,7 @@ Founding reference applied to bioinformatics: Chen et al. (2009) "An innovative 
 
 ---
 
-## Metamorphic relations (MR)
+## Metamorphic relations (MR) {.smaller}
 
 | MR | Input A → Input B | Relation |
 |----|-------------------|----------|
