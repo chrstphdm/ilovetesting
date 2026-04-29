@@ -163,4 +163,10 @@ golden dataset + pseudo-oracle + metamorphic = trois stratégies complémentaire
 
 Rendez-vous dans `exercises/06_metamorphic/`
 
-À la fin, vous devez avoir : 1 test MR1 (permutation → même count), 1 test MR2 (duplication → 2× count), 1 test MR3 (sous-ensemble → count ≤ original), et une commande locale pour lancer les tests.
+L'exercice se concentre sur le **metamorphic testing** — le plus nouveau des trois patterns.
+
+- 1 test MR1 — permutation → même count
+- 1 test MR2 — duplication → 2× count
+- 1 test MR3 — sous-ensemble → count ≤ original
+
+Bonus : appliquer le pattern golden dataset sur les mêmes données.

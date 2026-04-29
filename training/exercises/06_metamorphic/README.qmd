@@ -88,6 +88,20 @@ Le metamorphic testing permet de détecter des bugs sans oracle — par exemple 
 - un comptage qui change selon le tri du fichier BAM
 - une normalisation qui produit des résultats différents sur un sous-ensemble
 
+## Bonus — Golden dataset
+
+Si vous avez terminé les 3 MRs, appliquez le pattern golden dataset :
+
+1. Créer `training/data/sample_expected.txt` contenant le count attendu (100)
+2. Écrire un test bats qui vérifie que `count_reads sample.fastq` correspond au fichier de référence :
+
+```bash
+@test "golden dataset — count correspond au résultat de référence" {
+    run bash -c "awk 'NR%4==1' $DATA/sample.fastq | wc -l | tr -d ' '"
+    [ "$output" = "$(cat $DATA/sample_expected.txt)" ]
+}
+```
+
 ## Solution
 
 → Voir [solution.qmd](solution.qmd)
