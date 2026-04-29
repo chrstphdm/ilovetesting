@@ -28,25 +28,14 @@ C'est une version préliminaire — mais maintenant il faut des tests.
 Priorité = probabilité de casser × impact si ça casse
 ```
 
-| Priorité | Ce qu'on teste en priorité |
-|----------|---------------------------|
+| Priorité | Ce qu'on teste |
+|----------|---------------|
 | **1 — toujours** | transformations, filtres, décisions métier |
 | **2 — dès que possible** | enchaînements de modules |
-| **3 — dès que livrable** | pipeline complet (mini-data) |
-| **4 — si container custom** | version d'outil figée, comportement Apptainer |
+| **3 — dès que livrable** | pipeline complet sur mini-data |
+| **4 — si container custom** | version figée, comportement Apptainer |
 
----
-
-## Matrice de décision
-
-| Si... | Alors... |
-|-------|---------|
-| ça transforme une donnée critique | test unitaire + assertion comportementale |
-| ça enchaîne deux étapes | test workflow |
-| ça produit un livrable | test pipeline |
-| ça a déjà cassé | test de non-régression |
-| ça dépend d'un outil externe | test container + version |
-| ça coûte cher à exécuter | test minimal en PR + test long nightly |
+Pour le détail complet → [testing-matrix.qmd](../testing-matrix.qmd)
 
 ---
 
@@ -111,35 +100,24 @@ Un test = documentation exécutable que la prochaine personne peut lancer.
 
 ---
 
-## Maturité progressive
+## Anti-patterns de stratégie
 
-```
-Niveau 0  aucun test
-Niveau 1  smoke test (exit 0, fichier produit)
-Niveau 2  tests unitaires scripts + assertions comportementales
-Niveau 3  test fonctionnel pipeline sur mini-data
-Niveau 4  golden dataset + tests de non-régression
-Niveau 5  containers critiques versionnés + handover documenté
-```
+- Attendre d'avoir le temps — le bon moment n'arrive pas
+- Viser 100 % de couverture avant la première PR — épuisant et contre-productif
+- Écrire tous les tests à la fin du projet — trop tard pour détecter
+- Tester uniquement en local, jamais en CI — invisible pour l'équipe
+- Ne pas documenter les décisions de non-test — un oubli silencieux devient une dette
 
-Ne pas viser le niveau 5 dès le premier sprint.
+. . .
 
----
-
-## Ce que les tests ne doivent pas faire
-
-- Vérifier seulement que le process tourne
-- Dépendre de l'ordre si l'ordre n'est pas garanti
-- Figer des chemins temporaires
-- Utiliser `latest`
-- Accepter un snapshot sans lire le diff
+Pour les niveaux de maturité → [testing-matrix.qmd](../testing-matrix.qmd)
 
 ---
 
 ## Message à retenir
 
 ::: {.callout-important}
-**Commencer petit. Écrire un test utile vaut mieux qu'un plan parfait.**
+**Par où commencer ?** Le premier test utile vérifie la règle métier la plus critique du pipeline — le calcul, le filtre, ou la décision dont un résultat faux ne serait pas visible sans test.
 
-Un test minimal sur le chemin critique > zéro test.
+Commencer petit. Un test minimal sur le chemin critique > zéro test.
 :::
