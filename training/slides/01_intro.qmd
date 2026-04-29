@@ -145,7 +145,5 @@ Rendez-vous dans `exercises/01_bash/`
 ::: {.notes}
 L'exercice est volontairement simple. `validate_records.sh` fait environ 20 lignes. L'objectif est de pratiquer la structure GIVEN/WHEN/THEN, pas de comprendre la logique du script.
 
-Durée estimée : 20-30 minutes pour les 4 tests + la commande documentée.
-
 Si quelqu'un est bloqué sur la syntaxe bats → renvoyer vers le module 02 (slide "Suite → Module 03") qui montre la traduction GIVEN/WHEN/THEN en bats.
 :::
