@@ -94,7 +94,10 @@ nextflow_workflow {
             }
         }
         then {
-            // TODO : vérifier succès, taille des sorties, valeur du count
+            // TODO : vérifier succès
+            // TODO : vérifier que count.size() == 1, summary.size() == 1, stats.size() == 1
+            // TODO : vérifier une valeur comportementale (ex : count == 20)
+            // TODO : snapshot
         }
     }
 }
@@ -119,6 +122,31 @@ Test PROCESS_TABLE workflow
   ✔ TSV valide → count, summary et stats produits
 
 SUCCESS: Executed 3 tests
+```
+
+## Bonus — Tester le pipeline complet
+
+Si vous avez terminé les deux parties, ajoutez un test `nextflow_pipeline` sur `main.nf` :
+
+```groovy
+nextflow_pipeline {
+    name "Test pipeline complet"
+    script "../../pipelines/minimal/main.nf"
+
+    test("pipeline complet — sorties présentes") {
+        when {
+            params {
+                input  = "${projectDir}/data/records.tsv"
+                outdir = "${outputDir}"
+            }
+        }
+        then {
+            // TODO : vérifier workflow.success
+            // TODO : vérifier le nombre de tâches avec workflow.trace.succeeded()
+            // TODO : vérifier qu'un fichier de sortie existe et contient la valeur attendue
+        }
+    }
+}
 ```
 
 ## Solution
