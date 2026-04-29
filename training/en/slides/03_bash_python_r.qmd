@@ -35,21 +35,17 @@ Concrete goal: after this module, participants should be able to write their fir
 
 ---
 
-## Why test scripts outside Nextflow?
+## Testing scripts outside Nextflow
 
 The scripts `validate_records.sh`, `parse_records.py`, `stats_records.R`:
 
 - are called by pipeline processes
-- can fail silently (i.e. poor error handling)
+- can fail silently
 - can be reused across multiple projects
 
 . . .
 
 **A bug in a script = a bug in the pipeline.**
-
-. . .
-
-Why *outside* Nextflow? Immediate feedback, no Nextflow overhead, targeted debugging.
 
 ::: {.notes}
 Common question: "Why not just test the full pipeline with nf-test?" Answer: feedback speed. An nf-test takes at least 30 seconds to start Nextflow. A pytest or bats test takes 0.1 seconds. When debugging a script, you want the fastest possible feedback.
