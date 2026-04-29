@@ -118,8 +118,8 @@ DATA="training/data"
 
 Même logique que tester un script — GIVEN (l'image), WHEN (la commande), THEN (version + exit code).
 
-::: {.notes}
-Politique complète : container-policy.qmd — tag exact, .def versionné, .sif non commité.
+::: {style="font-size:0.55em; color:#666; margin-top:0.5em;"}
+→ [Politique containers](../container-policy.qmd) — tag exact, `.def` versionné, `.sif` non commité
 :::
 
 ---

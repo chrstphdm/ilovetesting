@@ -28,8 +28,8 @@ assert total_out <= total_in              # filtre ne crée pas de lignes
 assert len(ids) == len(set(ids))          # pas de doublon
 ```
 
-::: {.notes}
-Référence méthodologique : Kamali et al. (2015) "How to test bioinformatics software?" — Biophysical Reviews 7(3):343–352. PMID:28510230. DOI:10.1007/s12551-015-0177-3
+::: {style="font-size:0.55em; color:#666; margin-top:0.5em;"}
+→ [Kamali et al. 2015 — How to test bioinformatics software?](https://pubmed.ncbi.nlm.nih.gov/28510230/)
 :::
 
 
@@ -117,8 +117,8 @@ f(input_A)  ──┐
 f(input_B)  ──┘
 ```
 
-::: {.notes}
-Référence fondatrice appliquée à la bioinfo : Chen et al. (2009) "An innovative approach for testing bioinformatics programs using metamorphic testing" — BMC Bioinformatics 10:24. PMID:19152705. PMC:PMC2657898.
+::: {style="font-size:0.55em; color:#666; margin-top:0.5em;"}
+→ [Chen et al. 2009 — Metamorphic testing for bioinformatics programs](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2657898/)
 :::
 
 ---

@@ -14,9 +14,8 @@ nf-test = framework de référence pour tester des process, workflows et pipelin
 
 Utilisé notamment par nf-core comme standard communautaire.
 
-::: {.notes}
-Exemples officiels nf-test (RNA-seq pipeline complet, process isolés, snapshots) :
-https://github.com/askimed/nf-test-examples
+::: {style="font-size:0.55em; color:#666; margin-top:0.5em;"}
+→ [nf-test-examples](https://github.com/askimed/nf-test-examples) — RNA-seq pipeline complet, process isolés, snapshots
 :::
 
 ---
@@ -211,8 +210,8 @@ process FASTQC {
 Deux niveaux complémentaires :
 bats vérifie que l'image fonctionne seule · nf-test vérifie que le process fonctionne dedans.
 
-::: {.notes}
-Politique complète : container-policy.qmd — tag exact, .def versionné, .sif non commité, tests en CI self-hosted.
+::: {style="font-size:0.55em; color:#666; margin-top:0.5em;"}
+→ [Politique containers](../container-policy.qmd) — tag exact, `.def` versionné, `.sif` non commité
 :::
 
 ---

@@ -47,8 +47,8 @@ The test name **is** the specification: `test_filter_excludes_values_below_thres
 | **Functional** | full pipeline | `nextflow_pipeline` |
 | **Non-regression** | before/after comparison | snapshots |
 
-::: {.notes}
-Reference: Martin Fowler, TestPyramid — https://martinfowler.com/bliki/TestPyramid.html
+::: {style="font-size:0.55em; color:#666; margin-top:0.5em;"}
+→ [TestPyramid — Martin Fowler](https://martinfowler.com/bliki/TestPyramid.html)
 :::
 
 ---
@@ -72,11 +72,8 @@ In bioinformatics: a "unit test" for a FASTQC module reads files and calls an ex
 
 **In this course: Unit / Integration / Functional / Non-regression.**
 
-::: {.notes}
-References:
-- Fowler TestPyramid: https://martinfowler.com/bliki/TestPyramid.html
-- Google Test Sizes: https://testing.googleblog.com/2010/12/test-sizes.html
-- ISTQB Glossary: https://glossary.istqb.org/en_US/term
+::: {style="font-size:0.55em; color:#666; margin-top:0.5em;"}
+→ [TestPyramid](https://martinfowler.com/bliki/TestPyramid.html) · [Google Test Sizes](https://testing.googleblog.com/2010/12/test-sizes.html) · [ISTQB Glossary](https://glossary.istqb.org/en_US/term)
 :::
 
 ---

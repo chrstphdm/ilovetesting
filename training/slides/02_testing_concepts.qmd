@@ -40,8 +40,8 @@ Le nom du test **est** la spécification : `test_filtre_exclut_valeurs_sous_seui
 | **Fonctionnel** | pipeline complet | `nextflow_pipeline` |
 | **Non-régression** | comparaison avant/après | snapshots |
 
-::: {.notes}
-Référence : Martin Fowler, TestPyramid — https://martinfowler.com/bliki/TestPyramid.html
+::: {style="font-size:0.55em; color:#666; margin-top:0.5em;"}
+→ [TestPyramid — Martin Fowler](https://martinfowler.com/bliki/TestPyramid.html)
 :::
 
 ---
@@ -65,11 +65,8 @@ En bioinfo : un "test unitaire" de module FASTQC lit des fichiers et appelle un 
 
 **Dans ce cours : Unitaire / Intégration / Fonctionnel / Non-régression.**
 
-::: {.notes}
-Références :
-- Fowler TestPyramid : https://martinfowler.com/bliki/TestPyramid.html
-- Google Test Sizes : https://testing.googleblog.com/2010/12/test-sizes.html
-- ISTQB Glossary : https://glossary.istqb.org/en_US/term
+::: {style="font-size:0.55em; color:#666; margin-top:0.5em;"}
+→ [TestPyramid](https://martinfowler.com/bliki/TestPyramid.html) · [Google Test Sizes](https://testing.googleblog.com/2010/12/test-sizes.html) · [ISTQB Glossary](https://glossary.istqb.org/en_US/term)
 :::
 
 ---

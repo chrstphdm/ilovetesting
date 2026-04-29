@@ -125,8 +125,8 @@ DATA="training/data"
 
 Same logic as testing a script — GIVEN (the image), WHEN (the command), THEN (version + exit code).
 
-::: {.notes}
-Full policy: container-policy.qmd — exact tag, versioned .def, .sif not committed.
+::: {style="font-size:0.55em; color:#666; margin-top:0.5em;"}
+→ [Container policy](../../container-policy.qmd) — exact tag, `.def` versioned, `.sif` not committed
 :::
 
 ---

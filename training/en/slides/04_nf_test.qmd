@@ -14,9 +14,8 @@ nf-test = the reference framework for testing Nextflow processes, workflows, and
 
 Used by nf-core as a community standard.
 
-::: {.notes}
-Official nf-test examples (full RNA-seq pipeline, isolated processes, snapshots):
-https://github.com/askimed/nf-test-examples
+::: {style="font-size:0.55em; color:#666; margin-top:0.5em;"}
+→ [nf-test-examples](https://github.com/askimed/nf-test-examples) — full RNA-seq pipeline, isolated processes, snapshots
 :::
 
 ---
@@ -211,8 +210,8 @@ process FASTQC {
 Two complementary levels:
 bats verifies the image works standalone · nf-test verifies the process works inside it.
 
-::: {.notes}
-Full policy: container-policy.qmd — exact tag, versioned .def, uncommitted .sif, tests in self-hosted CI.
+::: {style="font-size:0.55em; color:#666; margin-top:0.5em;"}
+→ [Container policy](../../container-policy.qmd) — exact tag, `.def` versioned, `.sif` not committed
 :::
 
 ---
