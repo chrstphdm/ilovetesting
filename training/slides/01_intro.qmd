@@ -10,9 +10,17 @@ format:
 
 ## Un pipeline peut réussir… et produire une sortie fausse
 
-Cas réel — [blog anvi'o 2022](https://anvio.org/blog/bioinformatics-bugs/)
+Le pipeline tourne. Les fichiers sont générés. Les résultats semblent cohérents.
 
 . . .
+
+**Comment savoir si le résultat est juste ?**
+
+---
+
+## Cas réel — annotation KEGG / KOfam
+
+[blog anvi'o 2022](https://anvio.org/blog/bioinformatics-bugs/)
 
 - Deux outils annotent les mêmes gènes avec la même base KOfam
 - Résultat attendu : différences limitées, explicables par la méthode
@@ -20,7 +28,7 @@ Cas réel — [blog anvi'o 2022](https://anvio.org/blog/bioinformatics-bugs/)
 
 . . .
 
-Le pipeline tourne. Les fichiers sont générés. **Aucune erreur visible.**
+Le pipeline tournait. Les fichiers étaient générés. **Aucune erreur visible.**
 
 ---
 
@@ -47,27 +55,6 @@ assert all(hit.score >= threshold[hit.ko] for hit in kept_hits)
 
 ---
 
-## Ce qu'un test apporte
-
-- **Détection précoce** — bug trouvé avant merge, pas en prod
-- **Documentation vivante** — le test dit ce que le code est censé faire
-- **Refactoring sans peur** — si les tests passent, les comportements testés sont préservés
-- **CI possible** — automatisation réelle
-
----
-
-## La règle d'équipe
-
-::: {.callout-important}
-**Pas de merge sans test.**
-
-Chaque bug trouvé → un test qui l'aurait détecté.
-
-Chaque module → un fichier `.nf.test`.
-:::
-
----
-
 ## Les outils {.smaller}
 
 | Langage | Framework |
@@ -79,16 +66,15 @@ Chaque module → un fichier `.nf.test`.
 
 ---
 
-## Ce que les tests ne garantissent pas
+## La règle d'équipe
 
-- Que la biologie est correcte
-- Que les paramètres sont optimaux
-- Que l'outil tiers fonctionne sans bug
-- Qu'il n'y a aucun autre bug
+::: {.callout-important}
+**Pas de merge sans test.**
 
-. . .
+Chaque bug trouvé → un test qui l'aurait détecté.
 
-Ils vérifient automatiquement les comportements que l'on a explicitement définis.
+Chaque module Nextflow → un fichier `.nf.test`.
+:::
 
 ---
 
@@ -108,6 +94,8 @@ Ils vérifient automatiquement les comportements que l'on a explicitement défin
 
 ## Exercice → Module 01
 
+Dans cet exercice, l'objectif est de protéger exactement ce type de règle métier — exit code, message d'erreur, comportement sur input invalide — avec bats.
+
 Rendez-vous dans `exercises/01_bash/`
 
-À la fin, vous devez avoir : 1 test happy path, 1 test fichier vide, 1 test fichier absent, 1 assertion sur le contenu du message de sortie, et la commande bats documentée.
+À la fin : 1 test happy path · 1 test fichier vide · 1 test fichier absent · 1 assertion sur le message de sortie
