@@ -105,10 +105,16 @@ DATA="training/data"
 
 ```python
 def test_nom():
-    assert expr                                        # vérification simple
-    assert val == pytest.approx(3.14)                  # flottants
-    with pytest.raises(ValueError, match="message"):   # exception attendue
+    assert expr                                       # vérification simple
+    with pytest.raises(ValueError, match="message"):  # exception attendue
         fonction()
+
+@pytest.mark.parametrize("path,exc", [
+    ("a.tsv", ValueError),
+    ("b.tsv", FileNotFoundError),
+])
+def test_multi(path, exc):
+    with pytest.raises(exc): fonction(path)           # N cas, 1 test
 ```
 
 Documentation : <https://docs.pytest.org>
@@ -119,16 +125,16 @@ Documentation : <https://docs.pytest.org>
 
 ```python
 def test_ids_uniques_obligatoires():
-    df = load_records(DATA / "duplicated_records.tsv")   # GIVEN
-    with pytest.raises(ValueError, match="Duplicate"):   # THEN — type + message
-        validate_records(df)                             # WHEN
+    df = load_records(DATA / "duplicated_records.tsv")  # GIVEN
+    with pytest.raises(ValueError, match="Duplicate"):  # WHEN + THEN : type et message
+        validate_records(df)
 
 @pytest.mark.parametrize("path,exc", [
     ("empty.tsv",   ValueError),
     ("missing.tsv", FileNotFoundError),
 ])
 def test_inputs_invalides(path, exc):
-    with pytest.raises(exc):           # même test, inputs multiples
+    with pytest.raises(exc):                            # N cas, 1 test
         load_records(DATA / path)
 ```
 
@@ -163,16 +169,6 @@ test_that("résultat a les bonnes colonnes et un invariant", {
     expect_true(all(result$mean >= 0))              # invariant métier
 })
 ```
-
----
-
-## Ce qu'il faut retenir par framework
-
-| Framework | À retenir |
-|-----------|-----------|
-| bats | toujours vérifier `$output`, pas seulement `$status` |
-| pytest | `raises(match=)` pour typer l'erreur · `parametrize` pour N cas sans duplication |
-| testthat | `expect_named` pour la structure · `expect_true(all(...))` pour un invariant |
 
 ---
 
