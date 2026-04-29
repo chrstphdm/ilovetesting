@@ -124,10 +124,10 @@ Documentation : <https://docs.pytest.org>
 ## pytest — Python
 
 ```python
-def test_ids_uniques_obligatoires():
-    df = load_records(DATA / "duplicated_records.tsv")  # GIVEN
-    with pytest.raises(ValueError, match="Duplicate"):  # WHEN + THEN : type et message
-        validate_records(df)
+def test_fichier_valide():                              # happy path
+    df = load_records(DATA / "records.tsv")
+    assert df.shape == (20, 3)
+    assert list(df.columns) == ["id", "group", "value"]
 
 @pytest.mark.parametrize("path,exc", [
     ("empty.tsv",   ValueError),
@@ -159,14 +159,16 @@ Documentation : <https://testthat.r-lib.org>
 
 ```r
 test_that("colonne manquante → erreur explicite", {
-    bad <- data.frame(id="S01", group="A")               # GIVEN
-    expect_error(compute_stats(bad), "Missing columns")  # WHEN + THEN
+    bad <- data.frame(id="S01", group="A")              # données en mémoire — GIVEN
+    expect_error(compute_stats(bad), "Missing columns") # WHEN + THEN
 })
 
 test_that("résultat a les bonnes colonnes et un invariant", {
-    result <- compute_stats(load_records("data/records.tsv"))
-    expect_named(result, c("group", "mean", "sd"))  # structure exacte
-    expect_true(all(result$mean >= 0))              # invariant métier
+    df <- data.frame(                                   # données en mémoire — GIVEN
+        id = c("S01","S02"), group = c("A","B"), value = c(10, 20))
+    result <- compute_stats(df)
+    expect_named(result, c("group", "mean", "sd"))      # structure exacte
+    expect_true(all(result$mean >= 0))                  # invariant métier
 })
 ```
 
