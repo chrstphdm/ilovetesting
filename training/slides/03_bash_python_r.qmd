@@ -13,6 +13,11 @@ format:
 Appliquer la même logique de test dans trois langages différents,
 sur un exemple commun : `records.tsv`.
 
+. . .
+
+Ce module n'est pas un tutoriel sur les frameworks.
+Pour maîtriser la syntaxe complète → **RTFM** (liens dans les exercices).
+
 ---
 
 ## Pourquoi tester les scripts hors Nextflow ?
@@ -62,6 +67,20 @@ Un fichier = une règle violée = un test diagnostique.
 
 ---
 
+## bats — syntaxe minimale
+
+```bash
+@test "nom du test" {
+    run bash script.sh arg    # exécute la commande, capture status + output
+    [ "$status" -eq 0 ]       # code de sortie
+    [[ "$output" =~ "texte" ]] # contenu de la sortie standard
+}
+```
+
+Documentation : <https://bats-core.readthedocs.io>
+
+---
+
 ## bats — Bash
 
 ```bash
@@ -82,6 +101,20 @@ DATA="training/data"
 
 ---
 
+## pytest — syntaxe minimale
+
+```python
+def test_nom():
+    assert expr                                        # vérification simple
+    assert val == pytest.approx(3.14)                  # flottants
+    with pytest.raises(ValueError, match="message"):   # exception attendue
+        fonction()
+```
+
+Documentation : <https://docs.pytest.org>
+
+---
+
 ## pytest — Python
 
 ```python
@@ -98,6 +131,21 @@ def test_inputs_invalides(path, exc):
     with pytest.raises(exc):           # même test, inputs multiples
         load_records(DATA / path)
 ```
+
+---
+
+## testthat — syntaxe minimale
+
+```r
+test_that("nom du test", {
+    expect_equal(a, b)             # égalité
+    expect_true(all(x >= 0))       # invariant
+    expect_error(f(), "pattern")   # erreur attendue
+    expect_named(df, c("a", "b"))  # noms de colonnes
+})
+```
+
+Documentation : <https://testthat.r-lib.org>
 
 ---
 
