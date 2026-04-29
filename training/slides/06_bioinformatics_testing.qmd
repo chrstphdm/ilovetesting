@@ -70,9 +70,15 @@ data/
 ├── sample_expected.txt   # résultat attendu figé
 ```
 
+```bash
+@test "golden dataset — count correspond au résultat de référence" {
+    run bash count_reads.sh sample.fastq
+    [ "$output" = "$(cat sample_expected.txt)" ]
+}
+```
+
 ::: {.callout-tip}
-Petit, stable, versionné dans le repo.
-Utile pour la non-régression à long terme.
+Petit, stable, versionné dans le repo. Utile pour la non-régression à long terme.
 :::
 
 ---
@@ -81,11 +87,12 @@ Utile pour la non-régression à long terme.
 
 Comparer deux implémentations indépendantes sur le même input.
 
-```
-output_A = outil_A(input)
-output_B = outil_B(input)
-# les différences sont-elles attendues et explicables ?
-assert output_A ≈ output_B
+```bash
+@test "pseudo-oracle — deux outils donnent le même count de reads" {
+    count_A=$(tool_A sample.fastq | awk 'NR%4==1' | wc -l)
+    count_B=$(tool_B sample.fastq | awk 'NR%4==1' | wc -l)
+    [ "$count_A" -eq "$count_B" ]
+}
 ```
 
 . . .
@@ -128,13 +135,14 @@ Référence fondatrice appliquée à la bioinfo : Chen et al. (2009) "An innovat
 count_reads() { awk 'NR%4==1' "$1" | wc -l; }
 
 @test "MR1 — permutation : ordre n'affecte pas le count" {
-    [ "$(count_reads sample.fastq)" -eq \
-      "$(count_reads sample_shuffled.fastq)" ]
+    [ "$(count_reads sample.fastq)" -eq "$(count_reads sample_shuffled.fastq)" ]
 }
-
 @test "MR2 — duplication : 2× input → 2× output" {
     original=$(count_reads sample.fastq)
     [ "$(count_reads sample_doubled.fastq)" -eq $(( original * 2 )) ]
+}
+@test "MR3 — sous-ensemble : count ≤ count original" {
+    [ "$(count_reads sample_subset.fastq)" -le "$(count_reads sample.fastq)" ]
 }
 ```
 
@@ -145,7 +153,8 @@ count_reads() { awk 'NR%4==1' "$1" | wc -l; }
 ::: {.callout-important}
 **Tester les propriétés, pas seulement les valeurs.**
 
-Invariants + golden dataset + pseudo-oracle + metamorphic = couverture sans oracle exact.
+Les invariants sont le socle. Face à l'oracle problem :
+golden dataset + pseudo-oracle + metamorphic = trois stratégies complémentaires.
 :::
 
 ---
