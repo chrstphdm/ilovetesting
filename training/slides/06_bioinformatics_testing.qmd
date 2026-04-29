@@ -10,11 +10,11 @@ format:
 
 ## Tester en bioinfo : les mêmes outils, un défi supplémentaire
 
-Tu sais écrire des tests pour des scripts et des process Nextflow.
+Les tests pour scripts et process Nextflow sont maintenant maîtrisés.
 
 . . .
 
-Mais que faire quand tu ne connais pas le **résultat attendu** ?
+Mais que faire quand le **résultat attendu** est inconnu ?
 
 ---
 
@@ -165,11 +165,11 @@ golden dataset + pseudo-oracle + metamorphic = trois stratégies complémentaire
 
 ## Suite → Module 07
 
-Tu sais maintenant écrire des tests à tous les niveaux — scripts, process, workflows, et sans oracle exact.
+Les tests à tous les niveaux sont maintenant couverts — scripts, process, workflows, et sans oracle exact.
 
 . . .
 
-La dernière question : **par où commencer et quoi prioriser** dans ton équipe ?
+La dernière question : **par où commencer et quoi prioriser** dans l'équipe ?
 
 → Module 07 — Stratégie pour petite équipe.
 

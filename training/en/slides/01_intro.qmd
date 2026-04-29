@@ -17,9 +17,17 @@ format:
 
 ## A pipeline can succeed… and produce wrong output
 
-Real case — [anvi'o blog 2022](https://anvio.org/blog/bioinformatics-bugs/)
+The pipeline runs. Files are generated. Results look consistent.
 
 . . .
+
+**How do you know the output is correct?**
+
+---
+
+## Real case — KEGG / KOfam annotation
+
+[anvi'o blog 2022](https://anvio.org/blog/bioinformatics-bugs/)
 
 - Two tools annotate the same genes with the same KOfam database
 - Expected: limited differences, explainable by method
@@ -27,7 +35,7 @@ Real case — [anvi'o blog 2022](https://anvio.org/blog/bioinformatics-bugs/)
 
 . . .
 
-The pipeline runs. The files are generated. **No visible error.**
+The pipeline ran. Files were generated. **No visible error.**
 
 ---
 
@@ -38,47 +46,26 @@ The pipeline runs. The files are generated. **No visible error.**
 Rule: a hit passes the filter only if its score ≥ the model's threshold.
 
 ```
-KO_A  threshold = 100,  score = 120  → kept    ✓
-KO_B  threshold = 500,  score =  80  → rejected ✗
+KO_A  threshold = 100,  score = 120  → kept      ✓
+KO_B  threshold = 500,  score =  80  → rejected  ✗
 ```
 
 . . .
 
 ```python
-# Bad test
+# Weak test
 assert os.path.exists("output.filtered")
 
-# Good test — protects the business rule
+# Correct test — protects the business rule
 assert all(hit.score >= threshold[hit.ko] for hit in kept_hits)
 ```
-
----
-
-## What a test provides
-
-- **Early detection** — bug found before merge, not in production
-- **Living documentation** — the test says what the code is supposed to do
-- **Fear-free refactoring** — if tests pass, the tested behaviours are preserved
-- **CI possible** — real automation
-
----
-
-## The team rule
-
-::: {.callout-important}
-**No merge without a test.**
-
-Every bug found → a test that would have caught it.
-
-Every module → a `.nf.test` file.
-:::
 
 ---
 
 ## The tools {.smaller}
 
 | Language | Framework |
-|---------|-----------|
+|----------|-----------|
 | Nextflow | [nf-test](https://www.nf-test.com/) |
 | Bash | [bats](https://bats-core.readthedocs.io/) |
 | Python | [pytest](https://docs.pytest.org/) |
@@ -86,16 +73,15 @@ Every module → a `.nf.test` file.
 
 ---
 
-## What tests do not guarantee
+## Team rule
 
-- That the biology is correct
-- That the parameters are optimal
-- That the third-party tool works without bugs
-- That there are no other bugs
+::: {.callout-important}
+**No merge without a test.**
 
-. . .
+Every bug found → a test that would have caught it.
 
-They automatically verify the behaviours that have been explicitly defined.
+Every Nextflow module → a `.nf.test` file.
+:::
 
 ---
 
@@ -115,6 +101,8 @@ They automatically verify the behaviours that have been explicitly defined.
 
 ## Exercise → Module 01
 
+The goal of this exercise is to protect exactly this kind of business rule — exit code, error message, behaviour on invalid input — using bats.
+
 Go to `exercises/01_bash/`
 
-At the end, you must have: 1 happy path test, 1 empty file test, 1 missing file test, 1 assertion on the output message content, and the bats command documented.
+Deliverables: 1 happy path test · 1 empty file test · 1 missing file test · 1 assertion on the output message

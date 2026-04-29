@@ -10,11 +10,11 @@ format:
 
 ## Testing in bioinformatics: the same tools, an extra challenge
 
-You know how to write tests for scripts and Nextflow processes.
+Tests for scripts and Nextflow processes are now covered.
 
 . . .
 
-But what do you do when you don't know the **expected output**?
+But what to do when the **expected output** is unknown?
 
 ---
 
@@ -169,7 +169,7 @@ You now know how to write tests at every level — scripts, processes, workflows
 
 . . .
 
-The final question: **where to start and what to prioritise** in your team?
+The final question: **where to start and what to prioritise** in the team?
 
 → Module 07 — Strategy for a small team.
 
