@@ -3,85 +3,32 @@ title: "I Love Testing"
 subtitle: "Formation interne aux tests pour pipelines bioinformatiques"
 format:
   html:
-    toc: true
-    toc-depth: 2
+    toc: false
 ---
 
-## Objectif
-
-Ce repo apprend à écrire, exécuter et maintenir des tests pour :
-
-- scripts **Bash**
-- fonctions **Python**
-- fonctions **R**
-- process **Nextflow**
-- workflows **Nextflow**
-- pipelines complets
-- containers **Apptainer/Singularity**
-- documentation **Quarto** (vérification de rendu)
+Tu vas apprendre à écrire des tests automatiques pour tes scripts Bash, fonctions Python/R et pipelines Nextflow — pour détecter les bugs silencieux avant qu'ils atteignent tes résultats.
 
 ---
 
-## Ce repo n'est pas
+## Parcours
 
-- ❌ un template nf-core
-- ❌ une garantie de validation scientifique complète
-- ❌ un remplacement pour la revue scientifique
-- ❌ un framework lourd imposé à tous les projets
+| Étape | Sujet | Slides | Exercice | Durée |
+|-------|-------|--------|----------|-------|
+| 0 | Prérequis | — | [Vérifier](prerequisites.qmd) | 10 min |
+| 1 | Pourquoi tester — concepts clés | [01](slides/01_intro.qmd) · [02](slides/02_testing_concepts.qmd) | — | 45 min |
+| 2 | Bash · Python · R | [03](slides/03_bash_python_r.qmd) | [01](exercises/01_bash/README.qmd) · [02](exercises/02_python/README.qmd) · [03](exercises/03_r/README.qmd) | 2h |
+| 3 | Nextflow avec nf-test | [04](slides/04_nf_test.qmd) | [04](exercises/04_nextflow/README.qmd) | 1h30 |
+| 4 | Tester sans oracle exact | [06](slides/06_bioinformatics_testing.qmd) | [06](exercises/06_metamorphic/README.qmd) | 1h |
+| 5 | Stratégie pour ton équipe | [07](slides/07_small_team_strategy.qmd) | — | 30 min |
+| Bonus | Containers Apptainer | [05](slides/05_container_testing.qmd) | [05](exercises/05_testing_containers/README.qmd) | selon dispo |
 
----
-
-## Philosophie
-
-**Tester ce qui peut casser silencieusement :**
-
-1. transformation de données
-2. filtrage et sélection
-3. métrique rapportée à l'utilisateur
-4. agrégation ou résumé
-5. décision scientifique ou métier
-
-Un test n'a pas besoin d'être parfait pour être utile.
+::: {.callout-note}
+Le module 05 (containers) nécessite Apptainer — disponible en local ou sur HPC. Il ne fait pas partie du parcours standard et n'est pas en CI.
+:::
 
 ---
 
-## Les trois supports et leurs rôles
-
-| Support | Rôle | Ce qu'il contient |
-|---------|------|------------------|
-| **Slides** | guider une séance en groupe | concepts courts, règles, exemples mini |
-| **Tests** | prouver automatiquement | assertions, edge cases, snapshots |
-| **Site** | référence durable en solo | parcours, règles, commandes, matrices |
-
----
-
-## Parcours recommandé
-
-| Étape | Module | Support |
-|-------|--------|---------|
-| 1 | Lire les concepts de base | [Slide 01](slides/01_intro.qmd) + [Slide 02](slides/02_testing_concepts.qmd) |
-| 2 | Tester Bash, Python, R | [Slide 03](slides/03_bash_python_r.qmd) → exercices 01, 02, 03 |
-| 3 | Tester avec nf-test | [Slide 04](slides/04_nf_test.qmd) → [exercice 04](exercises/04_nextflow/README.qmd) |
-| 4 | Tests bioinformatiques | [Slide 06](slides/06_bioinformatics_testing.qmd) → [exercice 06](exercises/06_metamorphic/README.qmd) |
-| 5 | Stratégie équipe | [Slide 07](slides/07_small_team_strategy.qmd) |
-| Bonus | Tester les containers | [Politique containers](container-policy.qmd) → [exercice 05](exercises/05_testing_containers/README.qmd) |
-
----
-
-## Modules et exercices
-
-| Module | Sujet | Exercice | Outil |
-|--------|-------|----------|-------|
-| 01 | Bash et CLI | [01_bash/](exercises/01_bash/README.qmd) | bats |
-| 02 | Python et parsing | [02_python/](exercises/02_python/README.qmd) | pytest |
-| 03 | R et transformations | [03_r/](exercises/03_r/README.qmd) | testthat |
-| 04 | Nextflow process/workflow/pipeline | [04_nextflow/](exercises/04_nextflow/README.qmd) | nf-test |
-| 06 | Metamorphic testing | [06_metamorphic/](exercises/06_metamorphic/README.qmd) | bats |
-| Bonus | Containers Apptainer | [05_testing_containers/](exercises/05_testing_containers/README.qmd) | bats + nf-test |
-
----
-
-## Installation rapide
+## Installation
 
 ```bash
 git clone https://github.com/chrstphdm/ilovetesting.git
@@ -105,37 +52,8 @@ bats training/tests/bats/
 Rscript -e "testthat::test_dir('training/tests/testthat/')"
 
 # Nextflow / nf-test (depuis ce répertoire)
-cd training/tests/nf-test
-nf-test test --verbose
-
-# Vérifier le rendu du site Quarto
-cd training && quarto check
+cd training/tests/nf-test && nf-test test --verbose
 ```
-
----
-
-## Matrice de décision
-
-| Si... | Alors tester... |
-|-------|----------------|
-| Un process Nextflow change | `nf-test` sur ce process |
-| Un script Bash change | bats : exit code + stdout |
-| Une fonction Python change | pytest : assertions + bornes |
-| Un container change | bats `--version` + `nf-test --profile apptainer` |
-| Un snapshot change | lire le diff, justifier dans la PR |
-| Un bug est trouvé | ajouter un test qui l'aurait détecté |
-
----
-
-## Règle de PR
-
-Pas de merge si :
-
-- le pipeline change sans test adapté
-- un snapshot change sans justification dans la PR
-- un bug est corrigé sans test de non-régression
-- un container change sans vérification de version
-- la CI est rouge
 
 ---
 
@@ -143,8 +61,9 @@ Pas de merge si :
 
 | Page | Contenu |
 |------|---------|
-| [Méthodologie](testing-methodology.qmd) | AAA, types de tests, oracle problem |
-| [Matrice de décision](testing-matrix.qmd) | Quoi tester, quand, avec quel outil |
+| [Prérequis](prerequisites.qmd) | Langages attendus, installation des frameworks |
+| [Méthodologie](testing-methodology.qmd) | AAA, types de tests, oracle problem, anti-patterns |
+| [Matrice de décision](testing-matrix.qmd) | Quoi tester, quand, avec quel outil, niveaux de maturité |
 | [Politique snapshots](snapshot-policy.qmd) | Règles de création et mise à jour |
 | [Politique containers](container-policy.qmd) | Tags, `.def`, `.sif`, niveaux de test |
 | [FAQ](faq.qmd) | Réponses aux questions fréquentes |
