@@ -190,6 +190,33 @@ Ne jamais mettre à jour un snapshot sans comprendre pourquoi il a changé.
 
 ---
 
+## Tester avec Apptainer
+
+```bash
+# Lancer les tests nf-test avec le profil apptainer
+nf-test test fastqc.nf.test --profile apptainer
+```
+
+Le process déclare son container avec un **tag exact** :
+
+```groovy
+process FASTQC {
+    container 'biocontainers/fastqc:0.12.1--hdfd78af_0'
+    ...
+}
+```
+
+. . .
+
+Deux niveaux complémentaires :
+bats vérifie que l'image fonctionne seule · nf-test vérifie que le process fonctionne dedans.
+
+::: {.notes}
+Politique complète : container-policy.qmd — tag exact, .def versionné, .sif non commité, tests en CI self-hosted.
+:::
+
+---
+
 ## nf-test ne remplace pas
 
 - les tests Bash / Python / R sur les scripts

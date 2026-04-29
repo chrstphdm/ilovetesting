@@ -101,6 +101,29 @@ DATA="training/data"
 
 ---
 
+## bats — tester un container
+
+```bash
+@test "version correcte" {
+    run apptainer exec fastqc_0.12.1.sif fastqc --version
+    [ "$status" -eq 0 ]
+    [[ "$output" =~ "FastQC v0.12.1" ]]
+}
+
+@test "outil accessible sans /home monté" {
+    run apptainer exec --no-home fastqc_0.12.1.sif fastqc --version
+    [ "$status" -eq 0 ]
+}
+```
+
+Même logique que tester un script — GIVEN (l'image), WHEN (la commande), THEN (version + exit code).
+
+::: {.notes}
+Politique complète : container-policy.qmd — tag exact, .def versionné, .sif non commité.
+:::
+
+---
+
 ## pytest — syntaxe minimale
 
 ```python

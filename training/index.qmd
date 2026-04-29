@@ -62,9 +62,9 @@ Un test n'a pas besoin d'être parfait pour être utile.
 | 1 | Lire les concepts de base | [Slide 01](slides/01_intro.qmd) + [Slide 02](slides/02_testing_concepts.qmd) |
 | 2 | Tester Bash, Python, R | [Slide 03](slides/03_bash_python_r.qmd) → exercices 01, 02, 03 |
 | 3 | Tester avec nf-test | [Slide 04](slides/04_nf_test.qmd) → [exercice 04](exercises/04_nextflow/README.qmd) |
-| 4 | Tester les containers | [Slide 05](slides/05_container_testing.qmd) → [exercice 05](exercises/05_testing_containers/README.qmd) |
-| 5 | Tests bioinformatiques | [Slide 06](slides/06_bioinformatics_testing.qmd) → [exercice 06](exercises/06_metamorphic/README.qmd) |
-| 6 | Stratégie équipe | [Slide 07](slides/07_small_team_strategy.qmd) |
+| 4 | Tests bioinformatiques | [Slide 06](slides/06_bioinformatics_testing.qmd) → [exercice 06](exercises/06_metamorphic/README.qmd) |
+| 5 | Stratégie équipe | [Slide 07](slides/07_small_team_strategy.qmd) |
+| Bonus | Tester les containers | [Politique containers](container-policy.qmd) → [exercice 05](exercises/05_testing_containers/README.qmd) |
 
 ---
 
@@ -76,8 +76,8 @@ Un test n'a pas besoin d'être parfait pour être utile.
 | 02 | Python et parsing | [02_python/](exercises/02_python/README.qmd) | pytest |
 | 03 | R et transformations | [03_r/](exercises/03_r/README.qmd) | testthat |
 | 04 | Nextflow process/workflow/pipeline | [04_nextflow/](exercises/04_nextflow/README.qmd) | nf-test |
-| 05 | Containers Apptainer | [05_testing_containers/](exercises/05_testing_containers/README.qmd) | bats + nf-test |
 | 06 | Metamorphic testing | [06_metamorphic/](exercises/06_metamorphic/README.qmd) | bats |
+| Bonus | Containers Apptainer | [05_testing_containers/](exercises/05_testing_containers/README.qmd) | bats + nf-test |
 
 ---
 

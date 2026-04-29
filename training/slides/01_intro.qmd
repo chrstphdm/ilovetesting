@@ -105,9 +105,9 @@ Ils vérifient automatiquement les comportements que l'on a explicitement défin
 | 02 | Concepts | — |
 | 03 | Bash · Python · R | `01_bash/` `02_python/` `03_r/` |
 | 04 | nf-test | `04_nextflow/` |
-| 05 | Containers | `05_testing_containers/` |
 | 06 | Tests bioinformatiques | `06_metamorphic/` |
 | 07 | Stratégie équipe | — |
+| Bonus | Containers | `05_testing_containers/` |
 
 ---
 
