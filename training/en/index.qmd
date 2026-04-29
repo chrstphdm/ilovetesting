@@ -1,6 +1,6 @@
 ---
 title: "I Love Testing"
-subtitle: "Internal training on testing for bioinformatics pipelines"
+subtitle: "Training on testing for bioinformatics pipelines"
 format:
   html:
     toc: false
