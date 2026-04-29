@@ -27,36 +27,25 @@ Les scripts `validate_records.sh`, `parse_records.py`, `stats_records.R` :
 
 **Un bug dans un script = un bug dans le pipeline.**
 
+. . .
+
+Pourquoi *hors* Nextflow ? Feedback immédiat, pas de surcharge Nextflow, débogage ciblé.
+
 ---
 
 ## Le dataset commun
 
 ```
-records.tsv
-┌─────┬───────┬───────┐
-│ id  │ group │ value │
-├─────┼───────┼───────┤
-│ S01 │ A     │  12   │
-│ S02 │ B     │  45   │
-│ ... │ ...   │  ...  │
-│ S20 │ B     │  88   │
-└─────┴───────┴───────┘
-20 lignes · 2 groupes · valeurs numériques positives
+records.tsv  — 20 lignes · colonnes : id, group, value · valeurs numériques positives
 ```
 
----
-
-## Les fichiers de test
-
-| Fichier | Contenu | Scénario couvert |
-|---------|---------|-----------------|
-| `records.tsv` | 20 lignes valides | happy path |
-| `empty.tsv` | en-tête seul, aucune donnée | fichier sans données |
-| `invalid_records.tsv` | valeur non numérique | contrainte de type |
-| `duplicated_records.tsv` | ID `S01` dupliqué | contrainte d'unicité |
-| `missing.tsv` | n'existe pas | fichier absent |
-
-Chaque fichier correspond à un cas de test précis dans les exemples suivants.
+| Fichier | Scénario couvert |
+|---------|-----------------|
+| `records.tsv` | happy path |
+| `empty.tsv` | fichier sans données |
+| `invalid_records.tsv` | contrainte de type |
+| `duplicated_records.tsv` | contrainte d'unicité |
+| `missing.tsv` | fichier absent |
 
 ---
 
@@ -116,32 +105,24 @@ test_that("résultat a les bonnes colonnes et un invariant", {
 
 ---
 
-## Ce que chaque framework apporte
+## Ce qu'il faut retenir par framework
 
-| Framework | Spécificité montrée |
-|-----------|---------------------|
-| bats | `$output` — tester le message, pas seulement `$status` |
-| pytest | `raises(match=)` — exception typée et `parametrize` — N cas, 1 test |
-| testthat | `expect_named` — structure et `expect_error(pattern)` — message |
+| Framework | À retenir |
+|-----------|-----------|
+| bats | toujours vérifier `$output`, pas seulement `$status` |
+| pytest | `raises(match=)` pour typer l'erreur · `parametrize` pour N cas sans duplication |
+| testthat | `expect_named` pour la structure · `expect_true(all(...))` pour un invariant |
 
 ---
 
-## Règle à retenir
+## À retenir
 
 ::: {.callout-important}
 **Tout script appelé par un workflow doit pouvoir être testé hors du workflow.**
-
 Si ce n'est pas testable seul, le script fait trop de choses.
-:::
 
----
-
-## Message à retenir
-
-::: {.callout-important}
-La syntaxe change. La logique ne change pas.
-
-Tester les invariants métier (`>= 0`, colonnes attendues) autant que le comportement.
+La syntaxe change. La logique ne change pas :
+tester les invariants métier (`>= 0`, colonnes attendues) autant que le comportement.
 :::
 
 ---
