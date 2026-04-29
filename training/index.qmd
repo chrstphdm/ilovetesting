@@ -6,25 +6,25 @@ format:
     toc: false
 ---
 
-Tu vas apprendre à écrire des tests automatiques pour tes scripts Bash, fonctions Python/R et pipelines Nextflow — pour détecter les bugs silencieux avant qu'ils atteignent tes résultats.
+Formation à l'écriture de tests automatiques pour scripts Bash, fonctions Python/R et pipelines Nextflow.
+Chaque module combine une présentation et un exercice pratique.
+
+::: {.callout-note}
+Avant de commencer : vérifier les [prérequis](prerequisites.qmd) (langages attendus, installation des frameworks).
+:::
 
 ---
 
 ## Parcours
 
-| Étape | Sujet | Slides | Exercice | Durée |
-|-------|-------|--------|----------|-------|
-| 0 | Prérequis | — | [Vérifier](prerequisites.qmd) | 10 min |
-| 1 | Pourquoi tester — concepts clés | [01](slides/01_intro.qmd) · [02](slides/02_testing_concepts.qmd) | — | 45 min |
-| 2 | Bash · Python · R | [03](slides/03_bash_python_r.qmd) | [01](exercises/01_bash/README.qmd) · [02](exercises/02_python/README.qmd) · [03](exercises/03_r/README.qmd) | 2h |
-| 3 | Nextflow avec nf-test | [04](slides/04_nf_test.qmd) | [04](exercises/04_nextflow/README.qmd) | 1h30 |
-| 4 | Tester sans oracle exact | [06](slides/06_bioinformatics_testing.qmd) | [06](exercises/06_metamorphic/README.qmd) | 1h |
-| 5 | Stratégie pour ton équipe | [07](slides/07_small_team_strategy.qmd) | — | 30 min |
-| Bonus | Containers Apptainer | [05](slides/05_container_testing.qmd) | [05](exercises/05_testing_containers/README.qmd) | selon dispo |
-
-::: {.callout-note}
-Le module 05 (containers) nécessite Apptainer — disponible en local ou sur HPC. Il ne fait pas partie du parcours standard et n'est pas en CI.
-:::
+| Étape | Module | Durée |
+|-------|--------|-------|
+| 1 | [Pourquoi tester](slides/01_intro.qmd) · [Concepts de testing](slides/02_testing_concepts.qmd) | 45 min |
+| 2 | [Bash · Python · R](slides/03_bash_python_r.qmd) → [ex. 01](exercises/01_bash/README.qmd) · [ex. 02](exercises/02_python/README.qmd) · [ex. 03](exercises/03_r/README.qmd) | 2h |
+| 3 | [Nextflow / nf-test](slides/04_nf_test.qmd) → [ex. 04](exercises/04_nextflow/README.qmd) | 1h30 |
+| 4 | [Tester sans oracle exact](slides/06_bioinformatics_testing.qmd) → [ex. 06](exercises/06_metamorphic/README.qmd) | 1h |
+| 5 | [Stratégie pour petite équipe](slides/07_small_team_strategy.qmd) | 30 min |
+| Bonus | [Containers Apptainer](slides/05_container_testing.qmd) → [ex. 05](exercises/05_testing_containers/README.qmd) | selon dispo |
 
 ---
 
@@ -42,28 +42,21 @@ conda activate ilovetesting
 ## Lancer les tests
 
 ```bash
-# Python
-pytest -v --tb=short
-
-# Bash
-bats training/tests/bats/
-
-# R
-Rscript -e "testthat::test_dir('training/tests/testthat/')"
-
-# Nextflow / nf-test (depuis ce répertoire)
-cd training/tests/nf-test && nf-test test --verbose
+pytest -v --tb=short                                          # Python
+bats training/tests/bats/                                    # Bash
+Rscript -e "testthat::test_dir('training/tests/testthat/')"  # R
+cd training/tests/nf-test && nf-test test --verbose          # Nextflow
 ```
 
 ---
 
-## Pages de référence
+## Référence
 
 | Page | Contenu |
 |------|---------|
 | [Prérequis](prerequisites.qmd) | Langages attendus, installation des frameworks |
 | [Méthodologie](testing-methodology.qmd) | AAA, types de tests, oracle problem, anti-patterns |
-| [Matrice de décision](testing-matrix.qmd) | Quoi tester, quand, avec quel outil, niveaux de maturité |
+| [Matrice de décision](testing-matrix.qmd) | Quoi tester, quand, avec quel outil |
 | [Politique snapshots](snapshot-policy.qmd) | Règles de création et mise à jour |
 | [Politique containers](container-policy.qmd) | Tags, `.def`, `.sif`, niveaux de test |
-| [FAQ](faq.qmd) | Réponses aux questions fréquentes |
+| [FAQ](faq.qmd) | Questions fréquentes |
