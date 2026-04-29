@@ -28,17 +28,6 @@ Avant de commencer : vérifier les [prérequis](prerequisites.qmd) (langages att
 
 ---
 
-## Installation
-
-```bash
-git clone https://github.com/chrstphdm/ilovetesting.git
-cd ilovetesting
-bash setup.sh
-conda activate ilovetesting
-```
-
----
-
 ## Lancer les tests
 
 ```bash

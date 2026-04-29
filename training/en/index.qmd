@@ -32,17 +32,6 @@ Before you start: check the [prerequisites](prerequisites.qmd) (expected languag
 
 ---
 
-## Installation
-
-```bash
-git clone https://github.com/chrstphdm/ilovetesting.git
-cd ilovetesting
-bash setup.sh
-conda activate ilovetesting
-```
-
----
-
 ## Running the tests
 
 ```bash
