@@ -14,24 +14,26 @@ nf-test = framework de référence pour tester des process, workflows et pipelin
 
 Utilisé notamment par nf-core comme standard communautaire.
 
+::: {.notes}
+Exemples officiels nf-test (RNA-seq pipeline complet, process isolés, snapshots) :
+https://github.com/askimed/nf-test-examples
+:::
+
 ---
 
-## Installation
+## Mapping des niveaux de test Nextflow
 
-```bash
-# Via conda (méthode recommandée pour la formation)
-conda install -c bioconda nf-test
-
-# Alternative : script d'installation officiel
-# bash <(curl -fsSL https://get.nf-test.com)
-
-# Vérification
-nf-test version
+```
+process COUNT_LINES { ... }    ← test unitaire   (nextflow_process)
+          ↓
+workflow PROCESS_TABLE { ... } ← test intégration (nextflow_workflow)
+          ↓
+pipeline main.nf               ← test fonctionnel (nextflow_pipeline)
 ```
 
 ---
 
-## Structure d'un test nf-test
+## Tester un process
 
 ```groovy
 nextflow_process {
@@ -59,25 +61,69 @@ nextflow_process {
 
 ---
 
-## Mapping des niveaux de test Nextflow
+## Tester un workflow
 
-```
-process COUNT_LINES { ... }    ← test unitaire   (nextflow_process)
-          ↓
-workflow PROCESS_TABLE { ... } ← test intégration (nextflow_workflow)
-          ↓
-pipeline main.nf               ← test fonctionnel (nextflow_pipeline)
+```groovy
+nextflow_workflow {
+    name "Test PROCESS_TABLE"
+    script "workflows/process_table.nf"
+    workflow "PROCESS_TABLE"
+
+    test("TSV valide → count, summary et stats produits") {
+        when {
+            workflow {
+                input[0] = Channel.of([[id:"records"], file("data/records.tsv")])
+            }
+        }
+        then {
+            assert workflow.success
+            assert workflow.out.count.size() == 1
+            assert workflow.out.summary.size() == 1
+            assert workflow.out.stats.size() == 1
+            assert snapshot(workflow.out.count, workflow.out.summary, workflow.out.stats).match()
+        }
+    }
+}
 ```
 
 ---
 
-## Les 3 niveaux de test
+## Tester un pipeline *(bonus — non demandé dans l'exercice)*
 
 ```groovy
-nextflow_process { ... }   // ← process seul
-nextflow_workflow { ... }  // ← workflow (plusieurs process)
-nextflow_pipeline { ... }  // ← pipeline complet (main.nf)
+nextflow_pipeline {
+    name "Test pipeline complet"
+    script "../../pipelines/minimal/main.nf"
+
+    test("pipeline complet — 2 tâches, sorties présentes") {
+        when {
+            params {
+                input  = "${projectDir}/data/records.tsv"
+                outdir = "${outputDir}"
+            }
+        }
+        then {
+            assert workflow.success
+            assert workflow.trace.succeeded().size() == 2   // 2 tâches
+
+            def f = file("${outputDir}/count_lines/records.count")
+            assert f.exists()
+            assert f.text.trim().toInteger() == 20
+        }
+    }
+}
 ```
+
+---
+
+## Ce qui change entre les niveaux
+
+| | `nextflow_process` | `nextflow_workflow` | `nextflow_pipeline` |
+|--|:--:|:--:|:--:|
+| **Déclare** | `process "NOM"` | `workflow "NOM"` | *(rien)* |
+| **Input** | `input[0] = [...]` | `Channel.of([...])` | `params { }` |
+| **Sorties** | `process.out.xxx` | `workflow.out.xxx` | `file("${outputDir}/...")` |
+| **Trace** | — | `workflow.trace` | `workflow.trace` |
 
 ---
 
@@ -88,6 +134,7 @@ then {
     assert workflow.success
     assert snapshot(
         workflow.out.count,
+        workflow.out.summary,
         workflow.out.stats
     ).match()
 }
@@ -123,7 +170,7 @@ Snapshot seul = boîte noire. Assertion explicite = documentation.
 
 ---
 
-## Limites des snapshots
+## Snapshots — limites et mise à jour
 
 | Ce qu'un snapshot détecte | Ce qu'il ne détecte pas |
 |--------------------------|------------------------|
@@ -133,17 +180,39 @@ Snapshot seul = boîte noire. Assertion explicite = documentation.
 
 → Toujours combiner snapshot + au moins une assertion sur la valeur.
 
----
-
-## Mettre à jour un snapshot
-
 ```bash
-# Regénérer après changement intentionnel
-nf-test test --update-snapshot
+nf-test test --update-snapshot   # regénérer après changement intentionnel
 ```
 
 ::: {.callout-warning}
 Ne jamais mettre à jour un snapshot sans comprendre pourquoi il a changé.
+:::
+
+---
+
+## Tester avec Apptainer
+
+```bash
+# Lancer les tests nf-test avec le profil apptainer
+nf-test test fastqc.nf.test --profile apptainer
+```
+
+Le process déclare son container avec un **tag exact** :
+
+```groovy
+process FASTQC {
+    container 'biocontainers/fastqc:0.12.1--hdfd78af_0'
+    ...
+}
+```
+
+. . .
+
+Deux niveaux complémentaires :
+bats vérifie que l'image fonctionne seule · nf-test vérifie que le process fonctionne dedans.
+
+::: {.notes}
+Politique complète : container-policy.qmd — tag exact, .def versionné, .sif non commité, tests en CI self-hosted.
 :::
 
 ---
@@ -177,4 +246,10 @@ nf-test test --update-snapshot
 
 Rendez-vous dans `exercises/04_nextflow/`
 
-À la fin, vous devez avoir : 1 test COUNT_LINES (TSV valide → count 20), 1 test COUNT_LINES (fichier vide → échec), 1 test PROCESS_TABLE (count + stats produits), au moins 1 assertion comportementale sur une valeur, 1 snapshot.
+À la fin, vous devez avoir :
+
+- 1 test `COUNT_LINES` — TSV valide → count 20
+- 1 test `COUNT_LINES` — fichier vide → échec
+- 1 test `PROCESS_TABLE` — count + summary + stats produits
+- au moins 1 assertion comportementale sur une valeur
+- 1 snapshot

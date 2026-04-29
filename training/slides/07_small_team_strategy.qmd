@@ -8,9 +8,17 @@ format:
     code-block-height: 400px
 ---
 
-## Objectif
+## Situation typique : nouveau pipeline, pas encore de tests
 
-Choisir quoi tester en priorité avec des ressources limitées.
+J'ai codé rapidement pour valider une idée. Le pipeline tourne, les résultats semblent cohérents.
+
+. . .
+
+C'est une version préliminaire — mais maintenant il faut des tests.
+
+. . .
+
+**Je ne sais pas par où commencer.**
 
 ---
 
@@ -20,36 +28,14 @@ Choisir quoi tester en priorité avec des ressources limitées.
 Priorité = probabilité de casser × impact si ça casse
 ```
 
-| Priorité | Ce qu'on teste | Ce qu'on peut reporter |
-|----------|---------------|----------------------|
-| **1 — toujours** | transformations, filtres, décisions métier | — |
-| **2 — dès que possible** | enchaînements de modules | — |
-| **3 — dès que livrable** | pipeline complet (mini-data) | visualisations |
-| **dès création** | container custom critique (version) | — |
+| Priorité | Ce qu'on teste |
+|----------|---------------|
+| **1 — toujours** | transformations, filtres, décisions métier |
+| **2 — dès que possible** | enchaînements de modules |
+| **3 — dès que livrable** | pipeline complet sur mini-data |
+| **4 — si container custom** | version figée, comportement Apptainer |
 
----
-
-## Quoi tester en premier ?
-
-Tester ce qui peut casser **silencieusement** :
-
-1. Transformation de données (compter, filtrer, agréger)
-2. Décision scientifique ou métier
-3. Métrique reportée à l'utilisateur
-4. Format d'entrée/sortie entre modules
-
----
-
-## Matrice de décision
-
-| Si... | Alors... |
-|-------|---------|
-| ça transforme une donnée critique | test unitaire + assertion comportementale |
-| ça enchaîne deux étapes | test workflow |
-| ça produit un livrable | test pipeline |
-| ça a déjà cassé | test de non-régression |
-| ça dépend d'un outil externe | test container + version |
-| ça coûte cher à exécuter | test minimal en PR + test long nightly |
+Pour le détail complet → [testing-matrix.qmd](../testing-matrix.qmd)
 
 ---
 
@@ -66,16 +52,8 @@ Nuit ou manuel
     └── golden dataset complet
 ```
 
----
-
-## Handover et bus factor
-
-Un pipeline sans test = risque si la personne qui le maintient part.
-
-Un test = documentation exécutable que la prochaine personne peut lancer.
-
 ::: {.callout-tip}
-Écrire le test qu'on aurait voulu trouver en arrivant dans le projet.
+Au démarrage : même un seul `pytest` en CI suffit. L'important est que la porte existe.
 :::
 
 ---
@@ -96,6 +74,18 @@ C'est suffisant pour commencer.
 
 ---
 
+## Handover et bus factor
+
+Un pipeline sans test = risque si la personne qui le maintient part.
+
+Un test = documentation exécutable que la prochaine personne peut lancer.
+
+::: {.callout-tip}
+Écrire le test qu'on aurait voulu trouver en arrivant dans le projet.
+:::
+
+---
+
 ## Quand ne pas tester
 
 - code exploratoire jetable
@@ -110,35 +100,24 @@ C'est suffisant pour commencer.
 
 ---
 
-## Maturité progressive
+## Anti-patterns de stratégie
 
-```
-Niveau 0  aucun test
-Niveau 1  smoke test sur mini input (exit 0, fichier produit)
-Niveau 2  tests unitaires scripts et process
-Niveau 3  test fonctionnel pipeline mini-data
-Niveau 4  assertions comportementales + golden dataset
-Niveau 5  robustesse, containers critiques, performance, handover
-```
+- Attendre d'avoir le temps — le bon moment n'arrive pas
+- Viser 100 % de couverture avant la première PR — épuisant et contre-productif
+- Écrire tous les tests à la fin du projet — trop tard pour détecter
+- Tester uniquement en local, jamais en CI — invisible pour l'équipe
+- Ne pas documenter les décisions de non-test — un oubli silencieux devient une dette
 
-Ne pas viser le niveau 5 dès le premier sprint.
+. . .
 
----
-
-## Ce que les tests ne doivent pas faire
-
-- Vérifier seulement que le process tourne
-- Dépendre de l'ordre si l'ordre n'est pas garanti
-- Figer des chemins temporaires
-- Utiliser `latest`
-- Accepter un snapshot sans lire le diff
+Pour les niveaux de maturité → [testing-matrix.qmd](../testing-matrix.qmd)
 
 ---
 
 ## Message à retenir
 
 ::: {.callout-important}
-**Commencer petit. Écrire un test utile vaut mieux qu'un plan parfait.**
+**Par où commencer ?** Le premier test utile vérifie la règle métier la plus critique du pipeline — le calcul, le filtre, ou la décision dont un résultat faux ne serait pas visible sans test.
 
-Un test minimal sur le chemin critique > zéro test.
+Commencer petit. Un test minimal sur le chemin critique > zéro test.
 :::

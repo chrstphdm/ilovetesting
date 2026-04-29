@@ -19,8 +19,6 @@ website:
             href: slides/03_bash_python_r.qmd
           - text: "04 — nf-test"
             href: slides/04_nf_test.qmd
-          - text: "05 — Containers"
-            href: slides/05_container_testing.qmd
           - text: "06 — Tests bioinformatiques"
             href: slides/06_bioinformatics_testing.qmd
           - text: "07 — Stratégie équipe"
@@ -35,12 +33,12 @@ website:
             href: exercises/03_r/README.qmd
           - text: "04 — Nextflow / nf-test"
             href: exercises/04_nextflow/README.qmd
-          - text: "05 — Containers Apptainer"
-            href: exercises/05_testing_containers/README.qmd
           - text: "06 — Metamorphic testing"
             href: exercises/06_metamorphic/README.qmd
       - text: "Référence"
         menu:
+          - text: "Prérequis"
+            href: prerequisites.qmd
           - text: "Méthodologie"
             href: testing-methodology.qmd
           - text: "Matrice de décision"

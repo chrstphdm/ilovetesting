@@ -1,5 +1,5 @@
 ---
-title: "Exercice 05 — Metamorphic testing"
+title: "Exercice 06 — Metamorphic testing"
 format: html
 toc: true
 ---
@@ -34,6 +34,7 @@ Si la relation n'est pas respectée, il y a un bug — même sans connaître le 
 training/data/sample.fastq          # 100 reads
 training/data/sample_shuffled.fastq # mêmes 100 reads, ordre aléatoire
 training/data/sample_doubled.fastq  # 200 reads (sample × 2)
+training/data/sample_subset.fastq   # 50 premiers reads (sous-ensemble)
 ```
 
 ## Code de départ
@@ -57,6 +58,13 @@ count_reads() { awk 'NR%4==1' "$1" | wc -l; }
     # 2. compter les reads dans sample_doubled.fastq
     # 3. vérifier que doubled = original × 2
 }
+
+@test "MR3 — sous-ensemble : 50 reads → count ≤ count original" {
+    # TODO :
+    # 1. compter les reads dans sample.fastq
+    # 2. compter les reads dans sample_subset.fastq
+    # 3. vérifier que subset ≤ original
+}
 ```
 
 ## Exercice
@@ -68,6 +76,7 @@ Compléter le fichier `training/tests/bats/test_metamorphic.bats`.
 ```
 ✓ MR1 — permutation : reads réordonnés → même nombre de reads valides
 ✓ MR2 — duplication : 2× l'input → exactement 2× les reads
+✓ MR3 — sous-ensemble : 50 reads → count ≤ count original
 ```
 
 ## Pourquoi c'est utile ?
@@ -78,6 +87,20 @@ Le metamorphic testing permet de détecter des bugs sans oracle — par exemple 
 - un outil de trimming qui perd des reads selon l'ordre d'entrée
 - un comptage qui change selon le tri du fichier BAM
 - une normalisation qui produit des résultats différents sur un sous-ensemble
+
+## Bonus — Golden dataset
+
+Si vous avez terminé les 3 MRs, appliquez le pattern golden dataset :
+
+1. Créer `training/data/sample_expected.txt` contenant le count attendu (100)
+2. Écrire un test bats qui vérifie que `count_reads sample.fastq` correspond au fichier de référence :
+
+```bash
+@test "golden dataset — count correspond au résultat de référence" {
+    run bash -c "awk 'NR%4==1' $DATA/sample.fastq | wc -l | tr -d ' '"
+    [ "$output" = "$(cat $DATA/sample_expected.txt)" ]
+}
+```
 
 ## Solution
 

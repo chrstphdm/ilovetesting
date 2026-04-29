@@ -53,14 +53,15 @@ Exemple en bats :
 
 ## L'oracle problem
 
-En bioinformatique, on ne connaît souvent pas la "bonne réponse".
+En bioinformatique, on ne connaît souvent pas la "bonne réponse" sur des données réelles.
 
-Quatre stratégies :
+Premier outil : les **invariants du domaine** — propriétés toujours vraies quelle que soit l'entrée (count ≥ 0, fraction ≤ 1). Nécessaires, mais pas toujours suffisants.
 
-1. **Golden dataset** — input connu, output figé et versionné
+Trois stratégies complémentaires face à l'oracle problem :
+
+1. **Golden dataset** — données synthétiques, output défini par construction
 2. **Pseudo-oracle** — comparer deux implémentations indépendantes
-3. **Invariants métier** — propriétés toujours vraies (count ≥ 0, fraction ≤ 1)
-4. **Metamorphic testing** — vérifier une relation entre deux exécutions
+3. **Metamorphic testing** — vérifier une relation entre deux exécutions
 
 ---
 
@@ -74,7 +75,7 @@ Plutôt que vérifier une valeur absolue, on vérifie une **relation** :
 | Duplication | 100 reads → 200 reads | exactement 2× |
 | Sous-ensemble | 100 reads → 50 reads | output ≤ 100 |
 
-Référence : PMC5425734 (2017) — aligneurs sensibles à l'ordre des reads.
+Référence : Giannoulatou et al. (2014) — validation de BWA et Bowtie sans gold standard. PMC4290646.
 
 ---
 

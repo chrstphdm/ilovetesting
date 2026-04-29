@@ -8,6 +8,19 @@ toc: true
 
 Écrire des tests bats pour un script Bash qui valide un fichier TSV.
 
+## Référence rapide — bats
+
+Documentation : <https://bats-core.readthedocs.io/en/stable/>
+
+| Élément | Syntaxe |
+|---------|---------|
+| Lancer une commande | `run bash script.sh arg` |
+| Code de sortie | `[ "$status" -eq 0 ]` |
+| Contenu de la sortie | `[[ "$output" =~ "pattern" ]]` |
+| Ligne individuelle | `[ "${lines[0]}" = "texte" ]` |
+
+---
+
 ## Contexte
 
 Avant de lancer un pipeline sur un fichier de données, on veut vérifier :

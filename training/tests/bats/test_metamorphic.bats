@@ -18,13 +18,8 @@ count_reads() {
     [ "$doubled" -eq $(( original * 2 )) ]
 }
 
-@test "MR3 — composition : count(doubled) == count(original) + count(shuffled)" {
-    # Relation métamorphique composite : on vérifie une RELATION entre trois exécutions
-    # indépendantes de count_reads. Si MR1 garantit shuffled == original et MR2 garantit
-    # doubled == 2×original, alors doubled == original + shuffled doit aussi tenir.
-    # Un échec ici signale une incohérence entre les trois invariants, pas juste un crash.
+@test "MR3 — sous-ensemble : 50 reads → count ≤ count original" {
     original=$(count_reads "$DATA/sample.fastq")
-    shuffled=$(count_reads "$DATA/sample_shuffled.fastq")
-    doubled=$(count_reads "$DATA/sample_doubled.fastq")
-    [ "$doubled" -eq $(( original + shuffled )) ]
+    subset=$(count_reads "$DATA/sample_subset.fastq")
+    [ "$subset" -le "$original" ]
 }

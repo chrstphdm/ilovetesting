@@ -19,95 +19,64 @@ AND    la sortie indique "20 records validés"
 
 GIVEN / WHEN / THEN = Arrange / Act / Assert — même concept, deux notations.
 
----
-
-## Quatre types de tests
-
-| Type | Périmètre | Vitesse |
-|------|-----------|---------|
-| **Unitaire** | une fonction, un process | rapide |
-| **Intégration** | plusieurs modules enchaînés | moyen |
-| **Fonctionnel** | pipeline complet, end-to-end | lent |
-| **Non-régression** | comparaison avec une sortie attendue | variable |
-
----
-
-## Happy path vs edge case
-
-```bash
-# Happy path — input valide
-run bash validate_records.sh records.tsv
-[ "$status" -eq 0 ]
-
-# Edge case — fichier vide
-run bash validate_records.sh empty.tsv
-[ "$status" -eq 1 ]
-
-# Edge case — fichier absent
-run bash validate_records.sh /tmp/missing.tsv
-[ "$status" -eq 1 ]
-```
-
----
-
-## Le bug que Python ne signale pas
-
-**Bug 2 — comparaison de scores numériques lus comme chaînes**
-
-```python
-# Scores lus depuis un fichier texte → type str par défaut
-"80.6"  > "407.9"   # → True   (ordre alphabétique)
- 80.6   >  407.9    # → False  (ordre numérique)
-```
-
 . . .
 
-Le programme ne plante pas — il sélectionne le mauvais "meilleur hit".
+Le nom du test **est** la spécification : `test_filtre_exclut_valeurs_sous_seuil` dit ce que le code doit faire — avant même de le lire.
 
-```python
-# Test minimal
-assert best_hit(["407.9", "80.6"]) == pytest.approx(407.9)
+---
+
+## La pyramide des tests
+
+```
+        ▲  Fonctionnel      — pipeline complet, lent, peu nombreux
+       ▲▲  Intégration      — modules enchaînés, vitesse moyenne
+      ▲▲▲  Unitaire         — fonctions, process isolés, rapides, nombreux
 ```
 
-::: {.callout-tip}
-Toujours convertir les valeurs numériques lues depuis un fichier avant de les comparer.
+| Type | Périmètre | En nf-test |
+|------|-----------|------------|
+| **Unitaire** | une fonction, un process | `nextflow_process` |
+| **Intégration** | plusieurs modules enchaînés | `nextflow_workflow` |
+| **Fonctionnel** | pipeline complet | `nextflow_pipeline` |
+| **Non-régression** | comparaison avant/après | snapshots |
+
+::: {.notes}
+Référence : Martin Fowler, TestPyramid — https://martinfowler.com/bliki/TestPyramid.html
 :::
 
 ---
 
-## Tests rapides vs tests lents
+## Les termes varient selon les communautés
 
-| Rapides (< 1 min) | Lents (> 1 min) |
-|-------------------|-----------------|
-| Fonctions unitaires | Pipeline complet |
-| Process Nextflow | Tests containers |
-| Snapshots existants | Golden dataset |
+| Ce deck | Autres noms courants |
+|---------|---------------------|
+| Fonctionnel | End-to-end, acceptance test, e2e, system test |
+| Non-régression | Regression test, change detection |
+| Unitaire | Component test (certains frameworks JS) |
+| — | Smoke test : test minimal, vérifie que ça démarre |
 
-→ Les rapides passent à chaque PR.
-→ Les lents passent en CI nightly ou manuellement.
+. . .
+
+En bioinfo : un "test unitaire" de module FASTQC lit des fichiers et appelle un exécutable.
+
+→ Google l'appelle **Medium test**, pas unit test — car il touche le filesystem.
+
+. . .
+
+**Dans ce cours : Unitaire / Intégration / Fonctionnel / Non-régression.**
+
+::: {.notes}
+Références :
+- Fowler TestPyramid : https://martinfowler.com/bliki/TestPyramid.html
+- Google Test Sizes : https://testing.googleblog.com/2010/12/test-sizes.html
+- ISTQB Glossary : https://glossary.istqb.org/en_US/term
+:::
 
 ---
 
 ## Assertions
 
-Une assertion = une vérification binaire.
-
-```python
-# Python / pytest
-assert output.exists()
-assert line_count(output) == 100
-assert output.suffix == ".html"
-```
-
-```bash
-# Bash / bats
-[ -f "$output" ]
-[ "$(wc -l < "$output")" -eq 100 ]
-```
-
----
-
-## Les assertions utiles
+Une assertion = une vérification binaire : vrai → test passe, faux → test échoue.
 
 | Ce qu'on vérifie | Exemple |
 |-----------------|---------|
@@ -117,45 +86,101 @@ assert output.suffix == ".html"
 | Valeur dans une borne | `assert (df["value"] >= 0).all()` |
 | Code de sortie | `assert returncode == 0` |
 
+. . .
+
+```python
+assert result is not None        # trop vague — ne détecte rien de précis
+assert len(result) == 10         # exact — détecte une perte de données
+assert result["A"] == 65.25      # valeur métier — détecte un calcul faux
+```
+
+Une assertion utile détecte **précisément** ce qui peut être faux.
+
+---
+
+## Isolation des tests
+
+Chaque test doit pouvoir tourner seul, dans n'importe quel ordre.
+
+```python
+# Mauvais — effet de bord partagé entre deux vrais tests
+def test_charge_fichier():
+    df = load_records("records.tsv")
+    df.to_csv("/tmp/out.tsv", sep="\t")    # effet de bord
+    assert len(df) == 20
+
+def test_valeurs_positives():
+    df = pd.read_csv("/tmp/out.tsv", sep="\t")  # dépend du test précédent
+    assert (df["value"] >= 0).all()
+```
+
+. . .
+
+```python
+# Correct — chaque test arrange ses propres données
+def test_valeurs_positives():
+    df = load_records("records.tsv")       # pas de dépendance externe
+    assert (df["value"] >= 0).all()
+```
+
+---
+
+## Tests paramétrés
+
+**Happy path** (input nominal) + **edge cases** (limites, invalides) — sans dupliquer le code.
+
+```python
+def test_records_valides():              # happy path — 1 cas nominal
+    df = load_records(DATA / "records.tsv")
+    assert len(df) == 20
+
+@pytest.mark.parametrize("path,exc", [  # edge cases — sans dupliquer
+    ("empty.tsv",   ValueError),
+    ("missing.tsv", FileNotFoundError),
+])
+def test_inputs_invalides(path, exc):
+    with pytest.raises(exc):
+        load_records(DATA / path)
+```
+
+. . .
+
+```python
+# ❌ boucle dans un test — s'arrête au premier échec, nom opaque
+def test_edge_cases():
+    for path in ["empty.tsv", "missing.tsv"]:
+        with pytest.raises(...): load_records(path)
+```
+
 ---
 
 ## Snapshots
 
-Un snapshot = **photographie** de la sortie attendue.
+Un snapshot = **photographie** de la sortie attendue. Disponible dans tous les frameworks.
 
+```r
+expect_snapshot(compute_stats(df))   # testthat
+```
 ```groovy
-// nf-test
-assert snapshot(output).match()
+assert snapshot(process.out).match() // nf-test
+```
+```bash
+diff <(bash validate_records.sh records.tsv) expected.txt  # bats
 ```
 
-- Première exécution → crée le snapshot
-- Exécutions suivantes → compare avec le snapshot
-- Si différent → le test échoue
+Première exécution → crée la référence. Exécutions suivantes → compare — différence → échec.
 
 ::: {.callout-warning}
-Un snapshot ne dit pas que la sortie est **correcte**.
-
-Il dit seulement qu'elle n'a **pas changé**.
+Un snapshot ne dit pas que la sortie est **correcte**. Il dit qu'elle n'a **pas changé**.
 
 Snapshot seul = filet de non-régression. Snapshot + assertion explicite = test utile.
 :::
 
 ---
 
-## Non-régression
-
-Scénario classique :
-
-1. Pipeline fonctionnel → snapshot créé
-2. Refactoring du code
-3. `nf-test test` → snapshot comparé
-4. Différence détectée → bug identifié avant merge
-
----
-
 ## Données de test
 
-**Bonne pratique :** les données de test doivent être **minimalistes**.
+**Règle : la taille minimale qui déclenche le comportement à tester.**
 
 ```
 data/
@@ -163,22 +188,60 @@ data/
 └── empty.tsv      # en-tête seul, aucune donnée
 ```
 
-Pourquoi petit ? Tests rapides, CI rapide, pas de dépendance aux gros fichiers.
+20 lignes suffisent pour un filtre ou un calcul de stats.
+100 reads suffisent pour un process FASTQC.
 
 ---
 
-## CI/CD
+## Couverture : 5 tests, 100 % — et 3 bugs
 
-```
-Push → GitHub Actions → Tests → OK ou ÉCHEC
+```bash
+$ pytest --cov=filter_and_summarise test_coverage_demo.py
+
+Name                         Stmts   Miss  Cover
+-------------------------------------------------
+filter_and_summarise.py         14      0   100%
+
+5 passed in 0.4s
 ```
 
-Si ÉCHEC : merge bloqué automatiquement.
+. . .
+
+::: {.callout-warning}
+Un bug silencieux ne lève pas d'exception — il produit un résultat légèrement faux.
+
+La couverture mesure si les lignes sont **exécutées**, pas si les assertions **prouvent quelque chose**.
+:::
+
+---
+
+## Ce que la couverture ne voit pas
+
+```python
+# Bug 1 — > au lieu de >= : S02 (value=45) silencieusement exclu
+assert len(filtered) == 10              # ← compte exact
+assert 45 in filtered["value"].values  # ← invariant de borne
+
+# Bug 2 — stats calculées sur df, pas sur filtered
+assert result["A"] == pytest.approx(65.25)  # ← valeur métier
+
+# Bug 3 — retourne Series, pas DataFrame
+assert isinstance(result, pd.DataFrame)     # ← type explicite
+```
+
+→ La couverture dit ce qu'on n'a **pas testé**. Pas si ce qu'on a testé est **juste**.
 
 ---
 
 ## Suite → Module 03
 
-Ces concepts s'appliquent aux exercices 01, 02 et 03.
+Avant d'ouvrir le module 03 : voici comment GIVEN/WHEN/THEN se traduit en bats.
 
-Le module suivant montre comment les appliquer concrètement en Bash, Python et R.
+```bash
+# GIVEN  records.tsv valide    →  DATA="training/data"
+# WHEN   validate_records.sh   →  run bash validate_records.sh "$DATA/records.tsv"
+# THEN   exit 0                →  [ "$status" -eq 0 ]
+# THEN   message avec count    →  [[ "$output" =~ "20 records" ]]
+```
+
+Le module 03 montre les trois syntaxes — bats, pytest, testthat — sur ce même exemple.

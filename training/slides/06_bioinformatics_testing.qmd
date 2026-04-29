@@ -8,30 +8,65 @@ format:
     code-block-height: 400px
 ---
 
-## Le problème de l'oracle
+## Tester en bioinfo : les mêmes outils, un défi supplémentaire
 
-Comment vérifier qu'un résultat est **correct** quand on ne connaît pas la bonne réponse ?
+Tu sais écrire des tests pour des scripts et des process Nextflow.
 
 . . .
 
-→ C'est l'**oracle problem** — particulièrement fréquent en bioinfo.
+Mais que faire quand tu ne connais pas le **résultat attendu** ?
 
 ---
 
-## Quatre approches
+## Les invariants du domaine — premier outil
+
+Des propriétés qui doivent être vraies après chaque exécution, quelle que soit l'entrée.
+
+```python
+assert (df["value"] >= 0).all()           # valeurs positives
+assert total_out <= total_in              # filtre ne crée pas de lignes
+assert len(ids) == len(set(ids))          # pas de doublon
+```
+
+::: {.notes}
+Référence méthodologique : Kamali et al. (2015) "How to test bioinformatics software?" — Biophysical Reviews 7(3):343–352. PMID:28510230. DOI:10.1007/s12551-015-0177-3
+:::
+
+
+---
+
+## Mais les invariants ne suffisent pas toujours
+
+Un outil peut respecter tous les invariants... et produire des résultats biologiquement incorrects.
+
+. . .
+
+> BWA-MEM et Bowtie2 produisaient des alignements **différents** selon l'ordre des reads en entrée.
+> Les fichiers SAM étaient valides. Tous les reads étaient présents. Aucune erreur visible.
+>
+> — [Giannoulatou et al. 2014, BMC Bioinformatics](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4290646/)
+
+. . .
+
+Sur des données réelles, on ne peut pas toujours vérifier si chaque résultat individuel est correct.
+
+→ C'est l'**oracle problem**.
+
+---
+
+## Trois stratégies face au problème de l'oracle
 
 | Approche | Principe |
 |----------|----------|
-| **Golden dataset** | Input connu, output attendu figé |
+| **Golden dataset** | Données synthétiques — output défini *par construction* |
 | **Pseudo-oracle** | Comparer deux implémentations indépendantes |
-| **Invariants métier** | Vérifier des propriétés toujours vraies |
 | **Metamorphic testing** | Vérifier une relation entre deux exécutions |
 
 ---
 
 ## Golden dataset
 
-Un jeu de données de référence avec résultat attendu.
+Un jeu de données synthétiques avec résultat attendu défini par construction.
 
 ```
 data/
@@ -39,35 +74,36 @@ data/
 ├── sample_expected.txt   # résultat attendu figé
 ```
 
+```bash
+@test "golden dataset — count correspond au résultat de référence" {
+    run bash count_reads.sh sample.fastq
+    [ "$output" = "$(cat sample_expected.txt)" ]
+}
+```
+
 ::: {.callout-tip}
-Petit, stable, versionné dans le repo.
-Utile pour la non-régression à long terme.
+Petit, stable, versionné dans le repo. Utile pour la non-régression à long terme.
 :::
 
 ---
 
-## Invariants métier
+## Pseudo-oracle
 
-Des propriétés qui doivent toujours être vraies.
+Comparer deux implémentations indépendantes sur le même input.
 
-```python
-assert (df["value"] >= 0).all()              # valeurs positives
-assert 0.0 <= ratio <= 1.0                   # ratio dans [0, 1]
-assert len(output_rows) <= len(input_rows)   # filtre ne crée pas de lignes
-assert len(ids) == len(set(ids))             # pas de doublon d'identifiant
+```bash
+@test "pseudo-oracle — deux outils donnent le même count de reads" {
+    count_A=$(tool_A sample.fastq | awk 'NR%4==1' | wc -l)
+    count_B=$(tool_B sample.fastq | awk 'NR%4==1' | wc -l)
+    [ "$count_A" -eq "$count_B" ]
+}
 ```
 
----
+. . .
 
-## Contrôles positifs et négatifs
-
-| Type | Input | Attendu |
-|------|-------|---------|
-| **Positif** | FASTQ valide | exit 0, fichier de sortie |
-| **Négatif** | FASTQ vide | exit 1, message d'erreur |
-| **Négatif** | paramètre incohérent | échec explicite |
-
-Les deux sont nécessaires.
+::: {.callout-tip}
+Le cas anvi'o / MicrobeAnnotator (module 01) est un pseudo-oracle : deux outils annotent le même génome — les incohérences inattendues ont révélé des bugs.
+:::
 
 ---
 
@@ -80,6 +116,10 @@ f(input_A)  ──┐
               ├── relation attendue ?
 f(input_B)  ──┘
 ```
+
+::: {.notes}
+Référence fondatrice appliquée à la bioinfo : Chen et al. (2009) "An innovative approach for testing bioinformatics programs using metamorphic testing" — BMC Bioinformatics 10:24. PMID:19152705. PMC:PMC2657898.
+:::
 
 ---
 
@@ -99,28 +139,16 @@ f(input_B)  ──┘
 count_reads() { awk 'NR%4==1' "$1" | wc -l; }
 
 @test "MR1 — permutation : ordre n'affecte pas le count" {
-    [ "$(count_reads sample.fastq)" -eq \
-      "$(count_reads sample_shuffled.fastq)" ]
+    [ "$(count_reads sample.fastq)" -eq "$(count_reads sample_shuffled.fastq)" ]
 }
-
 @test "MR2 — duplication : 2× input → 2× output" {
     original=$(count_reads sample.fastq)
     [ "$(count_reads sample_doubled.fastq)" -eq $(( original * 2 )) ]
 }
+@test "MR3 — sous-ensemble : count ≤ count original" {
+    [ "$(count_reads sample_subset.fastq)" -le "$(count_reads sample.fastq)" ]
+}
 ```
-
----
-
-## Cas réel dans la littérature
-
-> Certains outils d'alignement ont produit des résultats **différents** selon l'ordre des reads en entrée.
-
-Les tests classiques passaient.
-Un test MR de permutation l'aurait détecté.
-
-::: {.notes}
-Référence : Li H et al. (2017) — PMC5425734. BWA-MEM et Bowtie2 produisaient des alignements différents sur les mêmes reads selon leur ordre dans le fichier FASTQ.
-:::
 
 ---
 
@@ -129,8 +157,21 @@ Référence : Li H et al. (2017) — PMC5425734. BWA-MEM et Bowtie2 produisaient
 ::: {.callout-important}
 **Tester les propriétés, pas seulement les valeurs.**
 
-Golden dataset + invariants + metamorphic = couverture sans oracle exact.
+Les invariants sont le socle. Face à l'oracle problem :
+golden dataset + pseudo-oracle + metamorphic = trois stratégies complémentaires.
 :::
+
+---
+
+## Suite → Module 07
+
+Tu sais maintenant écrire des tests à tous les niveaux — scripts, process, workflows, et sans oracle exact.
+
+. . .
+
+La dernière question : **par où commencer et quoi prioriser** dans ton équipe ?
+
+→ Module 07 — Stratégie pour petite équipe.
 
 ---
 
@@ -138,4 +179,10 @@ Golden dataset + invariants + metamorphic = couverture sans oracle exact.
 
 Rendez-vous dans `exercises/06_metamorphic/`
 
-À la fin, vous devez avoir : 1 test MR1 (permutation → même count), 1 test MR2 (duplication → 2× count), 1 test MR3 (sous-ensemble → count ≤ original), et une commande locale pour lancer les tests.
+L'exercice se concentre sur le **metamorphic testing** — le plus nouveau des trois patterns.
+
+- 1 test MR1 — permutation → même count
+- 1 test MR2 — duplication → 2× count
+- 1 test MR3 — sous-ensemble → count ≤ original
+
+Bonus : appliquer le pattern golden dataset sur les mêmes données.
