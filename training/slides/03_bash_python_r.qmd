@@ -28,21 +28,17 @@ L'objectif concret : après ce module, les participants doivent être capables d
 
 ---
 
-## Pourquoi tester les scripts hors Nextflow ?
+## Tester les scripts hors Nextflow
 
 Les scripts `validate_records.sh`, `parse_records.py`, `stats_records.R` :
 
 - sont appelés par des process du pipeline
-- peuvent casser silencieusement (i.e mauvaise gestion des erreurs)
+- peuvent casser silencieusement
 - peuvent être réutilisés dans plusieurs projets
 
 . . .
 
 **Un bug dans un script = un bug dans le pipeline.**
-
-. . .
-
-Pourquoi *hors* Nextflow ? Feedback immédiat, pas de surcharge Nextflow, débogage ciblé.
 
 ::: {.notes}
 Question fréquente : "Pourquoi ne pas juste tester le pipeline complet avec nf-test ?" Réponse : le temps de feedback. Un test nf-test prend 30 secondes minimum pour démarrer Nextflow. Un test pytest ou bats prend 0,1 seconde. Pour déboguer un script, on veut le feedback le plus rapide possible.
