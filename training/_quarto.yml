@@ -41,6 +41,8 @@ website:
             href: exercises/06_metamorphic/README.qmd
       - text: "Référence"
         menu:
+          - text: "Prérequis"
+            href: prerequisites.qmd
           - text: "Méthodologie"
             href: testing-methodology.qmd
           - text: "Matrice de décision"

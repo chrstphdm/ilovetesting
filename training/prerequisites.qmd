@@ -1,0 +1,62 @@
+---
+title: "Prérequis"
+format:
+  html:
+    toc: true
+---
+
+Cette formation suppose que vous savez déjà utiliser les outils suivants.
+Elle n'enseigne pas ces langages — elle enseigne comment les **tester**.
+
+---
+
+## Langages et outils
+
+| Outil | Niveau attendu | Module concerné |
+|-------|---------------|-----------------|
+| Bash | Écrire et lire des scripts simples | 01, 03, 05 |
+| Python | Lire et modifier des fonctions | 02, 03 |
+| R | Lire et modifier des fonctions | 03 |
+| Nextflow DSL2 | Comprendre process, workflow, channel | 04 |
+| Git | Commit, branch, diff | tous |
+
+---
+
+## Installation des frameworks de test
+
+Les frameworks sont tous disponibles via l'environnement conda fourni :
+
+```bash
+# Installer l'environnement (une seule fois)
+bash setup.sh
+conda activate ilovetesting
+```
+
+Ce qui est installé : `bats-core`, `pytest`, `pytest-cov`, `r-testthat`, `nf-test`.
+
+Pour les installer manuellement :
+
+| Framework | Commande |
+|-----------|----------|
+| bats | `conda install -c bioconda bats-core` |
+| pytest | `pip install pytest pytest-cov` |
+| testthat | `install.packages("testthat")` dans R |
+| nf-test | `conda install -c bioconda nf-test` |
+
+Documentation officielle :
+
+- bats : <https://bats-core.readthedocs.io>
+- pytest : <https://docs.pytest.org>
+- testthat : <https://testthat.r-lib.org>
+- nf-test : <https://www.nf-test.com>
+
+---
+
+## Apptainer (module 05 uniquement)
+
+Le module 05 (tests containers) nécessite Apptainer et s'exécute en local ou sur HPC.
+Il ne fait pas partie de la CI standard.
+
+```bash
+apptainer --version   # vérifier la disponibilité
+```

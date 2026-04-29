@@ -21,17 +21,14 @@ https://github.com/askimed/nf-test-examples
 
 ---
 
-## Installation
+## Mapping des niveaux de test Nextflow
 
-```bash
-# Via conda (méthode recommandée pour la formation)
-conda install -c bioconda nf-test
-
-# Alternative : script d'installation officiel
-# bash <(curl -fsSL https://get.nf-test.com)
-
-# Vérification
-nf-test version
+```
+process COUNT_LINES { ... }    ← test unitaire   (nextflow_process)
+          ↓
+workflow PROCESS_TABLE { ... } ← test intégration (nextflow_workflow)
+          ↓
+pipeline main.nf               ← test fonctionnel (nextflow_pipeline)
 ```
 
 ---
@@ -60,18 +57,6 @@ nextflow_process {
         }
     }
 }
-```
-
----
-
-## Mapping des niveaux de test Nextflow
-
-```
-process COUNT_LINES { ... }    ← test unitaire   (nextflow_process)
-          ↓
-workflow PROCESS_TABLE { ... } ← test intégration (nextflow_workflow)
-          ↓
-pipeline main.nf               ← test fonctionnel (nextflow_pipeline)
 ```
 
 ---
@@ -183,7 +168,7 @@ Snapshot seul = boîte noire. Assertion explicite = documentation.
 
 ---
 
-## Limites des snapshots
+## Snapshots — limites et mise à jour
 
 | Ce qu'un snapshot détecte | Ce qu'il ne détecte pas |
 |--------------------------|------------------------|
@@ -193,13 +178,8 @@ Snapshot seul = boîte noire. Assertion explicite = documentation.
 
 → Toujours combiner snapshot + au moins une assertion sur la valeur.
 
----
-
-## Mettre à jour un snapshot
-
 ```bash
-# Regénérer après changement intentionnel
-nf-test test --update-snapshot
+nf-test test --update-snapshot   # regénérer après changement intentionnel
 ```
 
 ::: {.callout-warning}
@@ -237,4 +217,10 @@ nf-test test --update-snapshot
 
 Rendez-vous dans `exercises/04_nextflow/`
 
-À la fin, vous devez avoir : 1 test COUNT_LINES (TSV valide → count 20), 1 test COUNT_LINES (fichier vide → échec), 1 test PROCESS_TABLE (count + stats produits), au moins 1 assertion comportementale sur une valeur, 1 snapshot.
+À la fin, vous devez avoir :
+
+- 1 test `COUNT_LINES` — TSV valide → count 20
+- 1 test `COUNT_LINES` — fichier vide → échec
+- 1 test `PROCESS_TABLE` — count + stats produits
+- au moins 1 assertion comportementale sur une valeur
+- 1 snapshot
