@@ -1,0 +1,254 @@
+---
+title: "Testing concepts"
+subtitle: "Testing training — Module 02"
+lang: en
+format:
+  revealjs:
+    theme: simple
+    slide-number: true
+    code-block-height: 400px
+---
+
+## 🇫🇷
+
+[🇫🇷 Version française](../../slides/02_testing_concepts.qmd)
+
+---
+
+## Anatomy of a test
+
+```
+GIVEN  a TSV file with 20 rows                ← Arrange
+WHEN   I run validate_records.sh              ← Act
+THEN   the exit code is 0                     ← Assert
+AND    the output says "20 records validated"
+```
+
+GIVEN / WHEN / THEN = Arrange / Act / Assert — same concept, two notations.
+
+. . .
+
+The test name **is** the specification: `test_filter_excludes_values_below_threshold` says what the code must do — before even reading it.
+
+---
+
+## The test pyramid
+
+```
+        ▲  Functional    — full pipeline, slow, few
+       ▲▲  Integration   — chained modules, medium speed
+      ▲▲▲  Unit          — functions, isolated processes, fast, many
+```
+
+| Type | Scope | In nf-test |
+|------|-------|------------|
+| **Unit** | one function, one process | `nextflow_process` |
+| **Integration** | several chained modules | `nextflow_workflow` |
+| **Functional** | full pipeline | `nextflow_pipeline` |
+| **Non-regression** | before/after comparison | snapshots |
+
+::: {.notes}
+Reference: Martin Fowler, TestPyramid — https://martinfowler.com/bliki/TestPyramid.html
+:::
+
+---
+
+## Terms vary across communities
+
+| This deck | Other common names |
+|---------|---------------------|
+| Functional | End-to-end, acceptance test, e2e, system test |
+| Non-regression | Regression test, change detection |
+| Unit | Component test (some JS frameworks) |
+| — | Smoke test: minimal test, checks it starts |
+
+. . .
+
+In bioinformatics: a "unit test" for a FASTQC module reads files and calls an executable.
+
+→ Google calls it a **Medium test**, not a unit test — because it touches the filesystem.
+
+. . .
+
+**In this course: Unit / Integration / Functional / Non-regression.**
+
+::: {.notes}
+References:
+- Fowler TestPyramid: https://martinfowler.com/bliki/TestPyramid.html
+- Google Test Sizes: https://testing.googleblog.com/2010/12/test-sizes.html
+- ISTQB Glossary: https://glossary.istqb.org/en_US/term
+:::
+
+---
+
+## Assertions
+
+An assertion = a binary check: true → test passes, false → test fails.
+
+| What we check | Example |
+|--------------|---------|
+| File exists | `assert path.exists()` |
+| Number of rows | `assert len(df) == 20` |
+| Expected columns | `assert "id" in df.columns` |
+| Value within bounds | `assert (df["value"] >= 0).all()` |
+| Exit code | `assert returncode == 0` |
+
+. . .
+
+```python
+assert result is not None        # too vague — detects nothing precise
+assert len(result) == 10         # exact — detects data loss
+assert result["A"] == 65.25      # business value — detects a wrong calculation
+```
+
+A useful assertion detects **precisely** what can be wrong.
+
+---
+
+## Test isolation
+
+Each test must be able to run on its own, in any order.
+
+```python
+# Bad — shared side effect between two real tests
+def test_load_file():
+    df = load_records("records.tsv")
+    df.to_csv("/tmp/out.tsv", sep="\t")    # side effect
+    assert len(df) == 20
+
+def test_positive_values():
+    df = pd.read_csv("/tmp/out.tsv", sep="\t")  # depends on the previous test
+    assert (df["value"] >= 0).all()
+```
+
+. . .
+
+```python
+# Correct — each test arranges its own data
+def test_positive_values():
+    df = load_records("records.tsv")       # no external dependency
+    assert (df["value"] >= 0).all()
+```
+
+---
+
+## Parameterised tests
+
+**Happy path** (nominal input) + **edge cases** (limits, invalid) — without duplicating code.
+
+```python
+def test_valid_records():              # happy path — 1 nominal case
+    df = load_records(DATA / "records.tsv")
+    assert len(df) == 20
+
+@pytest.mark.parametrize("path,exc", [  # edge cases — without duplicating
+    ("empty.tsv",   ValueError),
+    ("missing.tsv", FileNotFoundError),
+])
+def test_invalid_inputs(path, exc):
+    with pytest.raises(exc):
+        load_records(DATA / path)
+```
+
+. . .
+
+```python
+# ❌ loop inside a test — stops at first failure, opaque name
+def test_edge_cases():
+    for path in ["empty.tsv", "missing.tsv"]:
+        with pytest.raises(...): load_records(path)
+```
+
+---
+
+## Snapshots
+
+A snapshot = a **photograph** of the expected output. Available in all frameworks.
+
+```r
+expect_snapshot(compute_stats(df))   # testthat
+```
+```groovy
+assert snapshot(process.out).match() // nf-test
+```
+```bash
+diff <(bash validate_records.sh records.tsv) expected.txt  # bats
+```
+
+First run → creates the reference. Subsequent runs → compares — difference → failure.
+
+::: {.callout-warning}
+A snapshot does not say the output is **correct**. It says it has **not changed**.
+
+Snapshot alone = non-regression safety net. Snapshot + explicit assertion = useful test.
+:::
+
+---
+
+## Test data
+
+**Rule: the minimum size that triggers the behaviour being tested.**
+
+```
+data/
+├── records.tsv    # 20 rows (id, group, value)
+└── empty.tsv      # header only, no data
+```
+
+20 rows are enough for a filter or a stats calculation.
+100 reads are enough for a FASTQC process.
+
+---
+
+## Coverage: 5 tests, 100 % — and 3 bugs
+
+```bash
+$ pytest --cov=filter_and_summarise test_coverage_demo.py
+
+Name                         Stmts   Miss  Cover
+-------------------------------------------------
+filter_and_summarise.py         14      0   100%
+
+5 passed in 0.4s
+```
+
+. . .
+
+::: {.callout-warning}
+A silent bug does not raise an exception — it produces a slightly wrong result.
+
+Coverage measures whether lines are **executed**, not whether assertions **prove anything**.
+:::
+
+---
+
+## What coverage does not see
+
+```python
+# Bug 1 — > instead of >= : S02 (value=45) silently excluded
+assert len(filtered) == 10              # ← exact count
+assert 45 in filtered["value"].values  # ← boundary invariant
+
+# Bug 2 — stats computed on df, not on filtered
+assert result["A"] == pytest.approx(65.25)  # ← business value
+
+# Bug 3 — returns Series, not DataFrame
+assert isinstance(result, pd.DataFrame)     # ← explicit type
+```
+
+→ Coverage tells you what you have **not tested**. Not whether what you have tested is **correct**.
+
+---
+
+## Next → Module 03
+
+Before opening module 03: here is how GIVEN/WHEN/THEN translates to bats.
+
+```bash
+# GIVEN  valid records.tsv        →  DATA="training/data"
+# WHEN   validate_records.sh      →  run bash validate_records.sh "$DATA/records.tsv"
+# THEN   exit 0                   →  [ "$status" -eq 0 ]
+# THEN   message with count       →  [[ "$output" =~ "20 records" ]]
+```
+
+Module 03 shows the three syntaxes — bats, pytest, testthat — on this same example.

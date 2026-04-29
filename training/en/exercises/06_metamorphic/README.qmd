@@ -1,0 +1,111 @@
+---
+title: "Exercise 06 — Metamorphic testing"
+format: html
+toc: true
+---
+
+::: {.callout-note}
+🇫🇷 [Version française](../../../exercises/06_metamorphic/README.qmd)
+:::
+
+## Objective
+
+Understand and apply **metamorphic testing** to a bioinformatics pipeline.
+
+## Principle
+
+Metamorphic testing solves a fundamental problem: **how do you verify that a result is correct when you do not know the expected answer?**
+
+Rather than checking an absolute value, you verify a **relation** between two executions:
+
+```
+f(input_A) ─── expected relation ──→ f(input_B)
+```
+
+If the relation is not respected, there is a bug — even without knowing the correct result.
+
+## Metamorphic relations in bioinformatics
+
+| Relation (MR) | Input A | Input B | Expected relation |
+|---------------|---------|---------|-------------------|
+| **Permutation** | 100 reads | same 100 reads, random order | same number of reads in output |
+| **Duplication** | 100 reads | 200 reads (× 2) | exactly 2× the reads in output |
+| **Subset** | 100 reads | first 50 reads | output ≤ 100 reads |
+
+## Available data
+
+```
+training/data/sample.fastq          # 100 reads
+training/data/sample_shuffled.fastq # same 100 reads, random order
+training/data/sample_doubled.fastq  # 200 reads (sample × 2)
+training/data/sample_subset.fastq   # first 50 reads (subset)
+```
+
+## Starter code
+
+```bash
+#!/usr/bin/env bats
+
+DATA="training/data"
+count_reads() { awk 'NR%4==1' "$1" | wc -l; }
+
+@test "MR1 — permutation : reads réordonnés → même nombre de reads valides" {
+    # TODO :
+    # 1. compter les reads dans sample.fastq
+    # 2. compter les reads dans sample_shuffled.fastq
+    # 3. vérifier que les deux counts sont égaux
+}
+
+@test "MR2 — duplication : 2× l'input → exactement 2× les reads" {
+    # TODO :
+    # 1. compter les reads dans sample.fastq
+    # 2. compter les reads dans sample_doubled.fastq
+    # 3. vérifier que doubled = original × 2
+}
+
+@test "MR3 — sous-ensemble : 50 reads → count ≤ count original" {
+    # TODO :
+    # 1. compter les reads dans sample.fastq
+    # 2. compter les reads dans sample_subset.fastq
+    # 3. vérifier que subset ≤ original
+}
+```
+
+## Exercise
+
+Complete the file `training/tests/bats/test_metamorphic.bats`.
+
+## Expected result
+
+```
+✓ MR1 — permutation : reads réordonnés → même nombre de reads valides
+✓ MR2 — duplication : 2× l'input → exactement 2× les reads
+✓ MR3 — sous-ensemble : 50 reads → count ≤ count original
+```
+
+## Why is this useful?
+
+In our pipelines, we do not always know the "right answer" on real data.
+Metamorphic testing makes it possible to detect bugs without an oracle — for example:
+
+- a trimming tool that loses reads depending on the input order
+- a count that changes depending on the BAM file sort order
+- a normalisation that produces different results on a subset
+
+## Bonus — Golden dataset
+
+If you have completed the 3 MRs, apply the golden dataset pattern:
+
+1. Create `training/data/sample_expected.txt` containing the expected count (100)
+2. Write a bats test that verifies that `count_reads sample.fastq` matches the reference file:
+
+```bash
+@test "golden dataset — count correspond au résultat de référence" {
+    run bash -c "awk 'NR%4==1' $DATA/sample.fastq | wc -l | tr -d ' '"
+    [ "$output" = "$(cat $DATA/sample_expected.txt)" ]
+}
+```
+
+## Solution
+
+→ See [solution.qmd](solution.qmd)

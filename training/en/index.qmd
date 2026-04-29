@@ -1,0 +1,66 @@
+---
+title: "I Love Testing"
+subtitle: "Internal training on testing for bioinformatics pipelines"
+format:
+  html:
+    toc: false
+---
+
+::: {.callout-note}
+🇫🇷 [Version française](../index.qmd)
+:::
+
+Training on writing automated tests for Bash scripts, Python/R functions, and Nextflow pipelines.
+Each module combines a slide deck and a hands-on exercise.
+
+::: {.callout-note}
+Before you start: check the [prerequisites](prerequisites.qmd) (expected languages, framework installation).
+:::
+
+---
+
+## Learning path
+
+| Step | Module | Duration |
+|------|--------|----------|
+| 1 | [Why test](slides/01_intro.qmd) · [Testing concepts](slides/02_testing_concepts.qmd) | 45 min |
+| 2 | [Bash · Python · R](slides/03_bash_python_r.qmd) → [ex. 01](exercises/01_bash/README.qmd) · [ex. 02](exercises/02_python/README.qmd) · [ex. 03](exercises/03_r/README.qmd) | 2h |
+| 3 | [Nextflow / nf-test](slides/04_nf_test.qmd) → [ex. 04](exercises/04_nextflow/README.qmd) | 1h30 |
+| 4 | [Testing without an exact oracle](slides/06_bioinformatics_testing.qmd) → [ex. 06](exercises/06_metamorphic/README.qmd) | 1h |
+| 5 | [Strategy for small teams](slides/07_small_team_strategy.qmd) | 30 min |
+| Bonus | [Apptainer containers](slides/05_container_testing.qmd) → [ex. 05](exercises/05_testing_containers/README.qmd) | as available |
+
+---
+
+## Installation
+
+```bash
+git clone https://github.com/chrstphdm/ilovetesting.git
+cd ilovetesting
+bash setup.sh
+conda activate ilovetesting
+```
+
+---
+
+## Running the tests
+
+```bash
+pytest -v --tb=short                                          # Python
+bats training/tests/bats/                                    # Bash
+Rscript -e "testthat::test_dir('training/tests/testthat/')"  # R
+cd training/tests/nf-test && nf-test test --verbose          # Nextflow
+```
+
+---
+
+## Reference
+
+| Page | Content |
+|------|---------|
+| [Prerequisites](prerequisites.qmd) | Expected languages, framework installation |
+| [Methodology](testing-methodology.qmd) | AAA, test types, oracle problem, anti-patterns |
+| [Decision matrix](testing-matrix.qmd) | What to test, when, with which tool |
+| [Snapshot policy](snapshot-policy.qmd) | Rules for creating and updating snapshots |
+| [Container policy](container-policy.qmd) | Tags, `.def`, `.sif`, test levels |
+| [FAQ](faq.qmd) | Frequently asked questions |

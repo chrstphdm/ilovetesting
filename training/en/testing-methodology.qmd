@@ -1,0 +1,94 @@
+---
+title: "Testing Methodology"
+format:
+  html:
+    toc: true
+---
+
+::: {.callout-note}
+🇫🇷 [Version française](../testing-methodology.qmd)
+:::
+
+## Arrange / Act / Assert
+
+Each test follows three steps:
+
+```
+Arrange   prepare the minimal input
+Act       execute the function, script, or process
+Assert    verify the result
+```
+
+Example in bats:
+
+```bash
+@test "valid file → exit 0" {
+    # Arrange: data in data/records.tsv
+    run bash validate_records.sh data/records.tsv   # Act
+    [ "$status" -eq 0 ]                             # Assert
+    [[ "$output" =~ "20 records" ]]                 # Assert
+}
+```
+
+---
+
+## The four types of tests
+
+| Type | Scope | Speed | Tool |
+|------|-------|-------|------|
+| **Unit** | one function, one process | fast | pytest, bats, testthat, nf-test |
+| **Integration** | multiple modules | medium | nf-test workflow |
+| **Functional** | end-to-end pipeline | slow | nf-test pipeline |
+| **Non-regression** | before/after comparison | fast | nf-test snapshots |
+
+---
+
+## Happy path and edge cases
+
+| Category | Example | Expected |
+|----------|---------|----------|
+| **Happy path** | Valid FASTQ, 100 reads | exit 0, correct output |
+| **Negative** | empty file | exit 1, explicit message |
+| **Negative** | missing file | exit 1, "not found" |
+| **Negative** | invalid format | exit ≠ 0, clear error |
+| **Invariant** | read_count ≥ 0 | always true |
+
+---
+
+## The oracle problem
+
+In bioinformatics, we often do not know the "right answer" for real data.
+
+A first tool: **domain invariants** — properties that are always true regardless of the input (count ≥ 0, fraction ≤ 1). Necessary, but not always sufficient.
+
+Three complementary strategies to address the oracle problem:
+
+1. **Golden dataset** — synthetic data, output defined by construction
+2. **Pseudo-oracle** — compare two independent implementations
+3. **Metamorphic testing** — verify a relation between two executions
+
+---
+
+## Metamorphic testing
+
+Rather than checking an absolute value, we check a **relation**:
+
+| MR | Input A → Input B | Expected relation |
+|----|-------------------|------------------|
+| Permutation | reads → reordered reads | same count |
+| Duplication | 100 reads → 200 reads | exactly 2× |
+| Subset | 100 reads → 50 reads | output ≤ 100 |
+
+Reference: Giannoulatou et al. (2014) — validation of BWA and Bowtie without a gold standard. PMC4290646.
+
+---
+
+## What tests must not do
+
+- Only verify that the process runs without error
+- Depend on line order when that order is not guaranteed
+- Hard-code temporary paths (`/tmp/...`)
+- Test outputs of several gigabytes
+- Use private or identifiable data
+- Accept a snapshot without reading the diff
+- Use the `latest` tag in containers

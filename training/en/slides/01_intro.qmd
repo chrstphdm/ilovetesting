@@ -1,0 +1,125 @@
+---
+title: "Why test?"
+subtitle: "Testing training — Module 01"
+lang: en
+format:
+  revealjs:
+    theme: simple
+    slide-number: true
+    code-block-height: 400px
+---
+
+## 🇫🇷
+
+[🇫🇷 Version française](../../slides/01_intro.qmd)
+
+---
+
+## A pipeline can succeed… and produce wrong output
+
+Real case — KEGG / KOfam annotation
+
+Two tools annotate the same genes with the same KOfam database.
+
+. . .
+
+Expected result: limited, methodologically explainable differences.
+Observed result: inconsistent annotations — up to 65 % false positives.
+
+. . .
+
+The pipeline runs. The files are generated. **No visible error.**
+
+::: {.notes}
+The anvi'o blog (2022) describes a comparison between anvi'o and MicrobeAnnotator for annotating KEGG Orthologs from KOfam. The authors expected methodological differences, but observed very inconsistent results. The investigation revealed two code errors: (1) filtering using the threshold of the first KO in a batch rather than each KO's own threshold, (2) comparing numeric scores read as strings. Source: https://anvio.org/blog/bioinformatics-bugs/
+:::
+
+---
+
+## The minimal test: protecting the business rule
+
+**Bug 1 — filtering with the wrong bit score threshold**
+
+Rule: a hit passes the filter only if its score ≥ the model's threshold.
+
+```
+KO_A  threshold = 100,  score = 120  → kept    ✓
+KO_B  threshold = 500,  score =  80  → rejected ✗
+```
+
+. . .
+
+```python
+# Bad test
+assert os.path.exists("output.filtered")
+
+# Good test — protects the business rule
+assert all(hit.score >= threshold[hit.ko] for hit in kept_hits)
+```
+
+---
+
+## What a test provides
+
+- **Early detection** — bug found before merge, not in production
+- **Living documentation** — the test says what the code is supposed to do
+- **Fear-free refactoring** — if tests pass, the tested behaviours are preserved
+- **CI possible** — real automation
+
+---
+
+## The team rule
+
+::: {.callout-important}
+**No merge without a test.**
+
+Every bug found → a test that would have caught it.
+
+Every module → a `.nf.test` file.
+:::
+
+---
+
+## The tools
+
+| Language | Framework |
+|---------|-----------|
+| Nextflow | [nf-test](https://www.nf-test.com/) |
+| Bash | [bats](https://bats-core.readthedocs.io/) |
+| Python | [pytest](https://docs.pytest.org/) |
+| R | [testthat](https://testthat.r-lib.org/) |
+
+---
+
+## What tests do not guarantee
+
+- That the biology is correct
+- That the parameters are optimal
+- That the third-party tool works without bugs
+- That there are no other bugs
+
+. . .
+
+They automatically verify the behaviours that have been explicitly defined.
+
+---
+
+## Training overview
+
+| Module | Topic | Exercise |
+|--------|-------|----------|
+| 01 | Why test | `01_bash/` |
+| 02 | Concepts | — |
+| 03 | Bash · Python · R | `01_bash/` `02_python/` `03_r/` |
+| 04 | nf-test | `04_nextflow/` |
+| 06 | Bioinformatics testing | `06_metamorphic/` |
+| 07 | Team strategy | — |
+| Bonus | Containers | `05_testing_containers/` |
+
+---
+
+## Exercise → Module 01
+
+Go to `exercises/01_bash/`
+
+At the end, you must have: 1 happy path test, 1 empty file test, 1 missing file test, 1 assertion on the output message content, and the bats command documented.

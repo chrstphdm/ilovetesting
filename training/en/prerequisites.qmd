@@ -1,0 +1,66 @@
+---
+title: "Prerequisites"
+format:
+  html:
+    toc: true
+---
+
+::: {.callout-note}
+🇫🇷 [Version française](../prerequisites.qmd)
+:::
+
+This training assumes you already know how to use the following tools.
+It does not teach these languages — it teaches how to **test** them.
+
+---
+
+## Languages and tools
+
+| Tool | Expected level | Relevant module |
+|------|---------------|-----------------|
+| Bash | Write and read simple scripts | 01, 03, 05 |
+| Python | Read and modify functions | 02, 03 |
+| R | Read and modify functions | 03 |
+| Nextflow DSL2 | Understand process, workflow, channel | 04 |
+| Git | Commit, branch, diff | all |
+
+---
+
+## Installing the test frameworks
+
+All frameworks are available through the provided conda environment:
+
+```bash
+# Install the environment (once only)
+bash setup.sh
+conda activate ilovetesting
+```
+
+What gets installed: `bats-core`, `pytest`, `pytest-cov`, `r-testthat`, `nf-test`.
+
+To install them manually:
+
+| Framework | Command |
+|-----------|---------|
+| bats | `conda install -c bioconda bats-core` |
+| pytest | `pip install pytest pytest-cov` |
+| testthat | `install.packages("testthat")` in R |
+| nf-test | `conda install -c bioconda nf-test` |
+
+Official documentation:
+
+- bats: <https://bats-core.readthedocs.io>
+- pytest: <https://docs.pytest.org>
+- testthat: <https://testthat.r-lib.org>
+- nf-test: <https://www.nf-test.com>
+
+---
+
+## Apptainer (module 05 only)
+
+Module 05 (container testing) requires Apptainer and runs locally or on HPC.
+It is not part of the standard CI.
+
+```bash
+apptainer --version   # check availability
+```

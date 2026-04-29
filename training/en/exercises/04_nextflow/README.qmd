@@ -1,0 +1,158 @@
+---
+title: "Exercise 04 — Nextflow testing with nf-test"
+format: html
+toc: true
+---
+
+::: {.callout-note}
+🇫🇷 [Version française](../../../exercises/04_nextflow/README.qmd)
+:::
+
+## Objective
+
+Write nf-test tests for the `COUNT_LINES` process and the `PROCESS_TABLE` workflow.
+
+## Context
+
+The example pipeline (`pipelines/minimal/`) contains:
+
+- `modules/count_lines.nf` — counts lines in a TSV, produces a `.count` file and a `.summary.txt`
+- `modules/summarise.nf` — computes mean/n per group, produces a `.stats.tsv`
+- `workflows/process_table.nf` — chains COUNT_LINES → SUMMARISE
+
+::: {.callout-note}
+**This pipeline is a pedagogical simulation.**
+
+The modules use bash scripts (awk, wc). In production, you would test **observable properties** of a real tool (line count, output format, exit code). The testing logic is identical — the distinction matters for understanding what your assertions actually prove.
+:::
+
+## Data
+
+```
+training/data/records.tsv   # 20 rows (id, group, value)
+training/data/empty.tsv     # Header only, no data
+```
+
+## Exercise — Part 1: process test
+
+Complete `training/tests/nf-test/count_lines.nf.test`:
+
+```groovy
+nextflow_process {
+    name "Test COUNT_LINES"
+    script "../../pipelines/minimal/modules/count_lines.nf"
+    process "COUNT_LINES"
+
+    test("TSV valide → count produit") {
+        when {
+            process {
+                """
+                input[0] = [
+                    // TODO : définir le meta et le fichier d'entrée
+                ]
+                """
+            }
+        }
+        then {
+            // TODO : vérifier que le process a réussi
+            // TODO : vérifier que count == 20
+            // TODO : vérifier le snapshot
+        }
+    }
+
+    test("fichier vide → process échoue") {
+        when {
+            process {
+                """
+                input[0] = [
+                    // TODO
+                ]
+                """
+            }
+        }
+        then {
+            // TODO : vérifier que le process a échoué
+        }
+    }
+}
+```
+
+## Exercise — Part 2: workflow test
+
+Complete `training/tests/nf-test/process_table.nf.test`:
+
+```groovy
+nextflow_workflow {
+    name "Test PROCESS_TABLE"
+    script "../../pipelines/minimal/workflows/process_table.nf"
+    workflow "PROCESS_TABLE"
+
+    test("TSV valide → count et stats produits") {
+        when {
+            workflow {
+                """
+                input[0] = Channel.of([
+                    // TODO
+                ])
+                """
+            }
+        }
+        then {
+            // TODO : vérifier succès
+            // TODO : vérifier que count.size() == 1, summary.size() == 1, stats.size() == 1
+            // TODO : vérifier une valeur comportementale (ex : count == 20)
+            // TODO : snapshot
+        }
+    }
+}
+```
+
+## Running the tests
+
+```bash
+cd training/tests/nf-test
+nf-test test count_lines.nf.test --verbose
+nf-test test --verbose   # tous les tests
+```
+
+## Expected result
+
+```
+Test COUNT_LINES
+  ✔ TSV valide → count et summary produits
+  ✔ fichier vide (en-tête seul) → process échoue
+
+Test PROCESS_TABLE workflow
+  ✔ TSV valide → count, summary et stats produits
+
+SUCCESS: Executed 3 tests
+```
+
+## Bonus — Testing the full pipeline
+
+If you have completed both parts, add a `nextflow_pipeline` test on `main.nf`:
+
+```groovy
+nextflow_pipeline {
+    name "Test pipeline complet"
+    script "../../pipelines/minimal/main.nf"
+
+    test("pipeline complet — sorties présentes") {
+        when {
+            params {
+                input  = "${projectDir}/data/records.tsv"
+                outdir = "${outputDir}"
+            }
+        }
+        then {
+            // TODO : vérifier workflow.success
+            // TODO : vérifier le nombre de tâches avec workflow.trace.succeeded()
+            // TODO : vérifier qu'un fichier de sortie existe et contient la valeur attendue
+        }
+    }
+}
+```
+
+## Solution
+
+→ See [solution.qmd](solution.qmd)

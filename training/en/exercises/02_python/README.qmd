@@ -1,0 +1,161 @@
+---
+title: "Exercise 02 — Python Testing with pytest"
+format: html
+toc: true
+---
+
+::: {.callout-note}
+🇫🇷 [Version française](../../../exercises/02_python/README.qmd)
+:::
+
+## Objective
+
+Test a Python function that loads and validates a TSV file of tabular data.
+
+## Quick Reference — pytest
+
+Documentation: <https://docs.pytest.org/en/stable/>
+
+| Element | Syntax |
+|---------|---------|
+| Simple assertion | `assert expr` |
+| Expected exception | `with pytest.raises(ValueError):` |
+| Match on message | `pytest.raises(ValueError, match="texte")` |
+| Numeric approximation | `assert val == pytest.approx(3.14)` |
+
+---
+
+## Context
+
+Before processing a data file, we want to ensure that:
+
+- the file exists and is readable
+- it contains data (not just a header)
+- values are numeric and positive
+- identifiers are unique
+
+## Data
+
+```
+training/data/records.tsv            # Valid TSV: 20 rows (id, group, value)
+training/data/invalid_records.tsv    # Non-numeric value
+training/data/empty.tsv              # Header only, no data
+training/data/duplicated_records.tsv # Id S01 duplicated
+training/data/missing.tsv            # Non-existent file (triggers FileNotFoundError)
+```
+
+## Starting Code
+
+`training/pipelines/minimal/scripts/parse_records.py`:
+
+```python
+from pathlib import Path
+import pandas as pd
+
+
+def load_records(path: str) -> pd.DataFrame:
+    p = Path(path)
+    if not p.exists():
+        raise FileNotFoundError(f"File not found: {path}")
+    df = pd.read_csv(p, sep="\t")
+    if df.empty:
+        raise ValueError(f"File has no data rows: {path}")
+    return df
+
+
+def validate_records(df: pd.DataFrame) -> None:
+    required = {"id", "group", "value"}
+    missing = required - set(df.columns)
+    if missing:
+        raise ValueError(f"Missing columns: {missing}")
+    if not pd.api.types.is_numeric_dtype(df["value"]):
+        raise ValueError("Column 'value' must be numeric")
+    if (df["value"] < 0).any():
+        raise ValueError("Column 'value' contains negative values")
+    duplicated = df[df["id"].duplicated(keep=False)]["id"].unique().tolist()
+    if duplicated:
+        raise ValueError(f"Duplicate ids: {duplicated}")
+```
+
+## Exercise
+
+Complete `tests/pytest/test_parse_records.py`:
+
+```python
+import pytest
+import pandas as pd
+from pathlib import Path
+from parse_records import load_records, validate_records
+
+DATA = Path("training/data")
+
+
+def test_load_valid_file():
+    # TODO : vérifier shape (20, 3) et colonnes ["id", "group", "value"]
+    pass
+
+
+def test_load_missing_file():
+    # TODO : vérifier FileNotFoundError
+    pass
+
+
+def test_load_empty_file():
+    # TODO : vérifier ValueError sur empty.tsv
+    pass
+
+
+def test_validate_ok():
+    # TODO : vérifier qu'aucune exception n'est levée sur records.tsv
+    pass
+
+
+def test_validate_non_numeric_value():
+    # TODO : vérifier ValueError sur invalid_records.tsv
+    pass
+
+
+def test_validate_duplicate_ids():
+    # TODO : vérifier ValueError sur duplicated_records.tsv
+    pass
+
+
+def test_all_values_non_negative():
+    # TODO : vérifier l'invariant (df["value"] >= 0).all()
+    pass
+
+
+# Bonus — tests paramétrés
+# Les quatre cas d'erreur ci-dessous ont la même structure.
+# TODO : les regrouper avec @pytest.mark.parametrize
+@pytest.mark.parametrize("path,exc", [
+    # ("empty.tsv",              ValueError),
+    # ("invalid_records.tsv",    ValueError),
+    # ("duplicated_records.tsv", ValueError),
+    # ("missing.tsv",            FileNotFoundError),
+])
+def test_inputs_invalides(path, exc):
+    with pytest.raises(exc):
+        load_records(DATA / path)
+```
+
+## Expected Result
+
+```
+tests/pytest/test_parse_records.py .......  [100%]
+7 passed in 0.3s
+```
+
+## Bonus — Coverage
+
+```bash
+pytest --cov=parse_records tests/pytest/test_parse_records.py
+```
+
+Note that 100% coverage does not guarantee the absence of bugs:
+an assertion that is too vague (`assert result is not None`) can cover
+a line without proving anything.
+
+## Solution
+
+→ See [solution.qmd](solution.qmd)

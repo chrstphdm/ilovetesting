@@ -1,0 +1,98 @@
+---
+title: "Snapshot Policy"
+format:
+  html:
+    toc: true
+---
+
+::: {.callout-note}
+🇫🇷 [Version française](../snapshot-policy.qmd)
+:::
+
+## What is an nf-test snapshot?
+
+A snapshot is a **photograph of the expected result**, stored in a `.snap` file.
+
+```groovy
+// Create or compare a snapshot
+assert snapshot(process.out.stats).match()
+```
+
+On the first run, the snapshot is **created**.
+On subsequent runs, the result is **compared** to the snapshot.
+If different → the test fails.
+
+---
+
+## When to create a snapshot
+
+- To capture a stable output format (TSV, JSON, checksums)
+- After manually validating that the result is correct
+- As a complement to at least one explicit assertion on the value
+
+---
+
+## Mandatory rule: explicit assertion first
+
+A snapshot alone is not enough. Always accompany it with assertions on the key values:
+
+```groovy
+then {
+    assert process.success
+    // Explicit assertions
+    assert process.out.stats.size() == 1
+    def lines = path(process.out.stats[0][1]).readLines()
+    assert lines[0].split("\t")[1].toInteger() == 100
+    // Snapshot as a complement
+    assert snapshot(process.out.stats).match()
+}
+```
+
+---
+
+## When to update a snapshot
+
+A snapshot can change for two reasons:
+
+| Reason | Action |
+|--------|--------|
+| **Intentional change** to the behaviour | Re-run with `--update-snapshot`, justify in the PR |
+| **Unintended regression** | Investigate, fix the code, do not update |
+
+```bash
+nf-test test --update-snapshot
+```
+
+::: {.callout-warning}
+**Never update a snapshot without reading the diff.**
+
+A snapshot accepted without verification is invalidated evidence.
+:::
+
+---
+
+## What a snapshot detects (and does not detect)
+
+| Detects | Does not detect |
+|---------|----------------|
+| Change in output format | Whether the value is scientifically correct |
+| Addition or removal of a field | A bug present from the start |
+| Change in a checksum | A wrong but stable value |
+
+---
+
+## Snapshot files
+
+- Stored in the same directory as the `.nf.test` file
+- Extension `.nf.test.snap`
+- Versioned in git
+- Must be reviewed in every PR that modifies them
+
+---
+
+## PR rule
+
+A snapshot that changes in a PR must be accompanied by:
+
+1. An explanation of the change in the PR body
+2. A confirmation that the new result has been verified

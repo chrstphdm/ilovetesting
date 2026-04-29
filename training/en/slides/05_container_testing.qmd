@@ -1,0 +1,160 @@
+---
+title: "Testing containers"
+subtitle: "Testing training — Module 05"
+format:
+  revealjs:
+    theme: simple
+    slide-number: true
+    code-block-height: 400px
+---
+
+## A container is not a guarantee
+
+```bash
+# It starts...
+apptainer exec mon_outil.sif echo "OK"
+# → OK
+
+# But what about this?
+apptainer exec mon_outil.sif mon_outil --version
+# → command not found
+```
+
+. . .
+
+**A container that starts ≠ a tool that works.**
+
+---
+
+## Apptainer vs Docker on HPC
+
+| Topic | Docker | Apptainer |
+|-------|--------|-----------|
+| Bind mounts | configurable | `/home`, `/tmp` often mounted automatically |
+| Permissions | root inside container | user's UID |
+| Write access to `/` | possible | read-only by default |
+| `$HOME` available | depends on config | yes, unless `--no-home` |
+
+Exact mount behaviour depends on cluster configuration.
+
+→ Test with Apptainer, not only Docker.
+
+---
+
+## Common risks
+
+| Problem | Consequence |
+|---------|-------------|
+| `latest` tag | Image changes silently |
+| Network pull during critical run | Timeout, unexpected version |
+| Docker testing, Apptainer production | Different bind mounts, permissions |
+| No versioned `.def` | Image cannot be rebuilt |
+| Writing to `/home` | Not reproducible across environments |
+| No `--version` test | Actual version unknown |
+
+---
+
+## Two levels of testing
+
+```
+1. Container alone        →  apptainer exec + bats
+         ↓
+2. Nextflow process       →  nf-test --profile apptainer
+```
+
+Both are necessary. One without the other is insufficient.
+
+---
+
+## Level 1 — testing the container alone
+
+```bash
+@test "expected version present" {
+    run apptainer exec fastqc_0.12.1.sif fastqc --version
+    [ "$status" -eq 0 ]
+    [[ "$output" =~ "FastQC v0.12.1" ]]
+}
+
+@test "tool accessible without /home mounted" {
+    run apptainer exec --no-home fastqc_0.12.1.sif fastqc --version
+    [ "$status" -eq 0 ]
+}
+```
+
+---
+
+## Level 2 — testing the Nextflow process
+
+```groovy
+process FASTQC {
+    container 'biocontainers/fastqc:0.12.1--hdfd78af_0'
+    ...
+}
+```
+
+```bash
+nf-test test fastqc.nf.test --profile apptainer
+```
+
+---
+
+## Definition file — reproducibility
+
+```singularity
+Bootstrap: docker
+From: biocontainers/fastqc:0.12.1--hdfd78af_0
+
+%labels
+    Tool    FastQC
+    Version 0.12.1
+
+%test
+    fastqc --version
+    which fastqc
+```
+
+::: {.callout-important}
+The `.def` is versioned in the repo.
+The `.sif` is archived on HPC storage, not in git.
+:::
+
+---
+
+## Sources of versioned images
+
+| Source | Usage |
+|--------|-------|
+| **BioContainers** | Bioinformatics images, versioned by release |
+| **Seqera Containers / Wave** | Built on the fly from conda/bioconda |
+| **Team registry** | Custom images, versioned `.def` mandatory |
+
+→ Never `latest`. Always an exact tag.
+
+---
+
+## Key takeaway
+
+::: {.callout-important}
+**Test the container alone, then the Nextflow process inside it.**
+
+Exact tag. `.def` in git. `.sif` on HPC.
+:::
+
+---
+
+## CI vs HPC — who runs what
+
+| Context | What we test |
+|---------|-------------|
+| **PR / standard CI** | presence of `.def`, non-`latest` tag, version test if possible |
+| **HPC / nightly / manual** | real Apptainer, real `.sif`, bind mounts, permissions, shared storage |
+
+HPC tests cannot be automated in standard CI — run them locally or as a nightly job.
+
+---
+
+## Exercise → Module 05
+
+Go to `exercises/05_testing_containers/`
+
+By the end, you should have: 2 bats tests on the container (expected version, tool without `/home`), 1 nf-test process test with `--profile apptainer`, and the `.sif` accessible locally or on HPC storage.

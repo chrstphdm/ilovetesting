@@ -1,0 +1,114 @@
+---
+title: "Exercise 01 — Bash Testing with bats"
+format: html
+toc: true
+---
+
+::: {.callout-note}
+🇫🇷 [Version française](../../../exercises/01_bash/README.qmd)
+:::
+
+## Objective
+
+Write bats tests for a Bash script that validates a TSV file.
+
+## Quick Reference — bats
+
+Documentation: <https://bats-core.readthedocs.io/en/stable/>
+
+| Element | Syntax |
+|---------|---------|
+| Run a command | `run bash script.sh arg` |
+| Exit code | `[ "$status" -eq 0 ]` |
+| Output content | `[[ "$output" =~ "pattern" ]]` |
+| Individual line | `[ "${lines[0]}" = "texte" ]` |
+
+---
+
+## Context
+
+Before running a pipeline on a data file, we want to verify:
+
+- that the file exists
+- that it is not empty
+- that the header is correct (`id`, `group`, `value`)
+- that the `value` column is numeric
+
+The script to test is `pipelines/minimal/scripts/validate_records.sh`.
+
+## Data
+
+```bash
+training/data/records.tsv          # Valid TSV (20 rows)
+training/data/empty.tsv            # Header only, no data
+training/data/invalid_records.tsv  # Non-numeric value
+```
+
+## Starting Code
+
+The `validate_records.sh` script:
+
+```bash
+#!/usr/bin/env bash
+set -euo pipefail
+
+FILE="${1:-}"
+
+[ -n "$FILE" ] || { echo "ERROR: usage: $0 <records.tsv>"; exit 1; }
+[ -f "$FILE" ] || { echo "ERROR: file not found: $FILE"; exit 1; }
+
+lines=$(wc -l < "$FILE")
+if [ "$lines" -lt 2 ]; then
+    echo "ERROR: file is empty or has no data rows: $FILE"
+    exit 1
+fi
+# ... vérifie header, colonnes, valeurs numériques
+echo "OK: N records validated"
+```
+
+## Exercise
+
+Complete the file `tests/bats/test_validate_records.bats`:
+
+```bash
+#!/usr/bin/env bats
+
+SCRIPT="training/pipelines/minimal/scripts/validate_records.sh"
+DATA="training/data"
+
+@test "fichier valide → exit 0" {
+    # TODO : tester avec records.tsv
+}
+
+@test "fichier vide → exit 1" {
+    # TODO : tester avec empty.tsv
+}
+
+@test "valeur non numérique → exit 1" {
+    # TODO : tester avec invalid_records.tsv
+}
+
+@test "fichier inexistant → exit 1 et message" {
+    # TODO : tester avec un chemin qui n'existe pas
+}
+
+@test "aucun argument → exit 1 et usage" {
+    # TODO : appeler le script sans argument
+}
+```
+
+## Expected Result
+
+```
+✓ fichier valide → exit 0 et 20 records
+✓ fichier vide (en-tête seul) → exit 1
+✓ valeur non numérique → exit 1
+✓ fichier inexistant → exit 1 et message
+✓ aucun argument → exit 1 et usage
+
+5 tests, 0 failures
+```
+
+## Solution
+
+→ See [solution.qmd](solution.qmd)

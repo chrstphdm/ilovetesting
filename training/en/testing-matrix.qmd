@@ -1,0 +1,105 @@
+---
+title: "Decision Matrix"
+format:
+  html:
+    toc: true
+---
+
+::: {.callout-note}
+🇫🇷 [Version française](../testing-matrix.qmd)
+:::
+
+## What to test based on the change
+
+| Change | Minimal test | Full test |
+|--------|-------------|-----------|
+| New Nextflow process | `nf-test` happy path + empty file | snapshot + business assertions |
+| Modified Bash script | bats exit code + stdout | all edge cases |
+| Modified Python function | pytest assertions | bounds + errors |
+| Modified R function | testthat columns + values | empty data.frame + large inputs |
+| Updated container | bats `--version` | nf-test `--profile apptainer` |
+| Bug fixed | test that reproduces the bug | non-regression snapshot |
+
+---
+
+## Expected coverage per tool
+
+### bats (Bash)
+
+- exit code 0 on valid input
+- exit code ≠ 0 on invalid input
+- error message on stderr/stdout
+- output file generated
+
+### pytest (Python)
+
+- pure functions: expected values
+- parsing: columns, types, shape
+- bounds: negative, empty, extreme values
+- errors: `pytest.raises(ValueError)` etc.
+
+### testthat (R)
+
+- result structure: `expect_s3_class`, `expect_named`
+- computed values: `expect_equal`
+- invariants: `expect_true(all(x >= 0))`
+- errors: `expect_error`
+
+### nf-test (Nextflow)
+
+- isolated process: input/output, exit status
+- workflow: chaining, step outputs
+- full pipeline: end-to-end, files in `outdir`
+- snapshot: non-regression
+
+### bats + Apptainer (containers)
+
+- image present (`-f image.sif`)
+- tool accessible: `apptainer exec image.sif tool --version`
+- tool path: `which tool` → `/usr/` or `/opt/`
+- without `$HOME`: `apptainer exec --no-home image.sif tool --version`
+
+---
+
+## Execution frequency
+
+| Test | Frequency | Trigger |
+|------|-----------|---------|
+| pytest, bats, testthat | every PR | automatic CI |
+| nf-test process/workflow | every PR | automatic CI |
+| nf-test full pipeline | every PR | automatic CI |
+| Container tests | on demand | `workflow_dispatch` CI |
+| Quarto render | every push to main | deployment CI |
+
+---
+
+## Testing priorities
+
+```
+1 — always test
+    critical transformations, filters, business decisions
+
+2 — test as soon as possible
+    module chains, workflows
+
+3 — test progressively
+    full pipeline, containers, golden dataset
+
+4 — if custom container
+    pinned tool version, Apptainer behaviour
+```
+
+---
+
+## Progressive maturity
+
+```
+Level 0  no tests
+Level 1  smoke test (exit 0, file produced)
+Level 2  unit tests for scripts + behavioural assertions
+Level 3  functional pipeline test on mini-data
+Level 4  golden dataset + non-regression tests
+Level 5  versioned critical containers + documented handover
+```
+
+Do not aim for level 5 from the first sprint. A minimal test on the critical path > zero tests.

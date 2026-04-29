@@ -1,0 +1,223 @@
+---
+title: "Testing Bash, Python, and R"
+subtitle: "Testing training — Module 03"
+lang: en
+format:
+  revealjs:
+    theme: simple
+    slide-number: true
+    code-block-height: 400px
+---
+
+## 🇫🇷
+
+[🇫🇷 Version française](../../slides/03_bash_python_r.qmd)
+
+---
+
+## Goal
+
+Apply the same testing logic in three different languages,
+on a common example: `records.tsv`.
+
+. . .
+
+This module is not a framework tutorial.
+To master the full syntax → **RTFM** (links in the exercises).
+
+---
+
+## Why test scripts outside Nextflow?
+
+The scripts `validate_records.sh`, `parse_records.py`, `stats_records.R`:
+
+- are called by pipeline processes
+- can fail silently (i.e. poor error handling)
+- can be reused across multiple projects
+
+. . .
+
+**A bug in a script = a bug in the pipeline.**
+
+. . .
+
+Why *outside* Nextflow? Immediate feedback, no Nextflow overhead, targeted debugging.
+
+---
+
+## The scripts we will test
+
+| Script | Input | What it does |
+|--------|-------|--------------|
+| `validate_records.sh` | TSV file | checks existence, header, numeric columns → exit 0/1 |
+| `parse_records.py` | TSV file | loads, validates types and id uniqueness → DataFrame or exception |
+| `stats_records.R` | DataFrame | computes mean and sd per group → data.frame |
+
+These three scripts are called by the pipeline. Testing their contract = testing the expected behaviour.
+
+---
+
+## The common dataset
+
+`records.tsv` — 20 valid rows · columns: id, group, value · **reference data (happy path)**
+
+Each error file violates a single rule:
+
+| File | Violated rule |
+|------|--------------|
+| `empty.tsv` | no data |
+| `invalid_records.tsv` | non-numeric value |
+| `duplicated_records.tsv` | non-unique id |
+| `missing.tsv` | missing file |
+
+One file = one violated rule = one diagnostic test.
+
+---
+
+## bats — minimal syntax
+
+```bash
+@test "test name" {
+    run bash script.sh arg    # runs the command, captures status + output
+    [ "$status" -eq 0 ]       # exit code
+    [[ "$output" =~ "text" ]] # standard output content
+}
+```
+
+Documentation: <https://bats-core.readthedocs.io>
+
+---
+
+## bats — Bash
+
+```bash
+DATA="training/data"
+
+@test "valid file → exit 0 and message with count" {
+    run bash validate_records.sh "$DATA/records.tsv"
+    [ "$status" -eq 0 ]                     # exit code
+    [[ "$output" =~ "20 records" ]]         # content — not just the code
+}
+
+@test "non-numeric value → exit 1 and error message" {
+    run bash validate_records.sh "$DATA/invalid_records.tsv"
+    [ "$status" -eq 1 ]
+    [[ "$output" =~ "ERROR" ]]              # check the explicit message
+}
+```
+
+---
+
+## bats — testing a container
+
+```bash
+@test "correct version" {
+    run apptainer exec fastqc_0.12.1.sif fastqc --version
+    [ "$status" -eq 0 ]
+    [[ "$output" =~ "FastQC v0.12.1" ]]
+}
+
+@test "tool accessible without /home mounted" {
+    run apptainer exec --no-home fastqc_0.12.1.sif fastqc --version
+    [ "$status" -eq 0 ]
+}
+```
+
+Same logic as testing a script — GIVEN (the image), WHEN (the command), THEN (version + exit code).
+
+::: {.notes}
+Full policy: container-policy.qmd — exact tag, versioned .def, .sif not committed.
+:::
+
+---
+
+## pytest — minimal syntax
+
+```python
+def test_name():
+    assert expr                                       # simple check
+    with pytest.raises(ValueError, match="message"):  # expected exception
+        function()
+
+@pytest.mark.parametrize("path,exc", [
+    ("a.tsv", ValueError),
+    ("b.tsv", FileNotFoundError),
+])
+def test_multi(path, exc):
+    with pytest.raises(exc): function(path)           # N cases, 1 test
+```
+
+Documentation: <https://docs.pytest.org>
+
+---
+
+## pytest — Python
+
+```python
+def test_valid_file():                              # happy path
+    df = load_records(DATA / "records.tsv")
+    assert df.shape == (20, 3)
+    assert list(df.columns) == ["id", "group", "value"]
+
+@pytest.mark.parametrize("path,exc", [
+    ("empty.tsv",   ValueError),
+    ("missing.tsv", FileNotFoundError),
+])
+def test_invalid_inputs(path, exc):
+    with pytest.raises(exc):                            # N cases, 1 test
+        load_records(DATA / path)
+```
+
+---
+
+## testthat — minimal syntax
+
+```r
+test_that("test name", {
+    expect_equal(a, b)             # equality
+    expect_true(all(x >= 0))       # invariant
+    expect_error(f(), "pattern")   # expected error
+    expect_named(df, c("a", "b"))  # column names
+})
+```
+
+Documentation: <https://testthat.r-lib.org>
+
+---
+
+## testthat — R
+
+```r
+test_that("missing column → explicit error", {
+    bad <- data.frame(id="S01", group="A")              # in-memory data — GIVEN
+    expect_error(compute_stats(bad), "Missing columns") # WHEN + THEN
+})
+
+test_that("result has correct columns and an invariant", {
+    df <- data.frame(                                   # in-memory data — GIVEN
+        id = c("S01","S02"), group = c("A","B"), value = c(10, 20))
+    result <- compute_stats(df)
+    expect_named(result, c("group", "mean", "sd"))      # exact structure
+    expect_true(all(result$mean >= 0))                  # business invariant
+})
+```
+
+---
+
+## Key takeaway
+
+::: {.callout-important}
+**Every script called by a workflow must be testable outside the workflow.**
+If it cannot be tested on its own, the script does too many things.
+
+The syntax changes. The logic does not:
+test business invariants (`>= 0`, expected columns) as much as behaviour.
+:::
+
+---
+
+## Exercises → Modules 01, 02, 03
+
+- `exercises/01_bash/` — bats on `validate_records.sh`
+- `exercises/02_python/` — pytest on `parse_records.py`
+- `exercises/03_r/` — testthat on `stats_records.R`
