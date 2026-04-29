@@ -33,6 +33,18 @@ Pourquoi *hors* Nextflow ? Feedback immédiat, pas de surcharge Nextflow, débog
 
 ---
 
+## Les scripts que nous allons tester
+
+| Script | Entrée | Ce qu'il fait |
+|--------|--------|---------------|
+| `validate_records.sh` | fichier TSV | vérifie existence, header, colonnes numériques → exit 0/1 |
+| `parse_records.py` | fichier TSV | charge, valide types et unicité des ids → DataFrame ou exception |
+| `stats_records.R` | DataFrame | calcule mean et sd par groupe → data.frame |
+
+Ces trois scripts sont appelés par le pipeline. Tester leur contrat = tester le comportement attendu.
+
+---
+
 ## Le dataset commun
 
 ```
