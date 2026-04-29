@@ -63,3 +63,5 @@ format:
   html:
     theme: cosmo
     toc: true
+  revealjs:
+    center: true
