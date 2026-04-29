@@ -18,6 +18,14 @@ sur un exemple commun : `records.tsv`.
 Ce module n'est pas un tutoriel sur les frameworks.
 Pour maîtriser la syntaxe complète → **RTFM** (liens dans les exercices).
 
+::: {.notes}
+Ce module est intentionnellement centré sur la logique, pas sur la syntaxe. La syntaxe s'apprend en lisant la doc — ce qui ne s'apprend pas seul c'est de comprendre quoi tester et comment structurer les tests.
+
+"RTFM" n'est pas une provocation — c'est une invitation. La doc de pytest, bats et testthat est excellente et bien plus complète que ce qu'on peut couvrir ici.
+
+L'objectif concret : après ce module, les participants doivent être capables d'écrire leur premier test dans chacun des trois langages, même imparfait.
+:::
+
 ---
 
 ## Pourquoi tester les scripts hors Nextflow ?
@@ -36,6 +44,14 @@ Les scripts `validate_records.sh`, `parse_records.py`, `stats_records.R` :
 
 Pourquoi *hors* Nextflow ? Feedback immédiat, pas de surcharge Nextflow, débogage ciblé.
 
+::: {.notes}
+Question fréquente : "Pourquoi ne pas juste tester le pipeline complet avec nf-test ?" Réponse : le temps de feedback. Un test nf-test prend 30 secondes minimum pour démarrer Nextflow. Un test pytest ou bats prend 0,1 seconde. Pour déboguer un script, on veut le feedback le plus rapide possible.
+
+Deuxième raison : si le test nf-test échoue, on ne sait pas si le bug est dans le script Python, le script R, le script Bash, ou dans l'enchaînement Nextflow. Tester chaque script séparément permet de localiser exactement le problème.
+
+Troisième raison : les scripts peuvent être réutilisés dans d'autres pipelines ou contextes. S'ils sont testables hors Nextflow, ils sont plus robustes et plus réutilisables.
+:::
+
 ---
 
 ## Les scripts que nous allons tester {.smaller}
@@ -47,6 +63,16 @@ Pourquoi *hors* Nextflow ? Feedback immédiat, pas de surcharge Nextflow, débog
 | `stats_records.R` | DataFrame | calcule mean et sd par groupe → data.frame |
 
 Ces trois scripts sont appelés par le pipeline. Tester leur contrat = tester le comportement attendu.
+
+::: {.notes}
+"Contrat" est le mot clé. Chaque script a une interface claire : entrée → sortie ou erreur. Le test vérifie que le contrat est respecté, pas les détails d'implémentation.
+
+`validate_records.sh` : tester l'exit code et le message. Le contenu interne du script (la boucle awk, les conditions) n'est pas ce qu'on teste — on teste ce que l'utilisateur voit.
+
+`parse_records.py` : tester que le DataFrame retourné a la bonne forme, et que les exceptions correctes sont levées pour les inputs invalides. Ne pas tester les détails de pandas — tester le comportement du script.
+
+`stats_records.R` : tester que le data.frame retourné a les bonnes colonnes, les bonnes valeurs, et les bons invariants. En R, les erreurs se lèvent avec `stop()` — vérifier que le message d'erreur est explicite.
+:::
 
 ---
 
@@ -65,6 +91,16 @@ Chaque fichier d'erreur viole une seule règle :
 
 Un fichier = une règle violée = un test diagnostique.
 
+::: {.notes}
+L'architecture "un fichier par règle violée" est une décision de conception importante. Si on utilise un seul fichier avec plusieurs erreurs, on ne sait pas laquelle a causé l'échec du test.
+
+`missing.tsv` est un cas spécial : le fichier n'existe pas du tout. Il est listé ici pour clarifier, mais il ne faut évidemment pas le créer dans le repo.
+
+Pour les exercices, ces fichiers sont déjà présents dans `training/data/`. Les participants n'ont qu'à les référencer dans leurs tests.
+
+Si quelqu'un demande "pourquoi 20 lignes ?" : c'est un compromis entre avoir assez de données pour des statistiques significatives (deux groupes A et B, plusieurs valeurs) et rester suffisamment petit pour vérifier manuellement.
+:::
+
 ---
 
 ## bats — syntaxe minimale
@@ -78,6 +114,16 @@ Un fichier = une règle violée = un test diagnostique.
 ```
 
 Documentation : <https://bats-core.readthedocs.io>
+
+::: {.notes}
+`run` est le mot-clé central de bats. Il fait trois choses : exécute la commande, capture le code de sortie dans `$status`, et capture la sortie standard dans `$output`. Sans `run`, ces variables ne sont pas disponibles.
+
+`[ "$status" -eq 0 ]` utilise la syntaxe POSIX. `[[ "$output" =~ "texte" ]]` utilise la syntaxe bash étendue — les double crochets permettent les expressions régulières avec `=~`.
+
+Erreur fréquente : oublier les guillemets autour de `"$status"` et `"$output"`. Sans guillemets, une sortie avec des espaces peut casser l'assertion.
+
+Le nom du test entre guillemets peut contenir des espaces — c'est une feature, pas un bug. Écrire des noms lisibles comme des phrases : `"fichier valide → exit 0 et message avec count"`.
+:::
 
 ---
 
@@ -99,6 +145,16 @@ DATA="training/data"
 }
 ```
 
+::: {.notes}
+Le premier test est le happy path : input valide → exit 0 ET message avec le count. Vérifier le message est important — un script qui sort avec exit 0 mais n'affiche rien n'est pas utile.
+
+Le deuxième test est un edge case : input invalide → exit 1 ET message d'erreur explicite. L'assertion sur `"ERROR"` vérifie que le script communique clairement ce qui s'est passé — utile pour l'utilisateur qui doit comprendre pourquoi le pipeline a échoué.
+
+`DATA="training/data"` est défini en dehors des tests — c'est une variable partagée par tous les tests du fichier. En bats, on peut aussi utiliser `setup()` pour préparer l'environnement commun.
+
+Insister sur le fait que les deux assertions sont complémentaires : exit code + contenu. L'exit code seul ne suffit pas.
+:::
+
 ---
 
 ## bats — tester un container
@@ -118,8 +174,18 @@ DATA="training/data"
 
 Même logique que tester un script — GIVEN (l'image), WHEN (la commande), THEN (version + exit code).
 
+::: {style="font-size:0.55em; color:#666; margin-top:0.5em;"}
+→ [Politique containers](../container-policy.qmd) — tag exact, `.def` versionné, `.sif` non commité
+:::
+
 ::: {.notes}
-Politique complète : container-policy.qmd — tag exact, .def versionné, .sif non commité.
+Ces tests supposent qu'Apptainer est installé et que le fichier `.sif` est disponible. Ce n'est pas toujours le cas en environnement local — c'est pourquoi ces tests sont dans le module 05 bonus.
+
+Le test `--no-home` est important pour les environnements HPC où `/home` n'est pas monté. Si l'outil cherche un fichier de configuration dans `~/.config/` et que `/home` n'est pas monté, le test échoue en production mais pas en dev.
+
+La logique GIVEN/WHEN/THEN s'applique exactement de la même façon : GIVEN = l'image `.sif` disponible, WHEN = la commande `apptainer exec`, THEN = exit 0 et la bonne version.
+
+Ne pas passer trop de temps sur cette slide si Apptainer n'est pas disponible dans l'environnement de formation.
 :::
 
 ---
@@ -142,6 +208,16 @@ def test_multi(path, exc):
 
 Documentation : <https://docs.pytest.org>
 
+::: {.notes}
+`pytest.raises` est l'équivalent pytest de `try/except` dans les tests. L'argument `match=` est optionnel mais recommandé : il vérifie que le message d'exception contient la chaîne attendue. Sans `match`, n'importe quel ValueError passe — même si le message est incompréhensible.
+
+`@pytest.mark.parametrize` génère automatiquement un test par cas. Les noms générés ressemblent à `test_multi[a.tsv-ValueError]` — lisible dans le rapport d'erreur.
+
+La fonction doit commencer par `test_` — c'est la convention pytest pour la découverte automatique des tests. Idem pour les fichiers (`test_*.py` ou `*_test.py`).
+
+Mentionner `pyproject.toml` : dans ce repo, `testpaths = ["training/tests/pytest"]` est configuré — on n'a pas besoin de specifier le chemin à chaque lancement.
+:::
+
 ---
 
 ## pytest — Python
@@ -161,6 +237,16 @@ def test_inputs_invalides(path, exc):
         load_records(DATA / path)
 ```
 
+::: {.notes}
+`df.shape == (20, 3)` vérifie à la fois le nombre de lignes ET le nombre de colonnes — une seule assertion, deux vérifications.
+
+`list(df.columns) == ["id", "group", "value"]` vérifie l'ordre des colonnes, pas seulement leur présence. Utile si du code downstream accède aux colonnes par position.
+
+Le test paramétré sépare `empty.tsv` (fichier existe mais sans données → ValueError) de `missing.tsv` (fichier n'existe pas → FileNotFoundError). Ce sont deux comportements différents qui méritent des exceptions différentes.
+
+`DATA` est typiquement défini comme `pathlib.Path(__file__).parent.parent / "data"` en haut du fichier. On n'a pas besoin de mettre le chemin absolu dans chaque test.
+:::
+
 ---
 
 ## testthat — syntaxe minimale
@@ -175,6 +261,18 @@ test_that("nom du test", {
 ```
 
 Documentation : <https://testthat.r-lib.org>
+
+::: {.notes}
+`test_that` prend deux arguments : un nom (chaîne de caractères) et un bloc de code entre accolades. Toutes les assertions à l'intérieur du bloc font partie du même test.
+
+`expect_equal` fait une comparaison exacte pour les scalaires et les vecteurs. Pour les flottants, `expect_equal` utilise une tolérance par défaut (1e-7 environ). Si on veut une tolérance différente : `expect_equal(a, b, tolerance = 1e-3)`.
+
+`expect_error(f(), "pattern")` vérifie que `f()` lève une erreur ET que le message contient `"pattern"`. Si `f()` ne lève pas d'erreur, le test échoue.
+
+`expect_named` vérifie les noms des colonnes d'un data.frame. C'est plus lisible que `expect_equal(colnames(df), c("a", "b"))`.
+
+Lancer les tests R avec `Rscript -e "testthat::test_dir('training/tests/testthat/')"` — pas besoin d'un package complet.
+:::
 
 ---
 
@@ -195,6 +293,47 @@ test_that("résultat a les bonnes colonnes et un invariant", {
 })
 ```
 
+::: {.notes}
+L'avantage des données en mémoire (`data.frame(...)`) : pas de dépendance sur des fichiers. Le test est entièrement autonome. C'est l'idiome standard en R — pour des fonctions R, on crée les données directement dans le test.
+
+Le premier test vérifie le cas d'erreur avec un message explicite. `"Missing columns"` n'est pas une vérification exacte du message complet — c'est un pattern. Si le message contient cette chaîne, le test passe.
+
+Le deuxième test combine deux assertions : structure (`expect_named`) et invariant métier (`expect_true(all(...))`). L'invariant `mean >= 0` est une règle domaine — si le calcul produit un mean négatif sur des valeurs positives, quelque chose s'est mal passé.
+
+Pour des fonctions qui lisent des fichiers, on peut utiliser `testthat::test_path()` pour construire des chemins relatifs au répertoire de tests.
+:::
+
+---
+
+## Lancer les tests
+
+```bash
+# bats — depuis la racine du repo
+bats training/tests/bats/
+
+# pytest — depuis la racine du repo (testpaths configuré dans pyproject.toml)
+pytest -v --tb=short
+
+# testthat — depuis la racine du repo
+Rscript -e "testthat::test_dir('training/tests/testthat/')"
+```
+
+::: {.callout-tip}
+Les trois peuvent aussi être lancés via `pre-commit run --all-files` avant un commit.
+:::
+
+::: {.notes}
+Montrer chaque commande en live si possible, ou au moins afficher le résultat attendu. Les participants butent souvent sur "depuis quel répertoire ?" et "quel flag utiliser ?".
+
+pytest : `-v` donne un résultat verbeux (une ligne par test). `--tb=short` affiche un traceback concis en cas d'échec. Sans `-v`, seuls les échecs s'affichent.
+
+bats : peut être lancé sur un fichier spécifique (`bats training/tests/bats/test_validate.bats`) ou sur un répertoire (tous les fichiers `.bats` du répertoire).
+
+testthat : `test_dir()` lance tous les fichiers `test_*.R` du répertoire. Pour un fichier seul : `testthat::test_file('training/tests/testthat/test_stats.R')`.
+
+Ces commandes figurent aussi dans le CLAUDE.md / README — les participants n'ont pas besoin de les mémoriser.
+:::
+
 ---
 
 ## À retenir
@@ -205,6 +344,16 @@ Si ce n'est pas testable seul, le script fait trop de choses.
 
 La syntaxe change. La logique ne change pas :
 tester les invariants métier (`>= 0`, colonnes attendues) autant que le comportement.
+:::
+
+::: {.notes}
+Le critère "testable seul" est un indicateur de qualité de conception. Un script qui ne peut être testé qu'en lançant le pipeline complet a des dépendances implicites — Nextflow, d'autres scripts, des répertoires spécifiques. Ces dépendances le rendent fragile.
+
+Si quelqu'un dit "mon script ne peut pas être testé hors Nextflow car il utilise des variables Nextflow", c'est le moment de discuter de comment extraire la logique pure dans une fonction testable, et laisser le process Nextflow gérer l'infrastructure.
+
+La dernière phrase est le message central du module 03 : la syntaxe de bats, pytest et testthat est différente, mais l'invariant qu'on cherche à protéger est le même.
+
+Transition naturelle vers le module 04 : on a testé les scripts individuels — maintenant on teste les process et workflows Nextflow qui les appellent.
 :::
 
 ---

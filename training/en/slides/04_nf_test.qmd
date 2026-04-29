@@ -14,9 +14,16 @@ nf-test = the reference framework for testing Nextflow processes, workflows, and
 
 Used by nf-core as a community standard.
 
+::: {style="font-size:0.55em; color:#666; margin-top:0.5em;"}
+→ [nf-test-examples](https://github.com/askimed/nf-test-examples) — full RNA-seq pipeline, isolated processes, snapshots
+:::
+
 ::: {.notes}
-Official nf-test examples (full RNA-seq pipeline, isolated processes, snapshots):
-https://github.com/askimed/nf-test-examples
+nf-test solves a problem specific to Nextflow: testing processes and workflows without running the full pipeline. Before nf-test, the only way to test was to run `nextflow run main.nf` and inspect outputs manually.
+
+The mention of nf-core is significant: nf-core is the reference community for bioinformatics Nextflow pipelines, and they've adopted nf-test as standard. By adopting nf-test, we align with community best practices — `.nf.test` files will be recognised by any Nextflow developer.
+
+Don't cover installation details here — that's in the exercises and README.
 :::
 
 ---
@@ -30,6 +37,18 @@ workflow PROCESS_TABLE { ... } ← integration test (nextflow_workflow)
           ↓
 pipeline main.nf               ← functional test  (nextflow_pipeline)
 ```
+
+::: {.notes}
+This mapping is the key framework for the module. Each test level corresponds to a level of Nextflow abstraction.
+
+`nextflow_process` tests a single process in isolation — like a unit test. If COUNT_LINES is broken, this test catches it immediately without running the full pipeline.
+
+`nextflow_workflow` tests the chaining of multiple processes — like an integration test. If the processes interact correctly (outputs of one are compatible with inputs of the next), this test verifies it.
+
+`nextflow_pipeline` tests the full pipeline end-to-end on a small dataset — like a functional test. It's the slowest and fewest in number.
+
+In practice, most tests are `nextflow_process` with a few `nextflow_workflow`. `nextflow_pipeline` tests are rare and expensive.
+:::
 
 ---
 
@@ -59,6 +78,23 @@ nextflow_process {
 }
 ```
 
+::: {.notes}
+Break down the structure line by line:
+- `nextflow_process`: top-level block declaring we are testing a process
+- `name`: name of the test block — appears in error reports
+- `script`: path to the `.nf` file containing the process
+- `process`: exact name of the process in the `.nf` file
+
+Inside `when` / `process`: provide the process input. `input[0]` corresponds to the first input channel. The format `[[id: "records"], file("data/records.tsv")]` is the standard Nextflow tuple format.
+
+Inside `then`: three complementary assertions:
+1. `process.success`: the process completed without error
+2. `process.out.count.size() == 1`: there is exactly one output in the `count` channel
+3. `snapshot(process.out).match()`: the output matches the recorded snapshot
+
+The first run creates the snapshot. Subsequent runs compare against it.
+:::
+
 ---
 
 ## Testing a workflow
@@ -85,6 +121,16 @@ nextflow_workflow {
     }
 }
 ```
+
+::: {.notes}
+The main difference from `nextflow_process`: use `Channel.of([...])` to create a Nextflow channel. This is the standard Nextflow DSL2 syntax for creating a channel from a value.
+
+`workflow.out.count.size() == 1` checks there is exactly one element in the output channel. If the workflow produces multiple outputs or none, the test fails.
+
+The snapshot covers multiple channels at once: `snapshot(workflow.out.count, workflow.out.summary, workflow.out.stats)`. This is useful to guarantee consistency between outputs — if one output changes without the others changing, the snapshot detects the inconsistency.
+
+Common question: "Why `Channel.of` and not `file()` directly?" Because Nextflow workflows take channels as input, not files. `Channel.of` creates a channel with a single element.
+:::
 
 ---
 
@@ -114,6 +160,16 @@ nextflow_pipeline {
 }
 ```
 
+::: {.notes}
+`nextflow_pipeline` is the most expensive level — it runs the full pipeline. That's why it's marked "bonus": in practice, use it sparingly.
+
+`params { }` passes Nextflow parameters, as you would with `--input` and `--outdir` on the command line. `projectDir` and `outputDir` are special nf-test variables pointing to the project directory and a temporary output directory.
+
+`workflow.trace.succeeded().size() == 2` checks that exactly 2 tasks succeeded — useful to detect if a task was skipped or failed silently.
+
+`file("${outputDir}/...").text.trim().toInteger() == 20` is the value assertion — the file exists AND contains the right number. This is stronger than `f.exists()` alone.
+:::
+
 ---
 
 ## What changes between levels {.smaller}
@@ -124,6 +180,16 @@ nextflow_pipeline {
 | **Input** | `input[0] = [...]` | `Channel.of([...])` | `params { }` |
 | **Outputs** | `process.out.xxx` | `workflow.out.xxx` | `file("${outputDir}/...")` |
 | **Trace** | — | `workflow.trace` | `workflow.trace` |
+
+::: {.notes}
+This table is the quick reference to avoid confusing the three levels. The main differences:
+
+- Input: processes take direct values, workflows take channels, pipelines take params.
+- Outputs: processes and workflows expose their outputs via `.out.xxx`, pipelines require reading files directly from the filesystem.
+- Trace: available for workflows and pipelines — lets you count executed tasks.
+
+Common mistake: using `input[0] = file(...)` without the meta tuple in a process test, or forgetting `Channel.of` in a workflow test. The table helps avoid these confusions.
+:::
 
 ---
 
@@ -148,6 +214,16 @@ Generated snapshot file:
 }
 ```
 
+::: {.notes}
+The snapshot stores a SHA-256 hash of each output channel. If a file's content changes, the hash changes, and the test fails.
+
+The snapshot file is committed to the repo — that's intentional. It serves as a reference for all team members. If someone modifies the pipeline and outputs change, the snapshot fails for everyone in CI.
+
+Naming convention: the snapshot file is named `<test_name>.nf.test.snap` and lives in the same directory as the `.nf.test` file. Don't ignore them in `.gitignore`.
+
+Reminder: update snapshots with `nf-test test --update-snapshot` — but only after verifying the change is intentional.
+:::
+
 ---
 
 ## Explicit assertions first
@@ -168,6 +244,16 @@ then {
 Snapshot alone = black box. Explicit assertion = documentation.
 :::
 
+::: {.notes}
+The order of assertions is intentional: first structure assertions (did the process succeed? is there an output?), then value assertions (is the value correct?), finally the snapshot (non-regression).
+
+`path(process.out.count[0][1])`: `process.out.count` is a channel, `[0]` is the first element of the channel, `[1]` is the second element of the tuple (the file), `path(...)` converts it to a Path object to access the content.
+
+`assert n == 20` is the business assertion: we know `records.tsv` has 20 rows, so the count must be 20. This is a behaviour check, not just a non-regression check.
+
+The callout summarises the key point: a snapshot alone detects regressions, but doesn't say whether the initial value was correct. An explicit assertion states what the code must do — it's executable documentation.
+:::
+
 ---
 
 ## Snapshots — limits and updates {.smaller}
@@ -186,6 +272,18 @@ nf-test test --update-snapshot   # regenerate after intentional change
 
 ::: {.callout-warning}
 Never update a snapshot without understanding why it changed.
+:::
+
+::: {.notes}
+The table illustrates an important asymmetry: snapshots are excellent at detecting unexpected changes, but blind to bugs present since the snapshot was created.
+
+Classic error scenario: the pipeline produces wrong results from the start, you create the snapshot on the wrong result, all tests pass. The bug is now "captured" in the snapshot as if it were the correct value. That's why explicit value assertions are indispensable.
+
+`--update-snapshot` is the update command. Only use it after:
+1. Understanding why the snapshot changed (intentional behaviour change)
+2. Verifying the new result is correct
+
+If someone runs `--update-snapshot` without checking, that's a red flag in code review.
 :::
 
 ---
@@ -211,8 +309,18 @@ process FASTQC {
 Two complementary levels:
 bats verifies the image works standalone · nf-test verifies the process works inside it.
 
+::: {style="font-size:0.55em; color:#666; margin-top:0.5em;"}
+→ [Container policy](../../container-policy.qmd) — exact tag, `.def` versioned, `.sif` not committed
+:::
+
 ::: {.notes}
-Full policy: container-policy.qmd — exact tag, versioned .def, uncommitted .sif, tests in self-hosted CI.
+The exact tag (`0.12.1--hdfd78af_0` not `latest`) is mandatory for reproducibility. `latest` can point to a different image from one day to the next — tests passing today may fail tomorrow without code changes.
+
+The two levels are complementary and don't substitute for each other:
+- bats + apptainer exec: verifies the image is functional standalone (right tool, right version, accessible without `/home`)
+- nf-test + `--profile apptainer`: verifies Nextflow can orchestrate the process with this image (network, volumes, environment variables)
+
+This is covered in detail in module 05 (bonus). Here it's just a mention to show nf-test supports containers.
 :::
 
 ---
@@ -224,6 +332,16 @@ Full policy: container-policy.qmd — exact tag, versioned .def, uncommitted .si
 - Scientific validation of results
 - Container tests (`bats` + `--profile apptainer`)
 - Tests on representative datasets
+
+::: {.notes}
+This slide is important to avoid a common misconception: nf-test only tests Nextflow orchestration, not the internal logic of scripts. If `validate_records.sh` has a bug, nf-test will only detect it if the bug affects the process as a whole (different exit code or output).
+
+Human review of snapshots is essential. A snapshot is a hash — it doesn't say whether the content is scientifically correct. Someone must periodically verify that snapshotted outputs make biological sense.
+
+Tests on representative datasets (larger, more realistic) are separate from automated CI tests. Useful before a release, but too slow to run on every PR.
+
+Summary: nf-test + bats + pytest + testthat + human review + scientific validation = a complete strategy. No single tool covers everything.
+:::
 
 ---
 
@@ -240,6 +358,16 @@ nf-test test count_lines.nf.test
 nf-test test --update-snapshot
 ```
 
+::: {.notes}
+Important: nf-test must be run from `training/tests/nf-test/` — not from the repo root. The `nf-test.config` in that directory configures paths to the pipeline and data.
+
+`--verbose` shows details for each test — useful to understand what's happening. Without this flag, only failures are shown.
+
+If someone gets `nf-test: command not found`, check that the conda environment is activated (`conda activate ilovetesting`) and that nf-test is installed.
+
+The command `nf-test test --update-snapshot` regenerates all snapshots — do not use blindly.
+:::
+
 ---
 
 ## Exercise → Module 04
@@ -253,3 +381,13 @@ By the end, you should have:
 - 1 `PROCESS_TABLE` test — count + summary + stats produced
 - at least 1 behavioral assertion on a value
 - 1 snapshot
+
+::: {.notes}
+The exercise is designed to be completed in 45–60 minutes. The starter files (`count_lines.nf`, `process_table.nf`, `data/records.tsv`) are already present.
+
+The "empty file → failure" test is important: it verifies the process fails correctly on invalid input, not that it silently produces an empty result.
+
+The behavioral assertion on a value (e.g. `assert n == 20`) is the exercise for the "Explicit assertions first" slide. It pushes beyond the snapshot alone.
+
+If someone gets stuck on `path(process.out.count[0][1])`, point them back to the "Explicit assertions first" slide which shows how to access file content from an output channel.
+:::

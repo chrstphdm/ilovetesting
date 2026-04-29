@@ -16,6 +16,10 @@ Le pipeline tourne. Les fichiers sont générés. Les résultats semblent cohér
 
 **Comment savoir si le résultat est juste ?**
 
+::: {.notes}
+Laisser la question résonner 5-10 secondes. Ne pas répondre. Si quelqu'un dit "en vérifiant manuellement", acquiescer et enchaîner : "sur 10 000 hits, c'est faisable ?"
+:::
+
 ---
 
 ## Cas réel — annotation KEGG / KOfam
@@ -29,6 +33,16 @@ Le pipeline tourne. Les fichiers sont générés. Les résultats semblent cohér
 . . .
 
 Le pipeline tournait. Les fichiers étaient générés. **Aucune erreur visible.**
+
+::: {.notes}
+Les deux bugs réels découverts :
+1. Le seuil de filtrage du premier KO d'un lot était appliqué à tous les KOs du lot — une erreur de boucle subtile.
+2. Des scores numériques étaient comparés comme des chaînes de caractères : "9" > "80" est vrai en string.
+
+Ces bugs ne lèvent aucune exception. Le pipeline termine normalement. Sans test ciblé sur la règle métier, ils sont indétectables.
+
+Ne pas s'attarder sur le détail technique — le blog est disponible pour ceux qui veulent creuser.
+:::
 
 ---
 
@@ -53,6 +67,14 @@ assert os.path.exists("output.filtered")
 assert all(hit.score >= threshold[hit.ko] for hit in kept_hits)
 ```
 
+::: {.notes}
+Le mauvais test est le plus répandu. Il vérifie que le fichier a été créé — pas que son contenu est correct. Il passerait même si le filtre conservait tout ou rien.
+
+"Règle métier" = comportement attendu selon la spec scientifique. Ici : chaque hit est filtré selon son propre seuil. C'est une règle simple, mais sans test elle est invisible.
+
+Question utile à poser : "Dans vos pipelines, est-ce que vos tests vérifient le fichier ou le contenu ?"
+:::
+
 ---
 
 ## Les outils {.smaller}
@@ -64,6 +86,12 @@ assert all(hit.score >= threshold[hit.ko] for hit in kept_hits)
 | Python | [pytest](https://docs.pytest.org/) |
 | R | [testthat](https://testthat.r-lib.org/) |
 
+::: {.notes}
+Ne pas entrer dans les détails ici — chaque outil est couvert en module 03 (bats, pytest, testthat) et 04 (nf-test).
+
+Question fréquente : "Pourquoi pas Python pour tout ?" — bats est naturel pour tester des commandes shell. pytest pour la logique Python. testthat pour R. nf-test pour l'écosystème Nextflow. Chaque framework est idiomatique dans son contexte.
+:::
+
 ---
 
 ## La règle d'équipe
@@ -74,6 +102,14 @@ assert all(hit.score >= threshold[hit.ko] for hit in kept_hits)
 Chaque bug trouvé → un test qui l'aurait détecté.
 
 Chaque module Nextflow → un fichier `.nf.test`.
+:::
+
+::: {.notes}
+Ne pas présenter comme une contrainte imposée — la présenter comme une décision collective née d'expériences douloureuses.
+
+Si quelqu'un résiste, demander : "Qui a déjà mergé quelque chose qui a cassé silencieusement ?" La règle vient exactement de là.
+
+"Un fichier .nf.test vide mais présent" rappelle qu'il faut le compléter. C'est un signal visible dans le repo.
 :::
 
 ---
@@ -90,6 +126,12 @@ Chaque module Nextflow → un fichier `.nf.test`.
 | 07 | Stratégie équipe | — |
 | Bonus | Containers | `05_testing_containers/` |
 
+::: {.notes}
+Le trou entre 04 et 06 est intentionnel : le module 05 (containers Apptainer) est un bonus. Il nécessite Apptainer installé et une image .sif disponible — ce n'est pas toujours le cas. Selon l'environnement de l'équipe, il peut être fait en séance ou en autonomie.
+
+Ne pas s'attarder sur ce tableau — 30 secondes max. C'est une vue d'ensemble, pas un plan de séance à commenter ligne par ligne.
+:::
+
 ---
 
 ## Exercice → Module 01
@@ -99,3 +141,11 @@ Dans cet exercice, l'objectif est de protéger exactement ce type de règle mét
 Rendez-vous dans `exercises/01_bash/`
 
 À la fin : 1 test happy path · 1 test fichier vide · 1 test fichier absent · 1 assertion sur le message de sortie
+
+::: {.notes}
+L'exercice est volontairement simple. `validate_records.sh` fait environ 20 lignes. L'objectif est de pratiquer la structure GIVEN/WHEN/THEN, pas de comprendre la logique du script.
+
+Durée estimée : 20-30 minutes pour les 4 tests + la commande documentée.
+
+Si quelqu'un est bloqué sur la syntaxe bats → renvoyer vers le module 02 (slide "Suite → Module 03") qui montre la traduction GIVEN/WHEN/THEN en bats.
+:::

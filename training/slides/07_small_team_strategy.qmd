@@ -20,6 +20,14 @@ C'est une version préliminaire — mais maintenant il faut des tests.
 
 **Je ne sais pas par où commencer.**
 
+::: {.notes}
+Cette slide décrit la situation que presque tout le monde dans la salle a déjà vécue. Ne pas la présenter comme une mauvaise pratique — la coder vite pour valider une idée est une approche légitime. Le problème n'est pas d'avoir codé sans tests, c'est de ne pas savoir comment rattraper.
+
+Laisser résonner "Je ne sais pas par où commencer" 2-3 secondes. C'est la question que ce module répond.
+
+Si quelqu'un dit "moi j'aurais commencé par les tests" (TDD), acquiescer et préciser que le TDD est une bonne pratique quand on sait déjà ce qu'on veut faire — mais en exploration bioinformatique, on découvre souvent les règles métier en codant.
+:::
+
 ---
 
 ## Risk-based testing {.smaller}
@@ -36,6 +44,18 @@ Priorité = probabilité de casser × impact si ça casse
 | **4 — si container custom** | version figée, comportement Apptainer |
 
 Pour le détail complet → [testing-matrix.qmd](../testing-matrix.qmd)
+
+::: {.notes}
+Le risk-based testing est la réponse à "par où commencer" : commencer par ce qui a le plus d'impact si ça casse ET la plus grande probabilité de casser.
+
+Priorité 1 — les transformations et filtres : c'est là que les bugs silencieux vivent. Le bug anvi'o du module 01 était dans un filtre. Si un filtre est faux, toutes les analyses en aval sont fausses — sans aucune erreur visible.
+
+Priorité 2 — les enchaînements : vérifier que les sorties d'un module sont compatibles avec les entrées du suivant. Souvent négligé car "ça marchait hier".
+
+Priorité 3 — le pipeline complet : seulement quand le pipeline est assez stable pour mériter un test end-to-end. Sur un mini-dataset synthétique pour que ça reste rapide.
+
+Priorité 4 — les containers : seulement si on construit des images custom. Pour les containers publics (biocontainers), la communauté gère la qualité.
+:::
 
 ---
 
@@ -56,6 +76,16 @@ Nuit ou manuel
 Au démarrage : même un seul `pytest` en CI suffit. L'important est que la porte existe.
 :::
 
+::: {.notes}
+La règle des 5 minutes vient de l'expérience pratique : si le CI prend plus de 5 minutes, les développeurs commencent à merger sans attendre les résultats. Un CI de 5 minutes est assez rapide pour être utile sans être gênant.
+
+"La porte existe" est une formulation importante : un seul test en CI est infiniment mieux que zéro test en CI. Même si ce test ne couvre qu'une règle métier, il crée l'infrastructure pour en ajouter d'autres.
+
+Les tests lents (pipeline complet, golden dataset sur vraies données) peuvent tourner la nuit ou être déclenchés manuellement avant une release. L'important est qu'ils tournent régulièrement — au moins une fois par semaine.
+
+Ce repo a exactement cette structure : 4 jobs automatiques sur PR + 1 job manuel pour les containers (voir le README ou les fichiers `.github/workflows/`).
+:::
+
 ---
 
 ## Minimum viable test
@@ -72,6 +102,20 @@ Pour toute nouvelle étape du pipeline :
 
 C'est suffisant pour commencer.
 
+::: {.notes}
+Cette checklist est actionnable immédiatement. Après ce module, pour n'importe quelle nouvelle étape du pipeline, ces 5 points sont le minimum.
+
+"Input minimal" : le plus petit fichier qui déclenche le comportement. Pas les vraies données — un fichier synthétique de 20-100 lignes.
+
+"Sortie attendue" : ce que le script doit produire. Peut être une valeur exacte (count = 20), une structure (DataFrame avec colonnes attendues), ou un exit code.
+
+"Assertion comportementale" : pas `assert os.path.exists("output.txt")` — mais `assert n == 20` ou `assert len(df) == 20`. Quelque chose qui vérifie ce que le script fait, pas juste qu'il tourne.
+
+"Cas d'erreur" : au moins un input invalide avec le comportement d'erreur attendu (exit 1, exception, message explicite).
+
+"Commande documentée" : comment lancer le test. Si personne ne sait comment lancer les tests, ils ne seront jamais lancés.
+:::
+
 ---
 
 ## Handover et bus factor
@@ -82,6 +126,16 @@ Un test = documentation exécutable que la prochaine personne peut lancer.
 
 ::: {.callout-tip}
 Écrire le test qu'on aurait voulu trouver en arrivant dans le projet.
+:::
+
+::: {.notes}
+Le "bus factor" est le nombre minimal de personnes dont la perte (accident, départ, maladie) rendrait le projet inopérable. Un pipeline maintenu par une seule personne et sans tests a un bus factor de 1.
+
+L'argument du handover est souvent plus convaincant que l'argument de la qualité. Tout le monde a déjà souffert d'un pipeline hérité sans documentation. Les tests sont la documentation la plus utile : ils disent exactement ce que le pipeline doit faire, dans un format exécutable.
+
+"Le test qu'on aurait voulu trouver" est un exercice mental utile : imaginer qu'on rejoint le projet demain. Qu'est-ce qui nous aurait aidé à comprendre ce que le pipeline fait ? C'est ce qu'on doit écrire.
+
+Pas besoin que les tests soient parfaits — même des tests basiques avec des commentaires explicatifs aident énormément la personne suivante.
 :::
 
 ---
@@ -98,6 +152,16 @@ Un test = documentation exécutable que la prochaine personne peut lancer.
 
 **Mais documenter pourquoi** — une décision explicite vaut mieux qu'un oubli silencieux.
 
+::: {.notes}
+Cette slide est importante pour éviter l'impression que "tout doit être testé à 100 %". Ce n'est ni réaliste ni nécessaire.
+
+Code exploratoire jetable : un notebook d'exploration qu'on supprimera après avoir trouvé la bonne approche. Inutile d'écrire des tests pour du code qui ne survivra pas à la semaine.
+
+Wrapper trivial déjà couvert : si on appelle simplement `samtools sort` sans aucune logique, le comportement de `samtools` est déjà testé par ses auteurs. On n'a pas à le retester.
+
+"Documenter pourquoi" est la partie importante : une décision de non-test doit être explicite. Un commentaire dans le code (`# pas de test — logique triviale, couverte par samtools`), une note dans la PR, ou une entrée dans la testing-matrix. Un oubli silencieux devient une dette invisible.
+:::
+
 ---
 
 ## Anti-patterns de stratégie
@@ -112,6 +176,20 @@ Un test = documentation exécutable que la prochaine personne peut lancer.
 
 Pour les niveaux de maturité → [testing-matrix.qmd](../testing-matrix.qmd)
 
+::: {.notes}
+Chacun de ces anti-patterns mérite une phrase d'explication.
+
+"Attendre d'avoir le temps" : le temps de tester ne se libère jamais spontanément. Il se prend. Si on attend, on n'écrit jamais de tests.
+
+"Viser 100 % de couverture" : un objectif de couverture arbitraire crée des tests sans valeur — juste pour atteindre le chiffre. 70 % de couverture avec des assertions utiles vaut mieux que 100 % avec des assertions vides.
+
+"Écrire les tests à la fin" : à la fin du projet, on a oublié les règles métier implicites, les edge cases découverts en cours de route, et les bugs déjà corrigés. Les tests écrits après coup sont souvent moins précis.
+
+"Tester uniquement en local" : si les tests ne tournent pas en CI, personne ne sait s'ils passent après chaque merge. Ça crée une fausse impression de sécurité.
+
+"Ne pas documenter les non-tests" : un test manquant qu'on ne peut pas distinguer d'un oubli est une dette invisible.
+:::
+
 ---
 
 ## Message à retenir
@@ -120,4 +198,16 @@ Pour les niveaux de maturité → [testing-matrix.qmd](../testing-matrix.qmd)
 **Par où commencer ?** Le premier test utile vérifie la règle métier la plus critique du pipeline — le calcul, le filtre, ou la décision dont un résultat faux ne serait pas visible sans test.
 
 Commencer petit. Un test minimal sur le chemin critique > zéro test.
+:::
+
+::: {.notes}
+Message de clôture de la formation. Revenir sur le fil conducteur depuis le module 01 :
+- Module 01 : un pipeline peut produire des résultats faux sans aucune erreur visible
+- Modules 02-04 : les outils pour écrire des tests utiles à tous les niveaux
+- Module 06 : comment tester quand on ne connaît pas la bonne réponse
+- Module 07 : comment prioriser et intégrer les tests dans l'équipe
+
+"Commencer petit" est la permission que beaucoup de personnes attendent. On n'a pas besoin d'une suite de tests complète avant d'avoir de la valeur. Un test sur la règle métier la plus critique protège déjà contre la classe de bug la plus dangereuse.
+
+Ouvrir pour les questions. Si quelqu'un demande "mais par où je commence concrètement ?", utiliser le minimum viable test (5 points de la slide précédente) appliqué à leur pipeline actuel.
 :::

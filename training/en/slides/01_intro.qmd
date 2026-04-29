@@ -23,6 +23,12 @@ The pipeline runs. Files are generated. Results look consistent.
 
 **How do you know the output is correct?**
 
+::: {.notes}
+Let the question hang for 5–10 seconds. Don't answer it. If someone says "by checking manually", nod and follow up: "with 10,000 hits, is that feasible?"
+
+The goal of this opening slide is discomfort — not information. Everyone in the room has run a pipeline and assumed the results were correct. This is the moment to make that assumption explicit.
+:::
+
 ---
 
 ## Real case — KEGG / KOfam annotation
@@ -36,6 +42,16 @@ The pipeline runs. Files are generated. Results look consistent.
 . . .
 
 The pipeline ran. Files were generated. **No visible error.**
+
+::: {.notes}
+The two real bugs:
+1. The bit score threshold for the first KO in a batch was applied to all KOs in that batch — a subtle loop error.
+2. Numeric scores were compared as strings: "9" > "80" is true as a string.
+
+Neither bug raises an exception. The pipeline exits normally. Without a test targeting the business rule, they are undetectable.
+
+Don't dwell on the technical details — the blog post is there for anyone who wants to go deeper. The point is: the pipeline ran, files were produced, everything looked fine. That's what makes this kind of bug dangerous.
+:::
 
 ---
 
@@ -60,6 +76,14 @@ assert os.path.exists("output.filtered")
 assert all(hit.score >= threshold[hit.ko] for hit in kept_hits)
 ```
 
+::: {.notes}
+The weak test is the most common pattern. It verifies that a file was created — not that its content is correct. It would pass even if the filter kept everything or rejected everything.
+
+"Business rule" = the expected behaviour according to the scientific specification. Here: each hit is filtered against its own model's threshold. Simple rule, but invisible without a test.
+
+Useful question for the group: "In your pipelines, do your tests check the file, or the content?"
+:::
+
 ---
 
 ## The tools {.smaller}
@@ -71,6 +95,12 @@ assert all(hit.score >= threshold[hit.ko] for hit in kept_hits)
 | Python | [pytest](https://docs.pytest.org/) |
 | R | [testthat](https://testthat.r-lib.org/) |
 
+::: {.notes}
+Don't go into detail here — each tool is covered in module 03 (bats, pytest, testthat) and module 04 (nf-test).
+
+Common question: "Why not Python for everything?" — bats is natural for testing shell commands. pytest for Python logic. testthat for R. nf-test for the Nextflow ecosystem. Each framework is idiomatic in its context.
+:::
+
 ---
 
 ## Team rule
@@ -81,6 +111,14 @@ assert all(hit.score >= threshold[hit.ko] for hit in kept_hits)
 Every bug found → a test that would have caught it.
 
 Every Nextflow module → a `.nf.test` file.
+:::
+
+::: {.notes}
+Don't present this as an imposed constraint — present it as a collective decision born from painful experience.
+
+If someone pushes back, ask: "Who has ever merged something that broke silently?" The rule comes exactly from that.
+
+"An empty but present `.nf.test` file" is a visible reminder in the repo that the test still needs to be written. It's a signal, not a trick.
 :::
 
 ---
@@ -97,6 +135,12 @@ Every Nextflow module → a `.nf.test` file.
 | 07 | Team strategy | — |
 | Bonus | Containers | `05_testing_containers/` |
 
+::: {.notes}
+The gap between 04 and 06 is intentional: module 05 (Apptainer containers) is a bonus. It requires Apptainer installed and a `.sif` image available — that's not always the case. Depending on the team's environment, it can be covered in-session or done independently.
+
+Don't spend more than 30 seconds on this table — it's a high-level overview, not a session plan to comment line by line.
+:::
+
 ---
 
 ## Exercise → Module 01
@@ -106,3 +150,11 @@ The goal of this exercise is to protect exactly this kind of business rule — e
 Go to `exercises/01_bash/`
 
 Deliverables: 1 happy path test · 1 empty file test · 1 missing file test · 1 assertion on the output message
+
+::: {.notes}
+The exercise is intentionally simple. `validate_records.sh` is roughly 20 lines. The goal is to practise the GIVEN/WHEN/THEN structure, not to understand the script's logic.
+
+Estimated time: 20–30 minutes for the 4 tests plus the documented command.
+
+If someone gets stuck on bats syntax → point them to module 02 (slide "Next → Module 03") which shows the GIVEN/WHEN/THEN-to-bats translation.
+:::

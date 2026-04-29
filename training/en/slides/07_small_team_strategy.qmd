@@ -20,6 +20,14 @@ It's a preliminary version — but now it needs tests.
 
 **I don't know where to start.**
 
+::: {.notes}
+This slide describes a situation almost everyone in the room has experienced. Don't frame it as bad practice — coding fast to validate an idea is a legitimate approach. The problem is not having coded without tests, it's not knowing how to catch up.
+
+Let "I don't know where to start" hang for 2–3 seconds. That's exactly the question this module answers.
+
+If someone says "I would have started with tests" (TDD), acknowledge it and clarify: TDD works well when you already know what you want to build — but in bioinformatics exploration, you often discover the business rules while coding.
+:::
+
 ---
 
 ## Risk-based testing {.smaller}
@@ -36,6 +44,18 @@ Priority = probability of breaking × impact if it breaks
 | **4 — if custom container** | pinned version, Apptainer behaviour |
 
 For the full details → [testing-matrix.qmd](../testing-matrix.qmd)
+
+::: {.notes}
+Risk-based testing is the answer to "where to start": start with what has the highest impact if it breaks AND the highest probability of breaking.
+
+Priority 1 — transformations and filters: that's where silent bugs live. The anvi'o bug from module 01 was in a filter. If a filter is wrong, all downstream analyses are wrong — with no visible error.
+
+Priority 2 — chains: verify that outputs of one module are compatible with inputs of the next. Often overlooked because "it worked yesterday".
+
+Priority 3 — full pipeline: only when the pipeline is stable enough to warrant an end-to-end test. On a synthetic mini-dataset to keep it fast.
+
+Priority 4 — containers: only if you build custom images. For public containers (biocontainers), the community handles quality.
+:::
 
 ---
 
@@ -56,6 +76,16 @@ Nightly or manual
 At the start: even a single `pytest` in CI is enough. What matters is that the gate exists.
 :::
 
+::: {.notes}
+The 5-minute rule comes from practical experience: if CI takes more than 5 minutes, developers start merging without waiting for results. A 5-minute CI is fast enough to be useful without being annoying.
+
+"The gate exists" is an important framing: a single test in CI is infinitely better than no test in CI. Even if that test only covers one business rule, it creates the infrastructure to add more.
+
+Slow tests (full pipeline, golden dataset on real data) can run nightly or be triggered manually before a release. The important thing is that they run regularly — at least once a week.
+
+This repo has exactly this structure: 4 automatic jobs on PR + 1 manual job for containers (see README or `.github/workflows/`).
+:::
+
 ---
 
 ## Minimum viable test
@@ -72,6 +102,20 @@ For every new pipeline step:
 
 That is enough to get started.
 
+::: {.notes}
+This checklist is immediately actionable. After this module, for any new pipeline step, these 5 points are the minimum.
+
+"Minimal input": the smallest file that triggers the behaviour. Not real data — a synthetic file of 20–100 rows.
+
+"Expected output": what the script should produce. Can be an exact value (count = 20), a structure (DataFrame with expected columns), or an exit code.
+
+"Behavioral assertion": not `assert os.path.exists("output.txt")` — but `assert n == 20` or `assert len(df) == 20`. Something that checks what the script does, not just that it runs.
+
+"Error case": at least one invalid input with the expected error behaviour (exit 1, exception, explicit message).
+
+"Documented command": how to run the test. If nobody knows how to run the tests, they will never be run.
+:::
+
 ---
 
 ## Handover and bus factor
@@ -82,6 +126,16 @@ A test = executable documentation that the next person can run.
 
 ::: {.callout-tip}
 Write the test you would have wanted to find when joining the project.
+:::
+
+::: {.notes}
+"Bus factor" is the minimum number of people whose loss (accident, departure, illness) would make the project inoperable. A pipeline maintained by one person with no tests has a bus factor of 1.
+
+The handover argument is often more convincing than the quality argument. Everyone has suffered from an inherited pipeline with no documentation. Tests are the most useful documentation: they state exactly what the pipeline must do, in executable form.
+
+"The test you would have wanted to find" is a useful mental exercise: imagine joining the project tomorrow. What would have helped you understand what the pipeline does? That's what you should write.
+
+Tests don't need to be perfect — even basic tests with clear comments help the next person enormously.
 :::
 
 ---
@@ -98,6 +152,16 @@ Write the test you would have wanted to find when joining the project.
 
 **But document why** — an explicit decision is better than a silent omission.
 
+::: {.notes}
+This slide matters because it avoids giving the impression that "everything must be tested at 100%". That's neither realistic nor necessary.
+
+Throwaway exploratory code: a notebook exploration that will be deleted after finding the right approach. No point writing tests for code that won't survive the week.
+
+Trivial wrapper already covered: if you're simply calling `samtools sort` with no logic, `samtools`' behaviour is already tested by its authors. No need to retest it.
+
+"Document why" is the important part: a no-test decision must be explicit. A comment in the code, a note in the PR, or an entry in the testing matrix. A silent omission becomes invisible debt.
+:::
+
 ---
 
 ## Strategy anti-patterns
@@ -112,6 +176,20 @@ Write the test you would have wanted to find when joining the project.
 
 For maturity levels → [testing-matrix.qmd](../testing-matrix.qmd)
 
+::: {.notes}
+Each anti-pattern deserves one sentence.
+
+"Waiting until there is time": time to test never frees itself spontaneously. It has to be taken. If you wait, you never write tests.
+
+"Aiming for 100% coverage": an arbitrary coverage target creates tests with no value — just to hit the number. 70% coverage with useful assertions is worth more than 100% with empty assertions.
+
+"Writing tests at the end": by the end of the project, you've forgotten the implicit business rules, the edge cases discovered along the way, and the bugs already fixed. Tests written after the fact are often less precise.
+
+"Testing only locally": if tests don't run in CI, nobody knows if they pass after each merge. It creates a false sense of security.
+
+"Not documenting no-test decisions": a missing test that can't be distinguished from an oversight is invisible debt.
+:::
+
 ---
 
 ## Key takeaway
@@ -120,4 +198,16 @@ For maturity levels → [testing-matrix.qmd](../testing-matrix.qmd)
 **Where to start?** The first useful test verifies the most critical business rule in the pipeline — the calculation, filter, or decision whose wrong result would not be visible without a test.
 
 Start small. A minimal test on the critical path > zero tests.
+:::
+
+::: {.notes}
+Closing message of the training. Return to the thread running from module 01:
+- Module 01: a pipeline can produce wrong results with no visible error
+- Modules 02–04: tools for writing useful tests at every level
+- Module 06: how to test when the right answer is unknown
+- Module 07: how to prioritise and integrate testing in the team
+
+"Start small" is the permission many people are waiting for. You don't need a complete test suite before getting value. One test on the most critical business rule already protects against the most dangerous class of bugs.
+
+Open for questions. If someone asks "but where do I start concretely?", use the minimum viable test checklist (5 points from the previous slide) applied to their current pipeline.
 :::
