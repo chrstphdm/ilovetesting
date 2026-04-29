@@ -154,7 +154,5 @@ Deliverables: 1 happy path test · 1 empty file test · 1 missing file test · 1
 ::: {.notes}
 The exercise is intentionally simple. `validate_records.sh` is roughly 20 lines. The goal is to practise the GIVEN/WHEN/THEN structure, not to understand the script's logic.
 
-Estimated time: 20–30 minutes for the 4 tests plus the documented command.
-
 If someone gets stuck on bats syntax → point them to module 02 (slide "Next → Module 03") which shows the GIVEN/WHEN/THEN-to-bats translation.
 :::

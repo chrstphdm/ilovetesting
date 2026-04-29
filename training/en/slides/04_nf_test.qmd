@@ -383,7 +383,7 @@ By the end, you should have:
 - 1 snapshot
 
 ::: {.notes}
-The exercise is designed to be completed in 45–60 minutes. The starter files (`count_lines.nf`, `process_table.nf`, `data/records.tsv`) are already present.
+The starter files (`count_lines.nf`, `process_table.nf`, `data/records.tsv`) are already present.
 
 The "empty file → failure" test is important: it verifies the process fails correctly on invalid input, not that it silently produces an empty result.
 

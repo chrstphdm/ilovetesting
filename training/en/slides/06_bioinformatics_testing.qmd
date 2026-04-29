@@ -301,6 +301,4 @@ The exercise is deliberately focused on metamorphic testing — it's the least i
 The files `sample.fastq`, `sample_shuffled.fastq`, `sample_doubled.fastq`, `sample_subset.fastq` are already in the exercise directory — participants only need to write the tests.
 
 The golden dataset bonus consists of creating an `expected.txt` file and writing a test that compares `count_reads.sh` output against it.
-
-Estimated time: 20–30 minutes for the 3 MR tests + 15 minutes for the bonus.
 :::

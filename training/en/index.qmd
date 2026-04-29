@@ -21,14 +21,14 @@ Before you start: check the [prerequisites](prerequisites.qmd) (expected languag
 
 ## Learning path
 
-| Step | Module | Duration |
-|------|--------|----------|
-| 1 | [Why test](slides/01_intro.qmd) · [Testing concepts](slides/02_testing_concepts.qmd) | 45 min |
-| 2 | [Bash · Python · R](slides/03_bash_python_r.qmd) → [ex. 01](exercises/01_bash/README.qmd) · [ex. 02](exercises/02_python/README.qmd) · [ex. 03](exercises/03_r/README.qmd) | 2h |
-| 3 | [Nextflow / nf-test](slides/04_nf_test.qmd) → [ex. 04](exercises/04_nextflow/README.qmd) | 1h30 |
-| 4 | [Testing without an exact oracle](slides/06_bioinformatics_testing.qmd) → [ex. 06](exercises/06_metamorphic/README.qmd) | 1h |
-| 5 | [Strategy for small teams](slides/07_small_team_strategy.qmd) | 30 min |
-| Bonus | [Apptainer containers](slides/05_container_testing.qmd) → [ex. 05](exercises/05_testing_containers/README.qmd) | as available |
+| Step | Module |
+|------|--------|
+| 1 | [Why test](slides/01_intro.qmd) · [Testing concepts](slides/02_testing_concepts.qmd) |
+| 2 | [Bash · Python · R](slides/03_bash_python_r.qmd) → [ex. 01](exercises/01_bash/README.qmd) · [ex. 02](exercises/02_python/README.qmd) · [ex. 03](exercises/03_r/README.qmd) |
+| 3 | [Nextflow / nf-test](slides/04_nf_test.qmd) → [ex. 04](exercises/04_nextflow/README.qmd) |
+| 4 | [Testing without an exact oracle](slides/06_bioinformatics_testing.qmd) → [ex. 06](exercises/06_metamorphic/README.qmd) |
+| 5 | [Strategy for small teams](slides/07_small_team_strategy.qmd) |
+| Bonus | [Apptainer containers](slides/05_container_testing.qmd) → [ex. 05](exercises/05_testing_containers/README.qmd) |
 
 ---
 

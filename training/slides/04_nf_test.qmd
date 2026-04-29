@@ -383,7 +383,7 @@ Rendez-vous dans `exercises/04_nextflow/`
 - 1 snapshot
 
 ::: {.notes}
-L'exercice est conçu pour être complété en 45-60 minutes. Les fichiers de départ (`count_lines.nf`, `process_table.nf`, `data/records.tsv`) sont déjà présents.
+Les fichiers de départ (`count_lines.nf`, `process_table.nf`, `data/records.tsv`) sont déjà présents.
 
 Le test "fichier vide → échec" est important : il vérifie que le process échoue correctement quand l'input est invalide, pas qu'il produit silencieusement un résultat vide.
 
