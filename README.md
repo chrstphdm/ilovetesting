@@ -5,7 +5,7 @@
 [![Version](https://img.shields.io/github/v/tag/chrstphdm/ilovetesting?label=version)](https://github.com/chrstphdm/ilovetesting/releases)
 [![nf-test](https://img.shields.io/badge/tested_with-nf--test-337ab7)](https://www.nf-test.com)
 
-Formation interne à l'écriture de tests dans les pipelines bioinformatiques.
+A hands-on training resource for writing tests in bioinformatics pipelines.
 
 **Site de formation → [chrstphdm.github.io/ilovetesting](https://chrstphdm.github.io/ilovetesting/)**
 
@@ -62,7 +62,7 @@ training/
 
 ```bash
 # Cloner le repo
-git clone https://github.com/starfishbio/ilovetesting
+git clone https://github.com/chrstphdm/ilovetesting
 cd ilovetesting
 
 # Lancer tous les tests
