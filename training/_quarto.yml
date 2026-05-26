@@ -9,6 +9,9 @@ website:
     right:
       - text: "🇬🇧 English"
         href: en/index.qmd
+      - text: "Christophe Demay"
+        href: https://chrstphdm.github.io/
+        icon: globe
     left:
       - text: "Accueil"
         href: index.qmd
